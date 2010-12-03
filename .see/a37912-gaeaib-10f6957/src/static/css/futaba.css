@@ -1,0 +1,180 @@
+html, body {
+	background:#FFFFEE;
+	color:#800000;
+}
+a {
+	color:#0000EE;
+}
+a:hover {
+	color:#DD0000;
+}
+.reflink {
+        color: #900000;
+        font-weight: bold;
+}
+.reflink a:hover {
+	font-weight: bold;
+        font-style: italic;
+}
+.postarea {
+}
+
+.postarea th {
+	background:#EEAA88;
+	color:#800000;
+	font-weight:800;
+}
+
+.footer {
+        clear: both;
+	text-align:center;
+	font-size:12px;
+	font-family:serif;
+}
+.passvalid {
+	background:#EEAA88;
+	text-align:center;
+	width:100%;
+	color:#ffffff;
+}
+.dellist {
+	font-weight: bold;
+	text-align:center;
+}
+.delbuttons {
+	text-align:center;
+	padding-bottom:4px;
+
+}
+.managehead {
+	background:#AAAA66;
+	color:#400000;
+	padding:0px;
+}
+.postlists {
+	background:#FFFFFF;
+	width:100%;
+	padding:0px;
+	color:#800000;
+}
+.row1 {
+	background:#EEEECC;
+	color:#800000;
+}
+.row2 {
+	background:#DDDDAA;
+	color:#800000;
+}
+.unkfunc {
+	background:inherit;
+	color:#789922;
+}
+.filesize {
+	text-decoration:none;
+}
+.filetitle {
+	background:inherit;
+	font-size:1.2em;
+	color:#CC1105;
+	font-weight:800;
+}
+.postername {
+	color:#117743;
+	font-weight:bold;
+}
+.postertrip {
+	color:#228854;
+}
+.oldpost {
+	color:#CC1105;
+	font-weight:800;
+}
+.omittedposts {
+	color:#707070;
+}
+.reply {
+	background: #F0E0D6;
+	color: #800000;
+  -moz-border-radius: 9px 9px 9px 9px;
+  border-radius: 9px 9px 9px 9px;
+}
+.replyhl {
+	background: #F0C0B0;
+	color: #800000;
+}
+.replytitle {
+	font-size: 1.2em;
+	color:#CC1105;
+	font-weight:800;
+}
+.commentpostername {
+	color:#117743;
+	font-weight:800;
+}
+.thumbnailmsg {
+	font-size: small;
+	color:#800000;
+}
+
+.abbrev {
+	color:#707070;
+}
+.highlight {
+	background:#F0E0D6;
+	color:#800000;
+	border: 2px dashed #EEAA88;
+}
+
+#watchedthreads {
+	background-color: #F0E0D6 !important;
+}
+
+.preview {
+  background-color: #F0E0D6 !important;
+  -moz-box-shadow: 0 0 8px #999999;
+  -webkit-transition-property: opacity, -webkit-box-shadow:;
+  -webkit-transition-duration: 0.5s, 2s;
+  opacity: 0;
+  max-width: 60%;
+}
+
+span.spoiler, span.spoiler a {
+  background: #F0D0B6;
+  color: #F0D0B6;
+}
+span.spoiler:hover {
+  background: #F0D0B6;
+  color: #800000;
+}
+
+span.spoiler:hover a {
+  color: #0000EE;
+}
+
+.threadnum {
+  float: right;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.doubledash {
+  color: #d0d0d0;
+}
+
+.post-replies {
+  text-align: right;
+  font-size: 11px;
+  font-style: italic;
+  padding: 2px 6px;
+}
+
+blockquote p.unkfunc, blockquote pre {
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
+
+.watcher {
+  float: left;
+  margin: 3px;
+}
