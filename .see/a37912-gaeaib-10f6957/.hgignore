@@ -1,5 +1,0 @@
-.*\.pyc
-.installed.cfg
-src/distlib
-etc/
-bin
