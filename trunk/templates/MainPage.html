@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ application_name }} GPS avto {% endblock %}
+
+{% block javainit %}
+
+/*
+$("#menu-main").hover(function () {
+      $(this).css({'background-color' : 'yellow', 'font-weight' : 'bolder'});
+    }, function () {
+      var cssObj = {
+        'background-color' : 'blue',
+        'font-weight' : '',
+        'color' : 'rgb(0,40,244)'
+      }
+      $(this).css(cssObj);
+    });
+*/
+/*		var cssObj = {
+			'font-weight' : 'bolder',
+			'color' : 'rgb(0,128,0)'
+		}
+		$('#menu-main').css(cssObj);
+*/
+{% endblock %}
+
+
+{% block head %}
+  <link type="text/css" rel="stylesheet" href="stylesheets/ui.all.css" />
+{% endblock %}
+
+{% block body %}
+
+	<h1>Перечень наблюдаемых систем</h1>
+	<table>
+		<tr>
+			<th>IMEI</th>
+			<th>Дата регистрации</th>
+		</tr>
+		{% for system in account.systems %}
+		<tr>
+			<td><a href="systeminfo?key={{ system.key }}" title="Подробности">{{ system.imei }}</a></td>
+			<td>{{ system.ldate|date:"d/m/Y H:i:s" }}</td>
+		</tr>
+		{% endfor %}
+	</table>
+
+
+	<h1>Главное меню</h1>
+	<a href="/debug/test-register?imei=1234567890">Рарегестрировать систему с имеем 1234567890</a>
+	<a href="/debug/test-register?imei=1234567891">Рарегестрировать систему с имеем 1234567891</a>
+{% endblock %}
+
+{% block final %}
+{% endblock %}
