@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ application_name }} GPS avto - GEO Info {% endblock %}
+
+{% block javainit %}
+
+{% endblock %}
+
+
+{% block head %}
+  <!--link type="text/css" rel="stylesheet" href="/stylesheets/ui.all.css" /-->
+
+<script type="text/javascript" language="JavaScript">
+	//jQuery(function($){
+	function geo_info(){
+
+	}
+</script>
+  
+{% endblock %}
+
+{% block body %}
+
+	<h1>GEO</h1>
+
+	<h2>Test GEO</h2>
+	
+	<a href="/geo/dbgAddRec">Добавить одну запись</a>
+<script>
+	geo_info();
+</script>
+	
+{% endblock %}
+
+{% block final %}
+{% endblock %}

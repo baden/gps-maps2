@@ -25,7 +25,7 @@ $("#menu-main").hover(function () {
 
 
 {% block head %}
-  <link type="text/css" rel="stylesheet" href="stylesheets/ui.all.css" />
+  <!--link type="text/css" rel="stylesheet" href="stylesheets/ui.all.css" /-->
 {% endblock %}
 
 {% block body %}
@@ -58,6 +58,10 @@ $("#menu-main").hover(function () {
 	<h1>Главное меню</h1>
 	<a href="/debug/test-register?imei=1234567890">Рарегестрировать систему с имеем 1234567890</a>
 	<a href="/debug/test-register?imei=1234567891">Рарегестрировать систему с имеем 1234567891</a>
+	<br />
+	<a href="/s/GeoInfo">GEO info</a>	
+	<a href="/s/ApiInfo">API info</a>	
+	
 {% endblock %}
 
 {% block final %}

@@ -14,9 +14,9 @@ class DBAccounts(db.Expando):
 	systems_key = db.ListProperty(db.Key, default=None)			# Перечень наблюдаемых систем (их keys)
 	#systems = db.ListProperty(db.Blob)					# Перечень наблюдаемых систем
 	register = db.DateTimeProperty(auto_now_add=True)			# Дата регистрации аккаунта
-	premium = db.DateTimeProperty(auto_now_add=True)			# Дата окончания премиум-подписки (абон-плата)
-	config_list = db.ListProperty(unicode, default=None)				# Список записей конфигурации
-
+	config_list = db.ListProperty(unicode, default=[u"{timezone:0}"])	# Список записей конфигурации
+	access = db.IntegerProperty(default=0)					# Уровень доступа
+										# 0-только просмотр, 1-возможность конфигурирования, 2-возможность правки данных и т.д.										 
 	@property
 	def systems(self):
 		#return 'aaa'
@@ -56,7 +56,27 @@ class DBSystem(db.Model):
 	phone = db.StringProperty(multiline=False, default="None")		# Phone number, for example: +380679332332
 	date = db.DateTimeProperty(auto_now_add=True)				# Дата регистрации системы
 	desc = db.StringProperty(multiline=False, default=u"Нет описания")			# Описание
+	premium = db.DateTimeProperty(auto_now_add=True)			# Дата окончания премиум-подписки (абон-плата).
+										# Без премиум-подписки функционал ограничен.										# история ограничена 14 днями, и т.д.
 	@property
 	def ldate(self):
 		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
 		return fromUTC(self.date)
+
+"""
+ Информация о последней известной координате
+"""
+
+class DBLastPos(db.Model):
+	skey = db.StringProperty(multiline=False)		# Система
+	lpos = db.GeoPtProperty()				# Позиция
+	ldatetime = db.DateTimeProperty()			# Дата точки
+
+
+"""
+ Гео-данные
+"""
+
+class DBGeo(db.Model):
+	gdate = db.DateProperty()
+	
