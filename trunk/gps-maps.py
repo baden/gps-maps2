@@ -8,15 +8,20 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from template import TemplatedPage
 import datamodel
 
-
 class MainPage(TemplatedPage):
 	def get(self):
 		template_values = {}
 		self.write_template(template_values)
 
+class StaticPage(TemplatedPage):
+	def get(self):
+		template_values = {}
+		self.write_template(template_values, alturl=self.request.path[3:] + ".html")
+
 
 application = webapp.WSGIApplication(
 	[('/', MainPage),
+		('/s/.*', StaticPage),
 	],
 	debug=True
 )

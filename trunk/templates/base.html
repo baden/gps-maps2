@@ -8,16 +8,17 @@
 		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
 
 		<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
-		<link type="text/css" rel="stylesheet" href="stylesheets/main.css" />
-		<script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAADIf1TyW8EOrlksPTOSU_ahRSRM19lJ9EelRQvSBfwIzY3S55QBS-8_3mcz6GYcDrbbRrvEniskCZzw"></script>
+		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+		<!--script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAADIf1TyW8EOrlksPTOSU_ahRSRM19lJ9EelRQvSBfwIzY3S55QBS-8_3mcz6GYcDrbbRrvEniskCZzw"></script-->
+		<script type="text/javascript" src="/js/jquery.min.js"></script>
 
 		<script type="text/javascript">
 		//google.load("jquery", "1.3.2");
 		//google.load("jqueryui", "1.7.2");
 		//google.load("jquery", "1", {uncompressed:true});
 		//google.load("jqueryui", "1", {uncompressed:true});
-		google.load("jquery", "1");
-		google.load("jqueryui", "1");
+		//google.load("jquery", "1");
+		//google.load("jqueryui", "1");
 
 		function loadApp() {
 			{% block javainit %}{% endblock %}
@@ -45,6 +46,7 @@
 				<li id="menu-map"><a href="/map"><div>Карта</div></a></li>
 				<li id="menu-logs"><a href="/logs"><div>События</div></a></li>
 				<li id="menu-geos"><a href="/geos"><div>События GPS</div></a></li>
+				<li id="menu-admin"><a href="/_ah/admin/"><div>Администрирование</div></a></li>
 				{% endif %}
 			</ul>
 		</div>

@@ -1,0 +1,46 @@
+<p>Общий формат запроса /api/{command}?callback=foo[&ampparameters]</p>
+Перечень команд:
+<table>
+	<tr>
+		<th>Команда</th>
+		<th>Параметры</th>
+		<th>Описание</th>
+		<th>Вид ответа</th>
+	</tr>
+	<tr>
+		<td>version</td>
+		<td>-</td>
+		<td>Запрос версии api</td>
+		<td>{"version": 1.0}</td>
+	</tr>
+	<tr>
+		<td>geo/info</td>
+		<td>acckey, syskey, datetime</td>
+		<td>Запрос расширенной информации о точке</td>
+	</tr>
+</table>
+
+<h2>Test API</h2>
+<div id="api_debug" style="border: 1px solid red;">API_DEBUG<br /></div>
+<script type="text/javascript" language="JavaScript">
+	jQuery(function($){
+
+		api_debug = document.getElementById('api_debug');
+		api_debug.innerHTML += 'Инициализация...<br />';
+		$.getJSON("/api/info?callback=?", function (data) {
+			api_debug.innerHTML += "Обработка...<br />";
+
+			if (data.info) {
+				api_debug.innerHTML += "Info:<br />Accounts:<br />";
+				//api_debug.innerHTML += data.info.accounts[0].key;
+				for(var i in data.info.accounts){
+					api_debug.innerHTML += "i:" + i + "<br/>";
+					var account = data.info.accounts[i];
+					api_debug.innerHTML += "Key:" + account.key + "<br/>";
+					api_debug.innerHTML += "Name:" + account.name + "<br/>";
+				}
+				
+			}
+		});
+	});
+</script>

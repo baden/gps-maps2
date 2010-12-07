@@ -27,7 +27,7 @@ handlers:
   static_files: images/\1
   upload: images/(.*\.(gif|png|jpg|ico))
 
-- url: /favicon.ico
+- url: .*/favicon.ico
   static_files: static/favicon.ico
   upload: static/favicon.ico
 
@@ -63,6 +63,9 @@ handlers:
 
 - url: /debug/.*
   script: gps-debug.py
+
+- url: /api/.*
+  script: gps-api.py
 
 - url: /.*
   script: gps-maps.py

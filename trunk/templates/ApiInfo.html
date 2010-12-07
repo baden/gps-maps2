@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}{{ application_name }} GPS avto - API Info {% endblock %}
+
+{% block javainit %}
+
+{% endblock %}
+
+
+{% block head %}
+  <!--link type="text/css" rel="stylesheet" href="/stylesheets/ui.all.css" /-->
+
+<script type="text/javascript" language="JavaScript">
+	//jQuery(function($){
+	function api_info(){
+
+		api_debug = document.getElementById('api_debug');
+		api_debug.innerHTML = 'Инициализация...<br />';
+		$.getJSON("/api/info?callback=?", function (data) {
+			api_debug.innerHTML += "Обработка...<br />";
+
+			if (data.info) {
+				api_debug.innerHTML += "Info:<br />Accounts:<br /><table>";
+				var table = "<table><tr><th>Key</th><th>Name</th><th>User</th><th>Systems</th></tr>";
+				//api_debug.innerHTML += data.info.accounts[0].key;
+				for(var i in data.info.accounts){
+					table += "<tr>";
+					var account = data.info.accounts[i];
+					table += '<td align="center"><div title="' + account.key + '">[k]</div></td>';
+					table += "<td>" + account.name + "</td>";
+					table += "<td>" + account.user.email + "</td>";
+					var systems = "<table>";
+					for(var j in account.systems){
+						var system = account.systems[j];
+						systems += '<tr><td><a href="/info/system?skey=' + system.key + '">' + system.imei + '</a></td></tr>';
+					}
+					systems += "</table>";
+					table += "<td>" + systems + "</td>";
+					table += "</tr>";
+				}
+				table += "</table>";
+				api_debug.innerHTML += table;
+				
+			}
+		});
+	//});
+	}
+</script>
+  
+{% endblock %}
+
+{% block body %}
+
+	<h1>API</h1>
+
+<p>Общий формат запроса /api/{command}?callback=foo[&ampparameters]</p>
+Перечень команд:
+<table>
+	<tr>
+		<th>Команда</th>
+		<th>Параметры</th>
+		<th>Описание</th>
+		<th>Вид ответа</th>
+	</tr>
+	<tr>
+		<td>version</td>
+		<td>-</td>
+		<td>Запрос версии api</td>
+		<td>{"version": 1.0}</td>
+	</tr>
+	<tr>
+		<td>geo/info</td>
+		<td>acckey, syskey, datetime</td>
+		<td>Запрос расширенной информации о точке</td>
+	</tr>
+</table>
+
+<h2>Test API</h2>
+<div onclick="api_info();" style="cursor: pointer; border: 1px solid green; display: inline;">Update</div>
+<div id="api_debug" style="border: 1px solid red;">API is OFF.<br /></div>
+<script>
+	api_info();
+</script>
+	
+{% endblock %}
+
+{% block final %}
+{% endblock %}
