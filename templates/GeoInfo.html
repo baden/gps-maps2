@@ -1,35 +1,136 @@
-{% extends "base.html" %}
-{% block title %}{{ application_name }} GPS avto - GEO Info {% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
 
-{% block javainit %}
+  <link type="text/css" href="/stylesheets/base.css" rel="stylesheet" />
+  <link type="text/css" href="/plugins/jquery-ui-themes-1.7/jquery-ui-themes-1.7/themes/cupertino/jquery-ui.css" rel="stylesheet" />
 
-{% endblock %}
+  <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+  <script type="text/javascript" src="/js/jquery.min.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui/js/jquery-ui-1.8.6.custom.min.js"></script>
+
+  <link href="/plugins/jquery.jqGrid-3.8.1/css/ui.jqgrid.css" rel="stylesheet" type="text/css"/>
+  <script type="text/javascript" src="/plugins/jquery.jqGrid-3.8.1/js/i18n/grid.locale-ru.js"></script>
+  <script src="/plugins/jquery.jqGrid-3.8.1/js/jquery.jqGrid.min.js"></script>
+
+  <!--script src="/js/map.js"></script-->
+
+  <script>
+
+	//jQuery.extend(jQuery.jgrid.defaults, { sortable:false });
+	$(document).ready(function() {
+		//CreateMap();
+
+		$("button").button();
+		$(".debug_geo").click(function(){
+			//$('.ui-jqgrid').css('width', '100px !important');
+			path = '/api/debug_geo?skey={{ account.systems.0.key }}&cnt=' + this.value;
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', path, true);
+			xhr.send();
+                        //console.log("Press getter.");
+			return false;
+
+		});
+
+		$('#le_table').jqGrid({
+		   url:'/api/get_geo?skey={{ account.systems.0.key }}',
+		   editurl: "/api/geo/del?skey={{ account.systems.0.key }}",
+		   datatype: 'json',
+		   autowidth: true,
+		   height: 224,
+		   //width: 900,
+		   mtype: 'GET',
+		   colNames:['Время', 'Долгота', 'Широта', 'Спутники', 'Скорость', 'Направление', 'Осн.питание', 'Рез.питание', 'Источник', 'Дополнительно'],
+		   colModel :[
+		     //{name:'date', index:'date', width:150, sorttype:'date', formatter:'date', datefmt:'d/m/Y'},
+		     {name:'date', index:'date', width:150},
+		     {name:'lat', index:'lat', width:100, sortable:false},
+		     {name:'lon', index:'lon', width:100, sortable:false},
+		     {name:'sats', index:'sat', width:100, sortable:false},
+		     {name:'speed', index:'speed', width:100, sortable:false, formatter:'number'},
+		     {name:'course', index:'course', width:100, sortable:false},
+		     {name:'vout', index:'vout', width:100, sortable:false},
+		     {name:'vin', index:'vin', width:100, sortable:false},
+		     {name:'fsource', index:'fsource', width:100, sortable:false},
+		     {name:'extend', index:'extend', width:100, sortable:false}
+		   ],
+	          scroll: 1,
+		  //loadonce: true,
+		  rowNum: 100,
+		  pager: '#le_tablePager',
+		  rownumbers: true,
+	          rownumWidth: 40,
+	          gridview: true,
+		  //rowList:[10,20,30,100],
+	          viewrecords: true,
+		  sortable: true,
+		  sortname: 'date',
+		  sortorder: 'asc',
+		  caption: "Данные GPS",
+		  toolbar: [true, "bottom"],
+		  shrinkToFit: true,
+		  loadComplete: function() {
+			var udata = $("#le_table").jqGrid('getUserData');
+			$("#t_le_table").css("text-align","right").html(
+				" Записей: " + udata.hours + " Всего:" + udata.total + " g_rows:" + udata.g_rows + "&nbsp;&nbsp;&nbsp;"
+			);
+		  }
+		});
+		jQuery("#le_table").jqGrid('navGrid','#le_tablePager',{edit:false,add:false,del:true});
+		jQuery("#le_table").jqGrid('gridResize',{minWidth:500, maxWidth:1600, minHeight:180, maxHeight:1200});
+
+		jQuery("#le_table").jqGrid('navButtonAdd','#le_tablePager',{
+		    caption: "Столбцы",
+		    title: "Выбрать столбцы",
+		    onClickButton : function (){
+		        jQuery("#le_table").jqGrid('columnChooser');
+	    	}});
+
+		jQuery("#le_table").jqGrid('navButtonAdd','#le_tablePager',{
+		    caption: "Печать",
+		    title: "Печать отчета",
+		    onClickButton : function (){
+		        //jQuery("#le_table").jqGrid('columnChooser');
+			alert('Не доступно.');
+	    	}});
 
 
-{% block head %}
-  <!--link type="text/css" rel="stylesheet" href="/stylesheets/ui.all.css" /-->
+	});
 
-<script type="text/javascript" language="JavaScript">
 	//jQuery(function($){
 	function geo_info(){
 
 	}
-</script>
-  
-{% endblock %}
 
-{% block body %}
+  </script>
+
+</head>
+
+<body>
+
+  
 
 	<h1>GEO</h1>
 
+	<h2> Гео-данные за все время. </h2>
+	Первая система в списке: <a href="javascript:void();" title="IMEI: {{ account.systems.0.imei }} / PHOME: {{ account.systems.0.phone }}">{{ account.systems.0.desc }}</a>
+
+	<button id="get_geo">Запросить данные</button>
+
+	<table id="le_table"></table>
+	<div id="le_tablePager"></div>
+
+
 	<h2>Test GEO</h2>
 	
-	<a href="/geo/dbgAddRec">Добавить одну запись</a>
+	<button class="debug_geo" value="1">Добавить одну случайную запись</button>
+	<button class="debug_geo" value="100">Добавить 100 случайных записей</button>
+	<button class="debug_geo" value="1000">Добавить 1000 случайных записей</button>
+	<button class="debug_geo" value="10000">Добавить 10000 случайных записей</button>
 <script>
 	geo_info();
 </script>
 	
-{% endblock %}
-
-{% block final %}
-{% endblock %}
+</body>
+</html>
