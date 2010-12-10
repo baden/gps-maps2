@@ -2,6 +2,7 @@
 import logging
 
 from google.appengine.ext import db
+from google.appengine.api import channel
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
@@ -16,6 +17,9 @@ class MainPage(TemplatedPage):
 class StaticPage(TemplatedPage):
 	def get(self):
 		template_values = {}
+		#token = channel.create_channel(self.user.user_id())
+		#template_values["token"] = token
+
 		self.write_template(template_values, alturl=self.request.path[3:] + ".html")
 
 

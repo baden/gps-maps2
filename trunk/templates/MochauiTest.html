@@ -1,0 +1,55 @@
+<html>
+  <head>
+
+	<link rel="stylesheet" type="text/css" id="cssContent" href="/plugins/mochaui-0.9.7/mochaui-0.9.7/demo/themes/default/css/Content.css" />
+	<link rel="stylesheet" type="text/css" id="cssCore" href="/plugins/mochaui-0.9.7/mochaui-0.9.7/demo/themes/default/css/Core.css" />
+	<link rel="stylesheet" type="text/css" id="cssWindow" href="/plugins/mochaui-0.9.7/mochaui-0.9.7/demo/themes/default/css/Window.css" />
+
+    <script type="text/javascript" src="/plugins/mochaui-0.9.7/mochaui-0.9.7/build/mootools-1.2.4-core-yc.js"></script>
+    <script type="text/javascript" src="/plugins/mochaui-0.9.7/mochaui-0.9.7/build/mootools-1.2.4-more-yc.js"></script>
+    <script type="text/javascript" src="/plugins/mochaui-0.9.7/mochaui-0.9.7/build/mocha.js"></script>
+
+	<script type="text/javascript">
+		
+	MUI.testWindow = function(){
+		new MUI.Window({
+			id: 'test',
+			title: 'Test',
+			loadMethod: 'xhr',
+			contentURL: 'pages/lipsum.html'
+		});
+	}		
+		
+	window.addEvent('load', function(){
+		MUI.NewWindowsFromHTML = new MUI.NewWindowsFromHTML();
+		
+		$('testLink').addEvent('click', function(e){
+			new Event(e).stop();
+			MUI.testWindow();
+		});		
+		
+	});
+	
+	</script>
+
+  </head>
+  <body>
+	Test
+
+<div class="mocha" id="myWindow01" style="width:300px;height:255px;top:50px;left:350px">
+	<h3 class="mochaTitle">My Window 01</h3>
+	<p>My Window Content</p>
+</div>
+
+<div class="mocha" id="myWindow02" style="width:300px;height:275px;top:120px;left:420px">
+	<h3 class="mochaTitle">My Window 02</h3>
+	<p>My Window Content</p>
+</div>
+
+<div class="mocha" id="myWindow03" style="width:300px;height:105px;top:190px;left:490px">
+	<h3 class="mochaTitle">My Window 03</h3>
+	<p>My Window Content</p>
+</div>
+
+  </body>
+</html>

@@ -67,6 +67,9 @@ handlers:
 - url: /api/.*
   script: gps-api.py
 
+- url: /plugins/.*
+  script: gps-plugins.py
+
 - url: /.*
   script: gps-maps.py
 
