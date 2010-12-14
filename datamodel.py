@@ -5,6 +5,7 @@ from local import fromUTC
 
 from datetime import datetime, timedelta
 import struct
+#import zlib
 
 """
  Запись о пользователе
@@ -65,6 +66,29 @@ class DBSystem(db.Model):
 	def ldate(self):
 		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
 		return fromUTC(self.date)
+	
+	@classmethod
+	def get_or_create(cls, imei, phone=None, desc=None):
+		def txn():
+			update = False
+			entity = cls.get_by_key_name("sys_%s" % imei)
+			if entity is None:
+				entity = cls(key_name="sys_%s" % imei, imei=imei)
+				update = True
+			if phone:
+				if entry.phone != phone:
+					entry.phone = phone
+					update = True
+			if desc:
+				if entry.desc != desc:
+					entry.desc = desc
+					update = True
+			if update:
+				entity.put()
+			return entity
+
+		return db.run_in_transaction(txn)
+
 
 """
  Информация о последней известной координате
@@ -107,6 +131,7 @@ FSOURCE = {
 	10: "DELTALONG",
 	11: "DELTA",
 }
+
 PACK_STR = 'iffffffBBBBiiiiiiii'
 #           ^^^^^^^^^^^-------- Reserve
 #           │││││││││││
@@ -116,11 +141,11 @@ PACK_STR = 'iffffffBBBBiiiiiiii'
 #           │││││││└──── sats (byte)
 #           ││││││└───── vin (float)
 #           │││││└────── vout (float)
-#           ││││└─────── cource (float)
+#           ││││└─────── course (float)
 #           │││└──────── speed (float)
 #           ││└───────── lon (float)
 #           │└────────── lat (float)
-#           └─────────── time (int)
+#           └─────────── seconds (int)
 PACK_LEN = 64
 # !!! time должен всегда! идти первым и иметь тип int(i)
 
@@ -134,7 +159,6 @@ class DBGeo(db.Model):
 
 	extend = db.ListProperty(unicode, default=None)		# Дополнительная информация за текущий период
 
-
 	@property
 	def count(self):
 		if self.bin is None:
@@ -144,11 +168,12 @@ class DBGeo(db.Model):
 
 	def u_to_v(self, u):
 		return {
+			'seconds': u[0], 
 			'time': self.date + timedelta(seconds = u[0]),
 			'lat': u[1],
 			'lon': u[2],
 			'speed': u[3],
-			'cource': u[4],
+			'course': u[4],
 			'vout': u[5],
 			'vin': u[6],
 			'sats': u[7],
@@ -156,11 +181,11 @@ class DBGeo(db.Model):
 		}
 	def v_to_p(self, t):
 		return struct.pack(PACK_STR,
-			t['time'],
+			t['seconds'],
 			t['lat'],
 			t['lon'],
 			t['speed'],
-			t['cource'],
+			t['course'],
 			t['vout'],
 			t['vin'],
 			t['sats'],
@@ -168,24 +193,25 @@ class DBGeo(db.Model):
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0	# Reserve
 		)
 
-	def get_all(self, reverse=False):
-		if reverse:
-			start = self.count - 1
-			stop = -1
-			step = -PACK_LEN
-		else:
-			start = 0
-			stop = self.count
-			step = PACK_LEN
-
-		for offset in xrange(start, stop, step):
-			yield self.u_to_v(struct.unpack_from(PACK_STR, self.bin, offset))
 
 	def get_item(self, offset):
 		return self.u_to_v(struct.unpack_from(PACK_STR, self.bin, offset * PACK_LEN))
 
 	def get_last(self):
 		return self.u_to_v(struct.unpack_from(PACK_STR, self.bin, (self.count-1) * PACK_LEN))
+
+	def get_all(self, reverse=False):
+		if reverse:
+			start = len(self.bin) - PACK_LEN	# Я несколько не уверен на счет правильности
+			stop = -1
+			step = -PACK_LEN
+		else:
+			start = 0
+			stop = len(self.bin)
+			step = PACK_LEN
+
+		for offset in xrange(start, stop, step):
+			yield self.u_to_v(struct.unpack_from(PACK_STR, self.bin, offset))
 
 	def timelist(self):
 		stop = len(self.bin)
@@ -201,7 +227,7 @@ class DBGeo(db.Model):
 			self.i_count = 1
 			return True
 
-		t = point['time']
+		t = point['seconds']
 
 		# Как правило данные поступают последовательно и нет смысла искать место вставки, просто нужно добавить данные в конец
 		if t > self.time(self.count-1):
@@ -241,3 +267,57 @@ class DBGeo(db.Model):
 		self.bin = self.bin[:p*PACK_LEN] + self.v_to_p(point) + self.bin[p*PACK_LEN:]
 		self.i_count += 1
 		return True
+
+class PointWorker(object):
+	def __init__(self, skey):
+		#logging.info('PointWorker: __init__(%s)' % str(skey))
+		self.last_pkey = None
+		self.rec = None
+		self.rec_changed = False
+		self.system_key = skey
+		self.nrecs = 0
+
+	def Add_point(self, point):
+		#h = point['time'].hour & ~3;
+		pkey = point['time'].strftime("geo_%Y%m%d") + "%02d" % (point['time'].hour & ~3)
+		#logging.info('PointWorker: Add_point(%s)' % str(ptime))
+		if pkey != self.last_pkey:
+			if self.last_pkey is not None:
+				self.Flush()
+			self.last_pkey = pkey
+			self.rec = DBGeo.get_by_key_name(pkey, parent=self.system_key)
+			if self.rec is None:
+				self.rec = DBGeo(
+					parent = self.system_key,
+					key_name = pkey,
+					date = datetime(point['time'].year, point['time'].month, point['time'].day, point['time'].hour & ~3, 0, 0)
+				)
+				self.nrecs = 0
+			else:
+				self.nrecs = self.rec.count
+
+		#point['seconds'] = point['time'].minute * 60 + point['time'].second
+		point['seconds'] = (point['time'].hour & 3)*60*60 + point['time'].minute * 60 + point['time'].second
+
+		change = self.rec.add_point(point)
+		if change:
+			self.nrecs += 1
+			self.rec_changed = True
+
+	def Flush(self):
+		#logging.info('PointWorker: Flush (%d recs)' % self.nrecs)
+		if (self.rec is not None) and self.rec_changed:
+			self.rec.put()
+		self.rec = None
+		self.rec_changed = False
+		self.nrecs = 0
+
+class DBGPSBin(db.Model):
+	dataid = db.IntegerProperty()
+	data = db.BlobProperty()		# Пакет данных (размер ориентировочно до 64кбайт)
+
+class DBGPSBinBackup(db.Model):
+	cdate = db.DateTimeProperty(auto_now_add=True)
+	dataid = db.IntegerProperty()
+	crcok = db.BooleanProperty(default=False)
+	data = db.BlobProperty()		# Пакет данных (размер ориентировочно до 64кбайт)
