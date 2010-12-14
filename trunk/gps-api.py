@@ -8,7 +8,8 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
 #from template import TemplatedPage
-from datamodel import DBAccounts, DBSystem, DBGeo
+from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
+import local
 
 from datetime import datetime, timedelta
 
@@ -116,7 +117,6 @@ class GetGeo(webapp.RequestHandler):
 		g_page = int(self.request.get("page", "1"))
 		#logging.info(g_rows)
 
-
 		total = 0
 		skip = (g_page-1) * g_rows
 		isid = skip
@@ -173,7 +173,7 @@ class GetGeo(webapp.RequestHandler):
 						r['lon'],
 						r['sats'],
 						r['speed'],
-						r['cource'],
+						r['course'],
 						r['vout'],
 						r['vin'],
 						r['fsource'],
@@ -196,7 +196,7 @@ class GetGeo(webapp.RequestHandler):
 					r['lon'],
 					r['sats'],
 					r['speed'],
-					r['cource'],
+					r['course'],
 					r['vout'],
 					r['vin'],
 					r['fsource'],
@@ -242,102 +242,6 @@ class GetGeo(webapp.RequestHandler):
 		#rows = None
 		#jsonresp = None
 
-
-# Поиск места в сортированом списке для вставки нового значения (метор половинного деления)
-def find_index(arr, value):
-	s = 0
-	e = len(arr) - 1
-	if e == -1:
-		return 0
-
-	while (s+1) < e:
-		m = (s+e) / 2
-		if arr[m] > value:
-			e = m
-		else:
-			s = m
-
-	if arr[s] > value:
-		return s
-	else:
-		if arr[e] < value:
-			return e + 1
-		else:
-			return e
-
-class PointWorker(object):
-	def __init__(self, skey):
-		#logging.info('PointWorker: __init__(%s)' % str(skey))
-		self.last_pkey = None
-		self.rec = None
-		self.rec_changed = False
-		self.system_key = skey
-		self.nrecs = 0
-
-	def Add_point(self, ptime, lat, lon, sats, speed, cource, vout, vin, fsource):
-		pkey = ptime.strftime("geo_%Y%m%d%H")
-		#logging.info('PointWorker: Add_point(%s)' % str(ptime))
-		if pkey != self.last_pkey:
-			if self.last_pkey is not None:
-				self.Flush()
-			self.last_pkey = pkey
-			self.rec = DBGeo.get_by_key_name(pkey, parent=self.system_key)
-			if self.rec is None:
-				self.rec = DBGeo(
-					parent = self.system_key,
-					key_name = pkey,
-					date = datetime(ptime.year, ptime.month, ptime.day, ptime.hour, 0, 0)
-				)
-				self.nrecs = 0
-			else:
-				self.nrecs = self.rec.count
-
-		timep = ptime.minute * 60 + ptime.second
-
-		change = self.rec.add_point({
-			'time': timep,
-			'lat': lat,
-			'lon': lon,
-			'sats': sats,
-			'speed': speed,
-			'cource': cource,
-			'vout': vout,
-			'vin': vin,
-			'fsource': fsource
-		})
-		if change:
-			self.nrecs += 1
-			self.rec_changed = True
-		"""
-		if timep not in self.rec.timelist():
-			nindex = self.rec.find_pos(timep)	# find_index(self.rec.timelist(), timep)
-
-			self.rec.timelist.insert(nindex, timep)
-			self.rec.geolist.insert(nindex, db.GeoPt(lat, lon))
-			self.rec.sats.insert(nindex, sats)
-			self.rec.speed.insert(nindex, speed)
-			self.rec.course.insert(nindex, cource)
-			self.rec.vout.insert(nindex, vout)
-			self.rec.vin.insert(nindex, vin)
-			self.rec.fsource.insert(nindex, fsource)
-			self.rec.extend.insert(nindex, u"")
-
-			self.nrecs += 1
-			self.rec_changed = True
-
-			#rec.put()
-		"""
-
-	def Flush(self):
-		#logging.info('PointWorker: Flush (%d recs)' % self.nrecs)
-		if (self.rec is not None) and self.rec_changed:
-			self.rec.put()
-		self.rec = None
-		self.rec_changed = False
-		self.nrecs = 0
-		
-
-
 def put_random_point(worker):
 	import random
 	# Подготовим точку
@@ -348,12 +252,12 @@ def put_random_point(worker):
 	lon = random.uniform(-180.0,180.0)
 	sats = random.randint(0,255)
 	speed = random.uniform(0.0, 260.0)
-	cource = random.uniform(0.0, 360.0)
+	course = random.uniform(0.0, 360.0)
 	vout = random.uniform(0.0, 36.0)
 	vin = random.uniform(0.0, 6.0)
 	fsource = random.randint(0, 255)
 
-	worker.Add_point(ptime, lat, lon, sats, speed, cource, vout, vin, fsource)
+	worker.Add_point(ptime, lat, lon, sats, speed, course, vout, vin, fsource)
 
 def put_seq_point(worker, start, offset):
 	import random
@@ -365,12 +269,22 @@ def put_seq_point(worker, start, offset):
 	lon = random.uniform(-180.0,180.0)
 	sats = random.randint(0,255)
 	speed = random.uniform(0.0, 260.0)
-	cource = random.uniform(0.0, 360.0)
+	course = random.uniform(0.0, 360.0)
 	vout = random.uniform(0.0, 36.0)
 	vin = random.uniform(0.0, 6.0)
 	fsource = random.randint(0, 255)
 
-	worker.Add_point(ptime, lat, lon, sats, speed, cource, vout, vin, fsource)
+	worker.Add_point({
+		'time': ptime,
+		'lat': lat,
+		'lon': lon,
+		'sats': sats,
+		'speed': speed,
+		'course': course,
+		'vout': vout,
+		'vin': vin,
+		'fsource': fsource
+	})
 
 
 class DebugGeo(webapp.RequestHandler):
@@ -404,6 +318,51 @@ class Geo_Del(webapp.RequestHandler):
 	def post(self):
 		self.response.out.write(u"Не реализовано")
 
+class Geo_Get(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		skey = self.request.get("skey")
+		if skey is None:
+			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		system_key = db.Key(skey)
+
+		#pfrom = self.request.get("from")
+		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%d%m%Y%H%M%S"))
+		dhfrom = datetime(dtfrom.year, dtfrom.month, dtfrom.day, dtfrom.hour, 0, 0)
+
+		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%d%m%Y%H%M%S"))
+		dhto = datetime(dtto.year, dtto.month, dtto.day, dtto.hour, 0, 0)
+
+		pto = self.request.get("to")
+
+		recs = DBGeo.all().ancestor(system_key).filter("date >=", dhfrom).filter("date <=", dhto).order("date").fetch(1000)
+		points = []
+		counts = []
+		for rec in recs:
+			counts.append(rec.count)
+			#c = rec.count
+			#for i in xrange(c):
+			#	point = rec.get_item(i)
+			for point in rec.get_all():
+				points.append([
+					local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
+					point['lat'],
+					point['lon'],
+					int(point['course']),
+				])
+
+		jsonresp = {
+			'answer': 'ok',
+			'bcount': len(recs),
+			'count': len(points),
+			'counts': counts,
+			'format': ["date", "lat", "lon", "course"],
+			'points': points, 
+		}
+		self.response.out.write(json.dumps(jsonresp) + "\r")
 
 application = webapp.WSGIApplication(
 	[
@@ -413,6 +372,7 @@ application = webapp.WSGIApplication(
 	('/api/get_geo.*', GetGeo),
 	('/api/geo/del.*', Geo_Del),
 	('/api/debug_geo.*', DebugGeo),
+	('/api/geo/get*', Geo_Get),
 	],
 	debug=True
 )
