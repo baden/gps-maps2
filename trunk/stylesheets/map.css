@@ -1,0 +1,36 @@
+div.mymarker {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	/*border: 1px solid #F08000;*/
+	/*border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;*/
+
+	background-image: url(/images/marker-select.png);
+	/*-webkit-transition: all 0.1s ease-out;*/
+}
+
+div.mymarker-arrow {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	/*border: 1px solid #F08000;*/
+	/*border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;*/
+
+	background-image: url(/svg/arrow.svg);
+	/*-webkit-transition: all 0.1s ease-out;*/
+}
+
+div.info-header {
+	background-color: #F0E8F8;
+	font-weight: bold;
+	text-align: center;
+}
+
+table, td, th {
+	border: 2px solid black;
+	border-collapse: collapse;
+}

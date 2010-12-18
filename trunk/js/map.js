@@ -1,13 +1,15 @@
 
 var map = null;
 var ruler1 = null;
-var rulers = [];
+//var rulers = [];
 
 var prev_minp = -1;
 
 var flightPlanCoordinates = [];
+//var zooms = []
 
 var showed_path = [];
+//showed_path = new google.maps.MVCArray();
 
 var flightPath = null;
 var flightPathBounds = null;
@@ -40,18 +42,70 @@ function LoadPoints1(){
 
 var GetPath = function(skey, from, to){
 	console.log("::GetPath.start");
-	url = "http://localhost:8080/api/geo/get?skey="+skey+"&from="+from+"&to="+to;
+	url = "/api/geo/get?skey="+skey+"&from="+from+"&to="+to;
 	$.getJSON(url, function (data) {
 		//$("#progress").html("Обрабатываем...");
 		console.log("getJSON parce");
 		if (data.answer && data.points.length > 0) {
-			ParcePath(data.points);
+			ParcePath(data.points, data.bounds);
 		}
 	});
 	console.log("::GetPath.end");
 }
 
-var ParcePath = function(points){
+//google.maps.LatLng.prototype.setZoom = function(z){this.zoom = z;}
+//mLatLng_base = google.maps.LatLng.constructor;
+
+function newClass(parent, prop) {
+  // Dynamically create class constructor.
+  var clazz = function() {
+    // Stupid JS need exactly one "operator new" calling for parent
+    // constructor just after class definition.
+    if (clazz.preparing) return delete(clazz.preparing);
+    // Call custom constructor.
+    if (clazz.constr) {
+      this.constructor = clazz; // we need it!
+      clazz.constr.apply(this, arguments);
+    }
+  }
+  clazz.prototype = {}; // no prototype by default
+  if (parent) {
+    parent.preparing = true;
+    clazz.prototype = new parent;
+    clazz.prototype.constructor = parent;
+    clazz.constr = parent; // BY DEFAULT - parent constructor
+  }
+  if (prop) {
+    var cname = "constructor";
+    for (var k in prop) {
+      if (k != cname) clazz.prototype[k] = prop[k];
+    }
+    if (prop[cname] && prop[cname] != Object)
+      clazz.constr = prop[cname];
+  }
+  return clazz;
+}
+
+mLatLng = newClass(google.maps.LatLng, {
+	constructor: function(la, lo, z) {
+	    //document.writeln("Вызван конструктор Zaporojets().");
+	    this.constructor.prototype.constructor.call(this, la, lo);
+	    this.zoom = z;
+	  },
+});
+/*
+mLatLng = function(la, lo, z){
+//	base.constructor.call(la, lo);
+//	google.maps.LatLng.prototype.constructor(la, lo);
+//	mLatLng_base(la, lo);
+	this.constructor.prototype.constructor.call(this, la, lo);
+	this.zoom = z;
+};
+
+mLatLng.prototype = new google.maps.LatLng.prototype.constructor();
+*/
+
+var ParcePath = function(points, bounds){
 	var profile = new Profile("GetPath");
 
 	console.log("Loading a path...");
@@ -75,13 +129,27 @@ var ParcePath = function(points){
 	profile.show();
 	console.log("Create LatLng and calculate bounds...");
 	flightPlanCoordinates = [];
-	flightPathBounds = new google.maps.LatLngBounds();
+//	zooms = [];
+//	flightPathBounds = new google.maps.LatLngBounds();
 	//flightPathBounds = new google.maps.LatLngBounds(flightPlanCoordinates[0], flightPlanCoordinates[1]);
 	for(var i in points){
-		flightPlanCoordinates.push(new google.maps.LatLng(points[i][1], points[i][2]));
-		flightPathBounds.extend(flightPlanCoordinates[i]);
+		//flightPlanCoordinates.push(new google.maps.LatLng(points[i][1], points[i][2]));
+		//flightPlanCoordinates.push(new mLatLng(points[i][1], points[i][2], points[i][4]));
+		//flightPlanCoordinates.zoom = points[i][4];
+
+		var l = new google.maps.LatLng(points[i][1], points[i][2], false);
+		l.date = points[i][0];
+		l.angle = points[i][3];
+		l.zoom = points[i][4];
+		flightPlanCoordinates.push(l);
+		//zooms.push(points[i][4]);
+		//flightPathBounds.extend(flightPlanCoordinates[i]);
 	}
 
+	flightPathBounds = new google.maps.LatLngBounds(
+		new google.maps.LatLng(bounds[0][0], bounds[0][1]),
+		new google.maps.LatLng(bounds[1][0], bounds[1][1])
+	);
 	/*
 	if(!main_bound_rectangle){
 		main_bound_rectangle = new google.maps.Rectangle({
@@ -100,7 +168,8 @@ var ParcePath = function(points){
 	var sw = flightPathBounds.getSouthWest();
 	var ne = flightPathBounds.getNorthEast();
 
-	console.log("Bound: (" + sw.lat() + "," + sw.lng() + ")-(" + ne.lat() + "," + ne.lng() + ")" );
+	console.log("Calcilated bound: (" + sw.lat() + "," + sw.lng() + ")-(" + ne.lat() + "," + ne.lng() + ")" );
+	console.log("Bound in request: (" + bounds[0][0] + "," + bounds[0][1] + ")-(" + bounds[1][0] + "," + bounds[1][1] + ")" );
 	//map.panToBounds(flightPathBounds);
 	map.panTo(flightPlanCoordinates[0]);
 
@@ -159,36 +228,67 @@ var ParcePath = function(points){
 	PathRebuild();
 }
 
+var once = true;
+
 var PathRebuild = function(){
 	var profile = new Profile("PathRebuild");
+
+	var mapzoom = map.getZoom();
 	//if(showed_path.length != 0){
 	//	flightPath.setPath(null);
 	//}
 
-	console.log("Select points for this zoom...");
+	console.log("Select points for this zoom [" + mapzoom + "]");
 
 	// Now we use STUPID optimization methon - simple skip points
 	
+	/*
 	var projection = map.getProjection();
-	
 	var point = projection.fromLatLngToPoint(flightPlanCoordinates[0]);
 	console.log("1st pont is (" + point.x + "," + point.y + ")");
 	var point = projection.fromLatLngToPoint(flightPlanCoordinates[1]);
 	console.log("1st pont is (" + point.x + "," + point.y + ")");
+	*/
 
-	var step = 16-map.getZoom();
-	if(step < 1) step = 1;
+	//var step = 16-map.getZoom();
+	//if(step < 1) step = 1;
 
 	// temporraly disable draw optimization
-	step = 1;
+	//step = 1;
 
-	showed_path = [];
+	console.log(" - purge old points");
+	//showed_path = new google.maps.MVCArray();
+	//var path = flightPath.getPath();
+	//path.clear();
+	showed_path = []
+	profile.show();
 
-	for(var i=0; i<flightPlanCoordinates.length; i+=step){
-		showed_path.push(flightPlanCoordinates[i]);
-	}
-
+	console.log(" - purge points on map");
 	if(flightPath) flightPath.setPath(showed_path);
+	//if(flightPath) flightPath.setPath(path);
+	profile.show();
+
+	console.log(" - collect new points");
+	for(var i=0; i<flightPlanCoordinates.length; i++){
+		//if(zooms[i] <= mapzoom)
+		var p = flightPlanCoordinates[i];
+
+		//if(flightPlanCoordinates[i].zoom <= mapzoom)
+		//	showed_path.push(flightPlanCoordinates[i]);
+		if(p.zoom <= mapzoom){
+			showed_path.push(p);
+			//showed_path.insertAt(
+			//path.push(p);
+		}
+	}
+	profile.show();
+
+	console.log(" - assign points to map");
+//	if(once){
+		if(flightPath) flightPath.setPath(showed_path);
+//		once = false;
+//	}
+	//if(flightPath) flightPath.setPath(path);
 
 	profile.show();
 	console.log("Split points to bounds...");
@@ -213,6 +313,8 @@ var PathRebuild = function(){
 
 var UpdateMarker = function (moev){
 	var start = new Date();
+
+	if(showed_path.length == 0) return;
 
 	var mapzoom = map.getZoom();
 	var size = 0.005*Math.pow(2,13-mapzoom);
@@ -295,7 +397,7 @@ var UpdateMarker = function (moev){
 */
 	if(minp != prev_minp){
 		ruler1.setPosition(showed_path[minp]);
-		ruler1.setTitle("Pos: " + showed_path[minp]);
+		//ruler1.setTitle("Date: " + showed_path[minp].date);
 		$("#point_info").html("Pos: " + showed_path[minp]);
 		//console.log("flightPath: minp set to = " + minp);
 		prev_minp = minp;
@@ -314,7 +416,7 @@ function CreateMap()
         mapTypeId: google.maps.MapTypeId.ROADMAP,
 	disableDoubleClickZoom: true,
 	draggableCursor: "default",
-        zoom: 6,
+        zoom: 14,
       };
       
       map = new google.maps.Map(document.getElementById("map"), mapOptions);
@@ -369,6 +471,7 @@ function CreateMap()
 		PathRebuild();
 	});
 
+	/*
 	var riler1_Image = new google.maps.MarkerImage(
 		'/images/marker-select.png',
 		new google.maps.Size(16, 16),
@@ -382,7 +485,11 @@ function CreateMap()
 		icon: riler1_Image,
 	        draggable: false
 	});
+	*/
 
+	ruler1 = new MyMarker(map);
+
+	/*
 	for(var i=0; i<4; i++){
 		rulers.push(new google.maps.Marker({
 		        position: map.getCenter() ,
@@ -391,6 +498,7 @@ function CreateMap()
 		}));
 
 	}
+	*/
 
 }
 
@@ -414,9 +522,10 @@ function DrawPlyline()
 	if(flightPath) return;
 	flightPath = new google.maps.Polyline({
 		//path: flightPlanCoordinates,
+		//path: showed_path,
 		strokeColor: "#FF0000",
 		strokeOpacity: 1.0,
-		strokeWeight: 4
+		strokeWeight: 3
 	});
 	flightPath.setMap(map);
 
@@ -435,3 +544,13 @@ function DrawPlyline()
 	//google.maps.event.addListener(flightPath, 'mousemove', UpdateMarker);
 	console.log("Draw polyline.");
 }
+
+var ClearPath = function(skey){
+	var profile = new Profile("Clear path");
+	console.log("Clear path.");
+	showed_path = []
+	console.log(" - purge points on map");
+	if(flightPath) flightPath.setPath(showed_path);
+	profile.show();
+}
+
