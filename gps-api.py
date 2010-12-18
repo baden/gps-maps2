@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+#from gc import get_objects
+import gc
 import logging
 
 from django.utils import simplejson as json
@@ -10,6 +12,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 #from template import TemplatedPage
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
 import local
+
 
 from datetime import datetime, timedelta
 
@@ -257,7 +260,18 @@ def put_random_point(worker):
 	vin = random.uniform(0.0, 6.0)
 	fsource = random.randint(0, 255)
 
-	worker.Add_point(ptime, lat, lon, sats, speed, course, vout, vin, fsource)
+	#worker.Add_point(ptime, lat, lon, sats, speed, course, vout, vin, fsource)
+	worker.Add_point({
+		'time': ptime,
+		'lat': lat,
+		'lon': lon,
+		'sats': sats,
+		'speed': speed,
+		'course': course,
+		'vout': vout,
+		'vin': vin,
+		'fsource': fsource
+	})
 
 def put_seq_point(worker, start, offset):
 	import random
@@ -302,15 +316,18 @@ class DebugGeo(webapp.RequestHandler):
 
 		worker = PointWorker(system_key)
 
-		#for i in xrange(g_cnt):
-		#	put_random_point(worker)
+		for i in xrange(g_cnt):
+			put_random_point(worker)
 
+		"""
 		start = datetime.today() + timedelta(seconds = random.randint(0, 86400-1))
 
 		for i in xrange(g_cnt):
 			put_seq_point(worker, start, i)
+		"""
 
-		worker.Flush()
+		#worker.Flush()
+		del worker
 
 		self.response.out.write("OK")
 
@@ -320,11 +337,23 @@ class Geo_Del(webapp.RequestHandler):
 
 class Geo_Get(webapp.RequestHandler):
 	def get(self):
+		from math import log
+		prof = "gc START: %s\n" % dir(gc)
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		logging.info(prof)
+
 		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
 
 		skey = self.request.get("skey")
 		if skey is None:
 			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		if skey=="123":
+			self.response.out.write(json.dumps({'info': 'not ready yet'}) + "\r")
 			return
 
 		system_key = db.Key(skey)
@@ -341,28 +370,97 @@ class Geo_Get(webapp.RequestHandler):
 		recs = DBGeo.all().ancestor(system_key).filter("date >=", dhfrom).filter("date <=", dhto).order("date").fetch(1000)
 		points = []
 		counts = []
+		plat = 0.0
+		plon = 0.0
+
+		DS = 0.8
+		MS = DS/(2**20)
+
+		pl = 0
+		b_lat_l = 90.0
+		b_lon_l = 180.0
+		b_lat_r = -90.0
+		b_lon_r = -180.0
+
+		maxp = 50
+
 		for rec in recs:
+			if maxp == 0: break
+			else: maxp -= 1
+
 			counts.append(rec.count)
 			#c = rec.count
 			#for i in xrange(c):
 			#	point = rec.get_item(i)
 			for point in rec.get_all():
+
+				if maxp == 0: break
+				else: maxp -= 1
+
+				d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
+				plat = point['lat']
+				plon = point['lon']
+				
 				points.append([
 					local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
-					point['lat'],
-					point['lon'],
+					plat, #point['lat'],
+					plon, #point['lon'],
 					int(point['course']),
+					#20,
+					int(round(log(DS/d, 2), 0)),
 				])
+
+				b_lat_l = min(b_lat_l, plat)
+				b_lon_l = min(b_lon_l, plon)
+				b_lat_r = max(b_lat_r, plat)
+				b_lon_r = max(b_lon_r, plon)
+				"""
+				pl += 1
+
+				if pl >= 3:
+					d = max(MS, max(
+						abs(points[-1][1] - points[-2][1]), abs(points[-1][2] - points[-2][2]),
+						abs(points[-2][1] - points[-3][1]), abs(points[-2][2] - points[-3][2]),
+					))
+					points[-2][4] = int(round(log(DS/d, 2), 0))
+				"""
+				
+				
+
+		# Zoom для первой и последней точки наивысший (отображать всегда)
+		if len(points)>0:
+			points[0][-1] = 0
+			points[-1][-1] = 0
+
+		# Вычислим subbounds (TBD)
 
 		jsonresp = {
 			'answer': 'ok',
 			'bcount': len(recs),
 			'count': len(points),
 			'counts': counts,
-			'format': ["date", "lat", "lon", "course"],
+			'format': ["date", "lat", "lon", "course", "minzoom"],
 			'points': points, 
+			'bounds': ((b_lat_l, b_lon_l), (b_lat_r, b_lon_r)),
 		}
 		self.response.out.write(json.dumps(jsonresp) + "\r")
+
+		prof = "gc AFTER:\n"
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		logging.info(prof)
+
+		gc.collect()
+
+		prof = "gc COLLECT:\n"
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		#prof += "gc.get_objects()=%s\n" % repr(gc.get_objects())
+		logging.info(prof)
 
 application = webapp.WSGIApplication(
 	[

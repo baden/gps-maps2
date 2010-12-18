@@ -9,8 +9,12 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from template import TemplatedPage
 import datamodel
 
+#from guppy import hpy
+
 class MainPage(TemplatedPage):
 	def get(self):
+		#h = hpy()
+		#logging.info("Heap: %s" % h.heap())
 		template_values = {}
 		self.write_template(template_values)
 

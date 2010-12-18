@@ -180,16 +180,16 @@ class BinGpsParse(webapp.RequestHandler):
 			_log += '\n==\tDATA ID: %d' % dataid
 			_log += '\n==\tDATA LENGHT: %d' % len(pdata)
 
-			_log += '\nParsing...'
+			#_log += '\nParsing...'
 
-			_log += 'spliting...'
+			#_log += 'spliting...'
 			parts = pdata.split('\xFF')
-			_log += '%d patrs...' % len(parts)
+			#_log += '%d patrs...' % len(parts)
                         			
 			#odata_s = None
 			#odata_f = None
 			if len(parts[0]) == 0:
-				_log += 'pat[0] is == 0 - its ok...'
+				#_log += 'pat[0] is == 0 - its ok...'
 				del parts[0]
 
 			if len(parts) > 0:
@@ -197,7 +197,7 @@ class BinGpsParse(webapp.RequestHandler):
 					_log += 'pat[-1] is cutted - its NOT OK!!!...'
 					del parts[-1]
 
-			_log += '%d patrs now...' % len(parts)
+			#_log += '%d patrs now...' % len(parts)
 
 			worker = PointWorker(result.parent().key())
 			
@@ -217,12 +217,12 @@ class BinGpsParse(webapp.RequestHandler):
 			worker.Flush()
 
 			if points > 0:
-				_log += '\n==\tSaved points: %d\r\n' % points
+				_log += '\n==\tSaved points: %d\n' % points
 			else:
-				logging.error("Packet has no data or data is corrupted.")
+				logging.error("Packet has no data or data is corrupted.\n")
 
 			result.delete()
-			_log += '\nData deleted.\n'
+			#_log += '\nData deleted.\n'
 			_log += 'Ok\n'
 			
 			self.response.out.write('BINGPS/PARSE: OK\r\n')

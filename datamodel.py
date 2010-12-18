@@ -6,6 +6,7 @@ from local import fromUTC
 from datetime import datetime, timedelta
 import struct
 #import zlib
+import logging
 
 """
  Запись о пользователе
@@ -104,17 +105,30 @@ class DBLastPos(db.Model):
  Гео-данные
 
  Данные хранятся пачками.
- Каждатя пачка данных содержит точки за один час времени.
+ Каждатя пачка данных содержит точки за 4 часа времени.
  Запись имеет ключ вида: geo_YYYYMMDDHH
  где
 	YYYY - год
 	MM - месяц
 	DD - день
-	HH - часы
- Максимальное количество точек в одной записи = 60*60 = 3600 точек
- Необходимо позаботиться о том, чтобы размер одной записи не превысил 291 байт. (ограничение пачки в 1 МБ)
+	HH - часы [00,04,08,12,16,20]
+ Максимальное количество точек в одной записи = 60*60*4 = 14400 точек (*64 = 921600 байт)
+ Необходимо позаботиться о том, чтобы размер одной записи не превысил 72 байт. (ограничение пачки в 1 МБ)
 
- Записи представлены списком.
+ !Предложение!
+ По результатам реальных тестов, оказывается что очень много пакетов содержит всего 24 точки (6 точек в час).
+ Предлагается переделать процедуру сохранения точек по принципу:
+ создается один пакет для точек за сутки:
+  ключ вида: geo_YYYYMMDD
+ В него добавляются точки как обычно.
+ Если при очередном добавлении количество точек достигает 14400 штук, то создаются пакеты
+  geo_YYYYMMDDHH (столько сколько нужно с шагом 4 часа) и работа с ними идет как обычно.
+
+ Т.е. другими словами при поиске точек в Workere, сначала ищется пакет с ключем geo_YYYYMMDD, и если таковой не
+ найден, то пакет с ключем geo_YYYYMMDDHH.
+
+ Процедуру Geo_Get, похоже, переделывать не придется.
+
 """
 
 FSOURCE = {
@@ -150,7 +164,7 @@ PACK_LEN = 64
 # !!! time должен всегда! идти первым и иметь тип int(i)
 
 class DBGeo(db.Model):
-	date = db.DateTimeProperty()				# Дата записи + часы (необходима, например, для возможности удаления старых записей)
+	date = db.DateTimeProperty()				# Дата/время смещения
 	bin = db.BlobProperty(default=None)			# Упакованные данные
 	# Остальные параметры, возможно будут использоваться только на этапе отладки и в продакшине будут убраны.
 	i_count = db.IntegerProperty(default=0)			# Кол-во точек в пакете
@@ -239,11 +253,29 @@ class DBGeo(db.Model):
 		#	return False
 
 		# Поиск места вставки
+		
+		# Версия №2. Вроде работает.
+
+		lo = 0
+		hi = self.count
+		while lo < hi:
+			mid = (lo+hi)//2
+			if self.time(mid) < t: lo = mid+1
+			else: hi = mid
+
+		if self.time(lo) == t:		# Элемент уже есть в базе (игнорируем)
+			return False
+
+		self.bin = self.bin[:lo*PACK_LEN] + self.v_to_p(point) + self.bin[lo*PACK_LEN:]
+		
+
+		"""
+		# Поиск места вставки
 		s = 0
 		e = self.count-1
 
 		while (s+1) < e:
-			m = (s+e) / 2
+			m = (s+e) // 2
 			if self.time(m) > t:
 				e = m
 			else:
@@ -265,12 +297,14 @@ class DBGeo(db.Model):
 
 		# Вставляем данные
 		self.bin = self.bin[:p*PACK_LEN] + self.v_to_p(point) + self.bin[p*PACK_LEN:]
+		"""
+
 		self.i_count += 1
 		return True
 
 class PointWorker(object):
 	def __init__(self, skey):
-		#logging.info('PointWorker: __init__(%s)' % str(skey))
+		logging.info('PointWorker: __init__(%s)' % str(skey))
 		self.last_pkey = None
 		self.rec = None
 		self.rec_changed = False
@@ -280,7 +314,7 @@ class PointWorker(object):
 	def Add_point(self, point):
 		#h = point['time'].hour & ~3;
 		pkey = point['time'].strftime("geo_%Y%m%d") + "%02d" % (point['time'].hour & ~3)
-		#logging.info('PointWorker: Add_point(%s)' % str(ptime))
+		#logging.info('PointWorker: Add_point(%s)' % pkey)
 		if pkey != self.last_pkey:
 			if self.last_pkey is not None:
 				self.Flush()
@@ -305,12 +339,16 @@ class PointWorker(object):
 			self.rec_changed = True
 
 	def Flush(self):
-		#logging.info('PointWorker: Flush (%d recs)' % self.nrecs)
+		logging.info('PointWorker: Flush (%d recs)' % self.nrecs)
 		if (self.rec is not None) and self.rec_changed:
 			self.rec.put()
 		self.rec = None
 		self.rec_changed = False
 		self.nrecs = 0
+
+	def __del__(self):
+		self.Flush()
+
 
 class DBGPSBin(db.Model):
 	dataid = db.IntegerProperty()
