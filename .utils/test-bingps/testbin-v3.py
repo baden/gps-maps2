@@ -8,11 +8,11 @@ import socket
 
 from glob import glob
 
-#HOST = "127.0.0.1"
-#PORT = 80
+HOST = "127.0.0.1"
+PORT = 8080
 
-HOST = "gps-maps2.appspot.com"
-PORT = 80
+#HOST = "gps-maps2.appspot.com"
+#PORT = 80
 
 #HOST = "212.110.139.65"
 #PORT = 8015
