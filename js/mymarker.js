@@ -17,6 +17,7 @@ function MyMarker(map)
 	this.title = null;
 	this.point = null;
 	this.infowindow = null;
+	this.skey = null;
 
 //	this.result = result;
 //	this.index = MyMarker_globalindex;
@@ -27,14 +28,24 @@ function MyMarker(map)
 
 MyMarker.prototype = new google.maps.OverlayView();
 
+function add_geo_row(label, value) {
+	$('#tbl_info tbody').append('<tr><td>'+label+'</td><td><b>'+value+'</b></td></tr>');
+}
+
+function dt_to_date(dt){
+ return dt[0]+dt[1] + '/' + dt[2]+dt[3] + '/' + dt[4]+dt[5]+dt[6]+dt[7] + ' ' + dt[8]+dt[9] + ':' + dt[10]+dt[11] + ':' + dt[12]+dt[13];
+}
+
 MyMarker.prototype.Info = function() {
 	//alert('Bo ' + this.point.date);
 	var point = this.point;
+	var skey = this.skey;
+	console.log("skey = " + skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
-		'<div class="info-header">' + point.date + "</div>" +
+		'<div class="info-header">' + dt_to_date(point.date) + "</div>" +
 		/*'Скорость: <b>' + point.speed.toFixed(1) + " км/ч" +*/
-		'<table width="100%">' +
+		'<table id="tbl_info" width="100%">' +
 		'<tr><td>Направление:</td><td><b>' + point.angle.toFixed(0) + "°</b></td></tr>" +
 		'<tr><td>Долгота:</td><td><b>' + point.lat().toFixed(5) + "</b></td></tr>" +
 		'<tr><td>Широта:</td><td><b>' + point.lng().toFixed(5) + "</b></td></tr>" +
@@ -46,15 +57,20 @@ MyMarker.prototype.Info = function() {
 		'<div id="moreinfo" title="Ожидайте, идет получение дополнительной информации."><center><img src="/images/loading.gif" /></center></div>',
 		position: point,
 	});
-	google.maps.event.addListener(this.infowindow, 'domready', function(){
+	//self = this;
+	//google.maps.event.addListener(this.infowindow, 'domready', function(){
 		//$('#moreinfo').slideUp().delay(300).fadeIn();
 		//$("#moreinfo").animate({left:'+=200'},2000);
-		skey = 123;
-		url = "/api/geo/get?skey="+skey+"&point="+point.date;
+		url = "/api/geo/info?skey="+skey+"&point="+point.date;
 		$.getJSON(url, function (data) {
 			//$("#progress").html("Обрабатываем...");
-			if (data.info){
-				$("#moreinfo").html("Ура: " + data.info);
+			console.log("JSON data: " + data);
+			if (data.answer && data.answer === 'ok'){
+				$("#moreinfo").html("Ура: " + ":" + data.answer);
+				add_geo_row('Спутники', data.point.sats);
+				add_geo_row('Скорость', data.point.speed + 'км/ч');
+				add_geo_row('Основное питание', data.point.vout + 'В');
+				add_geo_row('Резервное питание', data.point.vin + 'В');
 			}
 			/*console.log("getJSON parce");
 			if (data.answer && data.points.length > 0) {
@@ -62,7 +78,7 @@ MyMarker.prototype.Info = function() {
 			}*/
 		});
 
-	});
+	//});
 //	infowindow.open(map, map.getMarker(i));
 	this.infowindow.open(map);
 }
@@ -153,11 +169,15 @@ MyMarker.prototype.setTitle = function(title) {
 	this.title = title;
 }
 
+MyMarker.prototype.setSysKey = function(skey) {
+	this.skey = skey;
+}
+
 MyMarker.prototype.setPosition = function(point) {
 	this.point = point;
 	this.arrdiv.setAttribute("style", "-webkit-transform: rotate(" + point.angle + "deg);z-index:-1;");
 //	console.log('MyMarker.protorype.setPosition');
-	this.setTitle(point.date);
+	this.setTitle(dt_to_date(point.date));
 	this.draw();
 }
 
