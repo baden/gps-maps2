@@ -192,6 +192,7 @@ class DBGeo(db.Model):
 			'vin': u[6],
 			'sats': u[7],
 			'fsource': u[8],
+			'fsourcestr': FSOURCE[u[8]],
 		}
 	def v_to_p(self, t):
 		return struct.pack(PACK_STR,
@@ -235,6 +236,15 @@ class DBGeo(db.Model):
 	def time(self, index):
 		return struct.unpack_from('i', self.bin, index * PACK_LEN)[0]
 
+	def find_item_index(self, t):
+		lo = 0
+		hi = self.count
+		while lo < hi:
+			mid = (lo+hi)//2
+			if self.time(mid) < t: lo = mid+1
+			else: hi = mid
+		return lo
+	
 	def add_point(self, point):
 		if self.count == 0:
 			self.bin = self.v_to_p(point)
@@ -256,51 +266,40 @@ class DBGeo(db.Model):
 		
 		# Версия №2. Вроде работает.
 
-		lo = 0
-		hi = self.count
-		while lo < hi:
-			mid = (lo+hi)//2
-			if self.time(mid) < t: lo = mid+1
-			else: hi = mid
+
+		lo = self.find_item_index(t)
 
 		if self.time(lo) == t:		# Элемент уже есть в базе (игнорируем)
 			return False
 
 		self.bin = self.bin[:lo*PACK_LEN] + self.v_to_p(point) + self.bin[lo*PACK_LEN:]
 		
-
-		"""
-		# Поиск места вставки
-		s = 0
-		e = self.count-1
-
-		while (s+1) < e:
-			m = (s+e) // 2
-			if self.time(m) > t:
-				e = m
-			else:
-				s = m
-
-		if self.time(s) == t:		# Элемент уже есть в базе (игнорируем)
-			return False
-
-		if self.time(e) == t:		# Элемент уже есть в базе (игнорируем)
-			return False
-
-		if self.time(s) > t:
-			p = s
-		else:
-			if self.time(e) < t:
-				p = e + 1
-			else:
-				p = e
-
-		# Вставляем данные
-		self.bin = self.bin[:p*PACK_LEN] + self.v_to_p(point) + self.bin[p*PACK_LEN:]
-		"""
-
 		self.i_count += 1
 		return True
+
+	def get_item_by_dt(self, pdt):
+		t = (pdt.hour & 3)*60*60 + pdt.minute * 60 + pdt.second
+		return self.get_item(self.find_item_index(t))
+
+	@classmethod
+	def key_by_date(cls, pdate):
+		return pdate.strftime("geo_%Y%m%d") + "%02d" % (pdate.hour & ~3)
+
+	@classmethod
+	def get_by_date(cls, skey, pdate):
+		return cls.get_by_key_name(cls.key_by_date(pdate), parent=skey)
+
+	@classmethod
+	def get_by_datetime(cls, skey, dtpoint):
+		#return cls.get_by_key_name(cls.key_by_date(pdate), parent=skey)
+		#dtpoint = local.toUTC(datetime.strptime(self.request.get("point"), "%d%m%Y%H%M%S"))
+		pointr = cls.get_by_date(skey, dtpoint)
+		if pointr:
+			point = pointr.get_item_by_dt(dtpoint)
+			return point
+		else:
+			return None
+
 
 class PointWorker(object):
 	def __init__(self, skey):
@@ -312,8 +311,10 @@ class PointWorker(object):
 		self.nrecs = 0
 
 	def Add_point(self, point):
+		if point is None: return
 		#h = point['time'].hour & ~3;
-		pkey = point['time'].strftime("geo_%Y%m%d") + "%02d" % (point['time'].hour & ~3)
+		#pkey = point['time'].strftime("geo_%Y%m%d") + "%02d" % (point['time'].hour & ~3)
+		pkey = DBGeo.key_by_date(point['time'])
 		#logging.info('PointWorker: Add_point(%s)' % pkey)
 		if pkey != self.last_pkey:
 			if self.last_pkey is not None:

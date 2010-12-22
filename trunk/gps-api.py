@@ -3,7 +3,8 @@
 import gc
 import logging
 
-from django.utils import simplejson as json
+#from django.utils import simplejson as json
+from repy import simplejson as json
 
 from google.appengine.ext import db
 from google.appengine.ext import webapp
@@ -12,7 +13,6 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 #from template import TemplatedPage
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
 import local
-
 
 from datetime import datetime, timedelta
 
@@ -352,10 +352,6 @@ class Geo_Get(webapp.RequestHandler):
 			self.response.out.write(json.dumps({'answer': None}) + "\r")
 			return
 
-		if skey=="123":
-			self.response.out.write(json.dumps({'info': 'not ready yet'}) + "\r")
-			return
-
 		system_key = db.Key(skey)
 
 		#pfrom = self.request.get("from")
@@ -369,7 +365,10 @@ class Geo_Get(webapp.RequestHandler):
 
 		recs = DBGeo.all().ancestor(system_key).filter("date >=", dhfrom).filter("date <=", dhto).order("date").fetch(1000)
 		points = []
+		l_lat = []	# Список индексов (lat, index)
+		l_lon = []	# Список индексов (lon, index)
 		counts = []
+		stops = []
 		plat = 0.0
 		plon = 0.0
 
@@ -383,6 +382,7 @@ class Geo_Get(webapp.RequestHandler):
 		b_lon_r = -180.0
 
 		maxp = 50
+		ind = 0 
 
 		for rec in recs:
 			if maxp == 0: break
@@ -402,13 +402,17 @@ class Geo_Get(webapp.RequestHandler):
 				plon = point['lon']
 				
 				points.append([
-					local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
+					#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
+					local.fromUTC(point['time']).strftime("%d%m%Y%H%M%S"),
 					plat, #point['lat'],
 					plon, #point['lon'],
 					int(point['course']),
 					#20,
 					int(round(log(DS/d, 2), 0)),
 				])
+				l_lat.append((plat, ind))
+				#l_lon.append((plon, ind))
+				ind += 1
 
 				b_lat_l = min(b_lat_l, plat)
 				b_lon_l = min(b_lon_l, plon)
@@ -428,20 +432,60 @@ class Geo_Get(webapp.RequestHandler):
 				
 
 		# Zoom для первой и последней точки наивысший (отображать всегда)
-		if len(points)>0:
+		plen = len(points) 
+		if plen>0:
 			points[0][-1] = 0
 			points[-1][-1] = 0
 
 		# Вычислим subbounds (TBD)
+		
+		# Разобьем на 8 частей по lat
+		l_lat.sort()
+		#l_lon.sort()
+		subbounds = []
+		for i in range(8):
+			l_lon = []
+			i1 = plen * i // 8
+			i2 = plen * (i+1) // 8
+			#logging.info('i1 = %s' % str(i1))
+			#logging.info('i2 = %s' % str(i2))
+			for i3 in xrange(i1, i2):
+				l_lon.append((points[l_lat[i3][1]][2], l_lat[i3][1]))
+			l_lon.sort()
+			for j in range(8):
+				sbl = []
+				j1 = len(l_lon) * j // 8
+				j2 = len(l_lon) * (j+1) // 8
+				#logging.info(' j1 = %s' % str(j1))
+				#logging.info(' j2 = %s' % str(j2))
+				nmin_lat = 180
+				nmax_lat = -180
+				for j3 in xrange(j1, j2):
+					nmin_lat = min(nmin_lat, points[l_lon[j3][1]][1])
+					nmax_lat = max(nmax_lat, points[l_lon[j3][1]][1])
+					sbl.append(l_lon[j3][1])
+				if(len(sbl)):
+					subbounds.append({
+						#'sw': (l_lat[i1][0], l_lon[j1][0]),
+						#'ne': (l_lat[i2-1][0], l_lon[j2-1][0]),
+						'sw': (nmin_lat, l_lon[j1][0]),
+						'ne': (nmax_lat, l_lon[j2-1][0]),
+						'i': sbl,
+					})
+				
+		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
 
 		jsonresp = {
 			'answer': 'ok',
-			'bcount': len(recs),
+			#'bcount': len(recs),
 			'count': len(points),
-			'counts': counts,
+			#'counts': counts,
 			'format': ["date", "lat", "lon", "course", "minzoom"],
 			'points': points, 
-			'bounds': ((b_lat_l, b_lon_l), (b_lat_r, b_lon_r)),
+			'bounds': {'sw': (b_lat_l, b_lon_l), 'ne': (b_lat_r, b_lon_r)},
+			'subbounds': subbounds,
+			#'slat': l_lat,
+			#'slon': l_lon,
 		}
 		self.response.out.write(json.dumps(jsonresp) + "\r")
 
@@ -462,6 +506,48 @@ class Geo_Get(webapp.RequestHandler):
 		#prof += "gc.get_objects()=%s\n" % repr(gc.get_objects())
 		logging.info(prof)
 
+class Geo_Info(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+		skey = self.request.get("skey")
+		if skey is None:
+			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		system_key = db.Key(skey)
+		dtpoint = local.toUTC(datetime.strptime(self.request.get("point"), "%d%m%Y%H%M%S"))
+		#pointr = DBGeo.get_by_date(system_key, dtpoint)
+		#point = None
+		#if pointr:
+		#	point = pointr.get_item_by_dt(dtpoint)
+
+		point = DBGeo.get_by_datetime(system_key, dtpoint)
+		
+		jsonresp = {
+			'answer': 'ok',
+			'point': {
+				#'count': pointr.i_count,
+				'lat': point['lat'],
+				'lon': point['lon'],
+				'speed': '%.1f' % point['speed'],
+				'course': point['course'],
+				'vout': '%.1f' % point['vout'],
+				'vin': '%.2f' % point['vin'],
+				'sats': point['sats'],
+				'fsource': point['fsourcestr'],
+			},
+			#'bcount': len(recs),
+			#'count': len(points),
+			#'counts': counts,
+			#'format': ["date", "lat", "lon", "course", "minzoom"],
+			#'points': points, 
+			#'bounds': {'sw': (b_lat_l, b_lon_l), 'ne': (b_lat_r, b_lon_r)},
+			#'subbounds': subbounds,
+			#'slat': l_lat,
+			#'slon': l_lon,
+		}
+		self.response.out.write(json.dumps(jsonresp) + "\r")
+
 application = webapp.WSGIApplication(
 	[
 	('/api/info.*', Info),
@@ -471,6 +557,7 @@ application = webapp.WSGIApplication(
 	('/api/geo/del.*', Geo_Del),
 	('/api/debug_geo.*', DebugGeo),
 	('/api/geo/get*', Geo_Get),
+	('/api/geo/info*', Geo_Info),
 	],
 	debug=True
 )
