@@ -9,7 +9,7 @@ import socket
 from glob import glob
 
 HOST = "127.0.0.1"
-PORT = 8080
+PORT = 80
 
 #HOST = "gps-maps2.appspot.com"
 #PORT = 80
@@ -71,6 +71,7 @@ def main():
 #	senddata(1)
 	for f in glob(IMAGE):
 		senddatav2(f)
+		#break
 	
 
 if __name__ == "__main__":

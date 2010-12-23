@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #from gc import get_objects
+import os
 import gc
 import logging
 
@@ -17,6 +18,8 @@ import local
 from datetime import datetime, timedelta
 
 API_VERSION = 1.0
+SERVER_NAME = os.environ['SERVER_NAME']
+
 
 class BaseApi(webapp.RequestHandler):
 	def parcer(self):
@@ -193,7 +196,7 @@ class GetGeo(webapp.RequestHandler):
 					self.response.out.write(',\n ')
 				self.response.out.write('{"id": %d, "cell": ["%s", %f, %f, %d, %f, %f, %f, %f, %d, "%s"]}' % (
 					isid,
-					r['time'].strftime("%Y-%m-%d %H:%M:%S"),	# dt
+					local.fromUTC(r['time']).strftime("%Y-%m-%d %H:%M:%S"),	# dt
 					#ptime.strftime("%Y-%m-%d"),	# dt
 					r['lat'],
 					r['lon'],
@@ -203,8 +206,9 @@ class GetGeo(webapp.RequestHandler):
 					r['vout'],
 					r['vin'],
 					r['fsource'],
+					r['fsourcestr'],
 					#rec.extend[p]
-					str(total)
+					#str(total)
 				))
 
 				isid = isid + 1
@@ -335,15 +339,18 @@ class Geo_Del(webapp.RequestHandler):
 	def post(self):
 		self.response.out.write(u"Не реализовано")
 
-class Geo_Get(webapp.RequestHandler):
+class Geo_GetO(webapp.RequestHandler):
 	def get(self):
 		from math import log
+
+		"""
 		prof = "gc START: %s\n" % dir(gc)
 		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
 		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
 		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
 		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
 		logging.info(prof)
+		"""
 
 		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
 
@@ -355,15 +362,15 @@ class Geo_Get(webapp.RequestHandler):
 		system_key = db.Key(skey)
 
 		#pfrom = self.request.get("from")
-		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%d%m%Y%H%M%S"))
-		dhfrom = datetime(dtfrom.year, dtfrom.month, dtfrom.day, dtfrom.hour, 0, 0)
+		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+		dhfrom = datetime(dtfrom.year, dtfrom.month, dtfrom.day, dtfrom.hour & ~7, 0, 0)
 
-		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%d%m%Y%H%M%S"))
-		dhto = datetime(dtto.year, dtto.month, dtto.day, dtto.hour, 0, 0)
+		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+		dhto = datetime(dtto.year, dtto.month, dtto.day, dtto.hour & ~7, 0, 0)
 
 		pto = self.request.get("to")
 
-		recs = DBGeo.all().ancestor(system_key).filter("date >=", dhfrom).filter("date <=", dhto).order("date").fetch(1000)
+		recs = DBGeo.all().ancestor(system_key).filter("date >=", dhfrom).filter("date <=", dhto).order("date")#.fetch(1000)
 		points = []
 		l_lat = []	# Список индексов (lat, index)
 		l_lon = []	# Список индексов (lon, index)
@@ -381,10 +388,13 @@ class Geo_Get(webapp.RequestHandler):
 		b_lat_r = -90.0
 		b_lon_r = -180.0
 
-		maxp = 50
+		maxp = 5000
 		ind = 0 
 
+		stop_start = None
+
 		for rec in recs:
+			logging.info('==> API:GEO:GET  fetch DBGeo[%s]' % rec.key().name())
 			if maxp == 0: break
 			else: maxp -= 1
 
@@ -393,6 +403,10 @@ class Geo_Get(webapp.RequestHandler):
 			#for i in xrange(c):
 			#	point = rec.get_item(i)
 			for point in rec.get_all():
+				if point['time'] < dtfrom:	# Это не очень оптимально, нужно заменить поиском
+					continue
+				if point['time'] > dtto:	# Это не очень оптимально, нужно заменить поиском
+					break
 
 				if maxp == 0: break
 				else: maxp -= 1
@@ -403,7 +417,7 @@ class Geo_Get(webapp.RequestHandler):
 				
 				points.append([
 					#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
-					local.fromUTC(point['time']).strftime("%d%m%Y%H%M%S"),
+					local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
 					plat, #point['lat'],
 					plon, #point['lon'],
 					int(point['course']),
@@ -412,24 +426,46 @@ class Geo_Get(webapp.RequestHandler):
 				])
 				l_lat.append((plat, ind))
 				#l_lon.append((plon, ind))
-				ind += 1
+
+				#if point['speed'] < 1.0:
+
+				if point['fsource'] in (2, 3, 7):
+					if stop_start is None:
+						stop_start = {}
+						stop_start['ind'] = ind
+						stop_start['lat'] = plat
+						stop_start['lon'] = plon
+				if point['fsource'] == 6:
+					if stop_start is not None:
+						stops.append({
+							'i': stop_start['ind'],
+							'p': (stop_start['lat'], stop_start['lon']),
+							's': ind,
+						})
+						stop_start = None
+				"""
+				if point['fsource'] in (2, 3, 7):
+					if stop_start is None:
+						stop_start = {}
+						stop_start['ind'] = ind
+						stop_start['lat'] = plat
+						stop_start['lon'] = plon
+						stops.append({'i': ind, 'p': (plat, plon)})
+					else:
+						if stop_start['lat'] != plat or stop_start['lon'] != plon:
+							stop_start['ind'] = ind
+							stop_start['lat'] = plat
+							stop_start['lon'] = plon
+							stops.append({'i': ind, 'p': (plat, plon)})
+				"""
+
 
 				b_lat_l = min(b_lat_l, plat)
 				b_lon_l = min(b_lon_l, plon)
 				b_lat_r = max(b_lat_r, plat)
 				b_lon_r = max(b_lon_r, plon)
-				"""
-				pl += 1
 
-				if pl >= 3:
-					d = max(MS, max(
-						abs(points[-1][1] - points[-2][1]), abs(points[-1][2] - points[-2][2]),
-						abs(points[-2][1] - points[-3][1]), abs(points[-2][2] - points[-3][2]),
-					))
-					points[-2][4] = int(round(log(DS/d, 2), 0))
-				"""
-				
-				
+				ind += 1
 
 		# Zoom для первой и последней точки наивысший (отображать всегда)
 		plen = len(points) 
@@ -481,14 +517,16 @@ class Geo_Get(webapp.RequestHandler):
 			'count': len(points),
 			#'counts': counts,
 			'format': ["date", "lat", "lon", "course", "minzoom"],
-			'points': points, 
+			'points': points,
+			'stops': stops,
 			'bounds': {'sw': (b_lat_l, b_lon_l), 'ne': (b_lat_r, b_lon_r)},
 			'subbounds': subbounds,
 			#'slat': l_lat,
 			#'slon': l_lon,
 		}
-		self.response.out.write(json.dumps(jsonresp) + "\r")
+		self.response.out.write(json.dumps(jsonresp, separators=(',',':')) + "\r")
 
+		"""
 		prof = "gc AFTER:\n"
 		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
 		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
@@ -505,9 +543,199 @@ class Geo_Get(webapp.RequestHandler):
 		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
 		#prof += "gc.get_objects()=%s\n" % repr(gc.get_objects())
 		logging.info(prof)
+		"""
+
+class Geo_Get(webapp.RequestHandler):
+	def get(self):
+		from math import log, sqrt
+
+		"""
+		prof = "gc START: %s\n" % dir(gc)
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		logging.info(prof)
+		"""
+
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		skey = self.request.get("skey")
+		if skey is None:
+			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		system_key = db.Key(skey)
+
+
+		#pfrom = self.request.get("from")
+		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+
+		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+
+
+		points = []
+		l_lat = []	# Список индексов (lat, index)
+		l_lon = []	# Список индексов (lon, index)
+		counts = []
+		stops = []
+		plat = 0.0
+		plon = 0.0
+
+		DS = 0.8
+		MS = DS/(2**20)
+
+		pl = 0
+		b_lat_l = 90.0
+		b_lon_l = 180.0
+		b_lat_r = -90.0
+		b_lon_r = -180.0
+
+		ind = 0 
+
+		stop_start = None
+
+		maxp = 5000
+		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, maxp):
+			d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
+			plat = point['lat']
+			plon = point['lon']
+				
+			points.append([
+				#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
+				local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
+				plat, #point['lat'],
+				plon, #point['lon'],
+				int(point['course']),
+				#20,
+				int(round(log(DS/d, 2), 0)),
+			])
+			l_lat.append((plat, ind))
+			#l_lon.append((plon, ind))
+
+			#if point['speed'] < 1.0:
+
+			if point['fsource'] in (2, 3, 7):
+				if stop_start is None:
+					stop_start = {}
+					stop_start['ind'] = ind
+					stop_start['lat'] = plat
+					stop_start['lon'] = plon
+			if point['fsource'] == 6:
+				if stop_start is not None:
+					stops.append({
+						'i': stop_start['ind'],
+						'p': (stop_start['lat'], stop_start['lon']),
+						's': ind,
+					})
+					stop_start = None
+			"""
+			if point['fsource'] in (2, 3, 7):
+				if stop_start is None:
+					stop_start = {}
+					stop_start['ind'] = ind
+					stop_start['lat'] = plat
+					stop_start['lon'] = plon
+					stops.append({'i': ind, 'p': (plat, plon)})
+				else:
+					if stop_start['lat'] != plat or stop_start['lon'] != plon:
+						stop_start['ind'] = ind
+						stop_start['lat'] = plat
+						stop_start['lon'] = plon
+						stops.append({'i': ind, 'p': (plat, plon)})
+			"""
+
+
+			b_lat_l = min(b_lat_l, plat)
+			b_lon_l = min(b_lon_l, plon)
+			b_lat_r = max(b_lat_r, plat)
+			b_lon_r = max(b_lon_r, plon)
+
+			ind += 1
+
+		# Zoom для первой и последней точки наивысший (отображать всегда)
+		plen = len(points) 
+		if plen>0:
+			points[0][-1] = 0
+			points[-1][-1] = 0
+
+		# Вычислим subbounds (TBD)
+		
+		# Разобьем на 8 частей по lat
+		l_lat.sort()
+		#l_lon.sort()
+		subbounds = []
+		sbs_lat = int(sqrt(plen) / 24) + 1
+		sbs_lon = int(sqrt(plen) / 24) + 1
+		for i in range(sbs_lat):
+			l_lon = []
+			i1 = plen * i // sbs_lat
+			i2 = plen * (i+1) // sbs_lat
+			#logging.info('i1 = %s' % str(i1))
+			#logging.info('i2 = %s' % str(i2))
+			for i3 in xrange(i1, i2):
+				l_lon.append((points[l_lat[i3][1]][2], l_lat[i3][1]))
+			l_lon.sort()
+			for j in range(sbs_lon):
+				sbl = []
+				j1 = len(l_lon) * j // sbs_lon
+				j2 = len(l_lon) * (j+1) // sbs_lon
+				#logging.info(' j1 = %s' % str(j1))
+				#logging.info(' j2 = %s' % str(j2))
+				nmin_lat = 180
+				nmax_lat = -180
+				for j3 in xrange(j1, j2):
+					nmin_lat = min(nmin_lat, points[l_lon[j3][1]][1])
+					nmax_lat = max(nmax_lat, points[l_lon[j3][1]][1])
+					sbl.append(l_lon[j3][1])
+				if(len(sbl)):
+					subbounds.append({
+						#'sw': (l_lat[i1][0], l_lon[j1][0]),
+						#'ne': (l_lat[i2-1][0], l_lon[j2-1][0]),
+						'sw': (nmin_lat, l_lon[j1][0]),
+						'ne': (nmax_lat, l_lon[j2-1][0]),
+						'i': sbl,
+					})
+				
+		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
+
+		jsonresp = {
+			'answer': 'ok',
+			#'bcount': len(recs),
+			'count': len(points),
+			#'counts': counts,
+			'format': ["date", "lat", "lon", "course", "minzoom"],
+			'points': points,
+			'stops': stops,
+			'bounds': {'sw': (b_lat_l, b_lon_l), 'ne': (b_lat_r, b_lon_r)},
+			'subbounds': subbounds,
+			#'slat': l_lat,
+			#'slon': l_lon,
+		}
+		self.response.out.write(json.dumps(jsonresp, separators=(',',':')) + "\r")
+
+		"""
+		prof = "gc AFTER:\n"
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		logging.info(prof)
+
+		gc.collect()
+
+		prof = "gc COLLECT:\n"
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		#prof += "gc.get_objects()=%s\n" % repr(gc.get_objects())
+		logging.info(prof)
+		"""
 
 class Geo_Info(webapp.RequestHandler):
 	def get(self):
+		from time import sleep
 		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
 		skey = self.request.get("skey")
 		if skey is None:
@@ -515,7 +743,7 @@ class Geo_Info(webapp.RequestHandler):
 			return
 
 		system_key = db.Key(skey)
-		dtpoint = local.toUTC(datetime.strptime(self.request.get("point"), "%d%m%Y%H%M%S"))
+		dtpoint = local.toUTC(datetime.strptime(self.request.get("point"), "%y%m%d%H%M%S"))
 		#pointr = DBGeo.get_by_date(system_key, dtpoint)
 		#point = None
 		#if pointr:
@@ -546,7 +774,54 @@ class Geo_Info(webapp.RequestHandler):
 			#'slat': l_lat,
 			#'slon': l_lon,
 		}
+		if SERVER_NAME=='localhost':
+			sleep(0.3)
 		self.response.out.write(json.dumps(jsonresp) + "\r")
+
+class Geo_Dates(webapp.RequestHandler):
+	def get(self):
+		from bisect import insort
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+		skey = self.request.get("skey")
+		if skey is None:
+			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		system_key = db.Key(skey)
+
+		req = DBGeo.all(keys_only=True).ancestor(system_key).order('-date').fetch(1000)
+
+		#dates = []
+		#months = []
+		dlen = 0
+		years = {}
+		for rec in req:
+			dt = rec.name()[4:12]
+			y = dt[0:4]
+			m = dt[4:6]
+			d = dt[6:8]
+			if y not in years:
+				years[y] = {}
+
+			if m not in years[y]:
+				years[y][m] = []
+
+			if d not in years[y][m]:
+				insort(years[y][m], d)
+				dlen+=1;
+
+			#if dt not in dates:
+			#	dates.append("%s" % dt)
+
+		jsonresp = {
+			'answer': 'ok',
+			#'dates': dates,
+			#'months': months,
+			'years': years,
+			'len': dlen,
+		}
+
+		self.response.out.write(json.dumps(jsonresp, sort_keys=True) + "\r")
 
 application = webapp.WSGIApplication(
 	[
@@ -557,7 +832,9 @@ application = webapp.WSGIApplication(
 	('/api/geo/del.*', Geo_Del),
 	('/api/debug_geo.*', DebugGeo),
 	('/api/geo/get*', Geo_Get),
+	('/api/geo/dates*', Geo_Dates),
 	('/api/geo/info*', Geo_Info),
+	#('/api/geo/test*', Geo_Test),
 	],
 	debug=True
 )

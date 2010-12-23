@@ -32,8 +32,18 @@ function add_geo_row(label, value) {
 	$('#tbl_info tbody').append('<tr><td>'+label+'</td><td><b>'+value+'</b></td></tr>');
 }
 
+function more_info(data){
+	//$("#moreinfo").html("Ура: " + ":" + data.answer);
+	$("#moreinfo").html('');
+	add_geo_row('Спутники', data.point.sats);
+	add_geo_row('Скорость', data.point.speed + 'км/ч');
+	add_geo_row('Основное питание', data.point.vout + 'В');
+	add_geo_row('Резервное питание', data.point.vin + 'В');
+	add_geo_row('Тип метки', data.point.fsource);
+}
+
 function dt_to_date(dt){
- return dt[0]+dt[1] + '/' + dt[2]+dt[3] + '/' + dt[4]+dt[5]+dt[6]+dt[7] + ' ' + dt[8]+dt[9] + ':' + dt[10]+dt[11] + ':' + dt[12]+dt[13];
+	return dt[4]+dt[5] + '/' + dt[2]+dt[3] + '/20' + dt[0]+dt[1] + ' ' + dt[6]+dt[7] + ':' + dt[8]+dt[9] + ':' + dt[10]+dt[11];
 }
 
 MyMarker.prototype.Info = function() {
@@ -43,7 +53,7 @@ MyMarker.prototype.Info = function() {
 	console.log("skey = " + skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
-		'<div class="info-header">' + dt_to_date(point.date) + "</div>" +
+		'<div style="width: 220px; height: 220px; border: none;"><div class="info-header">' + dt_to_date(point.date) + "</div>" +
 		/*'Скорость: <b>' + point.speed.toFixed(1) + " км/ч" +*/
 		'<table id="tbl_info" width="100%">' +
 		'<tr><td>Направление:</td><td><b>' + point.angle.toFixed(0) + "°</b></td></tr>" +
@@ -54,23 +64,42 @@ MyMarker.prototype.Info = function() {
 		/*'</b><br />Датчик 1: <b>' + results[i].in1.toFixed(3) +
 		'</b><br />Датчик 2: <b>' + results[i].in2.toFixed(3) +*/
 		'</table>' + 
-		'<div id="moreinfo" title="Ожидайте, идет получение дополнительной информации."><center><img src="/images/loading.gif" /></center></div>',
+		'<div id="moreinfo" title="Ожидайте, идет получение дополнительной информации."><center><img src="/images/loading.gif" /></center></div></div>',
 		position: point,
 	});
 	//self = this;
-	//google.maps.event.addListener(this.infowindow, 'domready', function(){
 		//$('#moreinfo').slideUp().delay(300).fadeIn();
 		//$("#moreinfo").animate({left:'+=200'},2000);
+		var self = this;
 		url = "/api/geo/info?skey="+skey+"&point="+point.date;
 		$.getJSON(url, function (data) {
 			//$("#progress").html("Обрабатываем...");
 			console.log("JSON data: " + data);
 			if (data.answer && data.answer === 'ok'){
-				$("#moreinfo").html("Ура: " + ":" + data.answer);
-				add_geo_row('Спутники', data.point.sats);
-				add_geo_row('Скорость', data.point.speed + 'км/ч');
-				add_geo_row('Основное питание', data.point.vout + 'В');
-				add_geo_row('Резервное питание', data.point.vin + 'В');
+				/*this.infowindow.close();
+				this.infowindow = new google.maps.InfoWindow({content:
+					position: point,
+				});*/
+
+				//if(!$('#tbl_info tbody')){ sleep(10); }
+
+				if($('#tbl_info tbody')){
+					$('#tbl_info tbody').ready(function(){
+						console.log("JSON data: jquery domready.");
+						more_info(data);
+					});
+					//console.log("JSON data: ready on request.");
+					//more_info(data);
+				}/*else{
+					$('#tbl_info tbody').ready(function(){
+						console.log("JSON data: jquery domready.");
+						more_info(data);
+						}); 
+				}*/
+				//google.maps.event.addListener(self.infowindow, 'domready', function(){
+				//	console.log("JSON data: domready");
+				//	more_info(data);
+				//});
 			}
 			/*console.log("getJSON parce");
 			if (data.answer && data.points.length > 0) {
@@ -78,7 +107,6 @@ MyMarker.prototype.Info = function() {
 			}*/
 		});
 
-	//});
 //	infowindow.open(map, map.getMarker(i));
 	this.infowindow.open(map);
 }
@@ -121,8 +149,8 @@ MyMarker.prototype.onAdd = function() {
 		// We'll use these coordinates to resize the DIV.
 		//var divpx = overlayProjection.fromLatLngToDivPixel(this.marker.div.point);
 
-		arrdiv.style.left = parseInt(this.marker.div.style.left) - 13 + 'px';
-		arrdiv.style.top = parseInt(this.marker.div.style.top) - 13 + 'px';
+		arrdiv.style.left = parseInt(this.marker.div.style.left, 10) - 13 + 'px';
+		arrdiv.style.top = parseInt(this.marker.div.style.top, 10) - 13 + 'px';
 
 		/*this.marker.arrdiv.style.display = "block";*/
 
@@ -156,7 +184,7 @@ MyMarker.prototype.onAdd = function() {
 	this.panes = panes;
 //	panes.overlayLayer.appendChild(div);
 //  	panes.overlayLayer.appendChild(arrdiv);
-	/*panes.overlayMouseTarget.appendChild(arrdiv);*/
+//	panes.overlayMouseTarget.appendChild(arrdiv);
 	panes.overlayMouseTarget.appendChild(div);
 //	panes.floatPane.appendChild(div);
 
