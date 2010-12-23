@@ -62,7 +62,8 @@ class DBSystem(db.Model):
 	date = db.DateTimeProperty(auto_now_add=True)				# Дата регистрации системы
 	desc = db.StringProperty(multiline=False, default=u"Нет описания")			# Описание
 	premium = db.DateTimeProperty(auto_now_add=True)			# Дата окончания премиум-подписки (абон-плата).
-										# Без премиум-подписки функционал ограничен.										# история ограничена 14 днями, и т.д.
+										# Без премиум-подписки функционал ограничен.
+										# история ограничена 14 днями, и т.д.
 	@property
 	def ldate(self):
 		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
@@ -105,24 +106,23 @@ class DBLastPos(db.Model):
  Гео-данные
 
  Данные хранятся пачками.
- Каждатя пачка данных содержит точки за 4 часа времени.
+ Каждатя пачка данных содержит точки за 8 часов времени.
  Запись имеет ключ вида: geo_YYYYMMDDHH
  где
 	YYYY - год
 	MM - месяц
 	DD - день
-	HH - часы [00,04,08,12,16,20]
- Максимальное количество точек в одной записи = 60*60*4 = 14400 точек (*64 = 921600 байт)
- Необходимо позаботиться о том, чтобы размер одной записи не превысил 72 байт. (ограничение пачки в 1 МБ)
+	HH - часы [00,08,16]
+ Максимальное количество точек в одной записи = 60*60*8 = 28800 точек (*36 = 1036800 байт ~ 0.99МБ)
 
  !Предложение!
- По результатам реальных тестов, оказывается что очень много пакетов содержит всего 24 точки (6 точек в час).
+ По результатам реальных тестов, оказывается что очень много пакетов содержит всего 48 точки (6 точек в час).
  Предлагается переделать процедуру сохранения точек по принципу:
  создается один пакет для точек за сутки:
   ключ вида: geo_YYYYMMDD
  В него добавляются точки как обычно.
- Если при очередном добавлении количество точек достигает 14400 штук, то создаются пакеты
-  geo_YYYYMMDDHH (столько сколько нужно с шагом 4 часа) и работа с ними идет как обычно.
+ Если при очередном добавлении количество точек достигает 28800 штук, то создаются пакеты
+  geo_YYYYMMDDHH (столько сколько нужно с шагом 8 часов) и работа с ними идет как обычно.
 
  Т.е. другими словами при поиске точек в Workere, сначала ищется пакет с ключем geo_YYYYMMDD, и если таковой не
  найден, то пакет с ключем geo_YYYYMMDDHH.
@@ -146,9 +146,10 @@ FSOURCE = {
 	11: "DELTA",
 }
 
-PACK_STR = 'iffffffBBBBiiiiiiii'
-#           ^^^^^^^^^^^-------- Reserve
-#           │││││││││││
+#PACK_STR = 'iffffffBBBBiiiiiiii'
+PACK_STR = 'iffffffBBBBi'
+#           ^^^^^^^^^^^^
+#           │││││││││││└ res3 (int)
 #           ││││││││││└─ res2 (byte)
 #           │││││││││└── res1 (byte)
 #           ││││││││└─── fsource (byte)
@@ -160,7 +161,10 @@ PACK_STR = 'iffffffBBBBiiiiiiii'
 #           ││└───────── lon (float)
 #           │└────────── lat (float)
 #           └─────────── seconds (int)
-PACK_LEN = 64
+PACK_LEN = 36
+MAX_RECS = 1024*1024//PACK_LEN		# Максимальное количество точей в одной записи
+
+assert(struct.calcsize(PACK_STR) == PACK_LEN)
 # !!! time должен всегда! идти первым и иметь тип int(i)
 
 class DBGeo(db.Model):
@@ -205,7 +209,7 @@ class DBGeo(db.Model):
 			t['vin'],
 			t['sats'],
 			t['fsource'],
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0	# Reserve
+			0, 0, 0#,  0, 0, 0, 0, 0, 0, 0	# Reserve
 		)
 
 
@@ -244,8 +248,13 @@ class DBGeo(db.Model):
 			if self.time(mid) < t: lo = mid+1
 			else: hi = mid
 		return lo
+
+	def test_4_sort(self):
+		logging.info('-------- Test 4 sort TBD --------------')
+		return True
 	
 	def add_point(self, point):
+		#logging.info('--------  add_point --------------')
 		if self.count == 0:
 			self.bin = self.v_to_p(point)
 			self.i_count = 1
@@ -254,6 +263,7 @@ class DBGeo(db.Model):
 		t = point['seconds']
 
 		# Как правило данные поступают последовательно и нет смысла искать место вставки, просто нужно добавить данные в конец
+		
 		if t > self.time(self.count-1):
 			self.bin += self.v_to_p(point)
 			self.i_count += 1
@@ -269,21 +279,24 @@ class DBGeo(db.Model):
 
 		lo = self.find_item_index(t)
 
+		#if lo < self.count:
 		if self.time(lo) == t:		# Элемент уже есть в базе (игнорируем)
 			return False
 
 		self.bin = self.bin[:lo*PACK_LEN] + self.v_to_p(point) + self.bin[lo*PACK_LEN:]
+
+		#self.test_4_sort()
 		
 		self.i_count += 1
 		return True
 
 	def get_item_by_dt(self, pdt):
-		t = (pdt.hour & 3)*60*60 + pdt.minute * 60 + pdt.second
+		t = (pdt.hour & 7)*60*60 + pdt.minute * 60 + pdt.second
 		return self.get_item(self.find_item_index(t))
 
 	@classmethod
 	def key_by_date(cls, pdate):
-		return pdate.strftime("geo_%Y%m%d") + "%02d" % (pdate.hour & ~3)
+		return pdate.strftime("geo_%Y%m%d") + "%02d" % (pdate.hour & ~7)
 
 	@classmethod
 	def get_by_date(cls, skey, pdate):
@@ -300,6 +313,25 @@ class DBGeo(db.Model):
 		else:
 			return None
 
+	@classmethod
+	def get_items_by_range(cls, system_key, dtfrom, dtto, maxp):
+		dhfrom = datetime(dtfrom.year, dtfrom.month, dtfrom.day, dtfrom.hour & ~7, 0, 0)
+		dhto = datetime(dtto.year, dtto.month, dtto.day, dtto.hour & ~7, 0, 0)
+		recs = DBGeo.all().ancestor(system_key).filter("date >=", dhfrom).filter("date <=", dhto).order("date")#.fetch(1000)
+		for rec in recs:
+			logging.info('==> API:GEO:GET  fetch DBGeo[%s]' % rec.key().name())
+			if maxp == 0: break
+			for point in rec.get_all():
+				if point['time'] < dtfrom:	# Это очень не оптимально, нужно заменить поиском (TBD)
+					continue
+				if point['time'] > dtto:
+					break
+
+				if maxp == 0: break
+				else: maxp -= 1
+
+				yield point
+
 
 class PointWorker(object):
 	def __init__(self, skey):
@@ -312,8 +344,8 @@ class PointWorker(object):
 
 	def Add_point(self, point):
 		if point is None: return
-		#h = point['time'].hour & ~3;
-		#pkey = point['time'].strftime("geo_%Y%m%d") + "%02d" % (point['time'].hour & ~3)
+		#h = point['time'].hour & ~7;
+		#pkey = point['time'].strftime("geo_%Y%m%d") + "%02d" % (point['time'].hour & ~7)
 		pkey = DBGeo.key_by_date(point['time'])
 		#logging.info('PointWorker: Add_point(%s)' % pkey)
 		if pkey != self.last_pkey:
@@ -325,14 +357,14 @@ class PointWorker(object):
 				self.rec = DBGeo(
 					parent = self.system_key,
 					key_name = pkey,
-					date = datetime(point['time'].year, point['time'].month, point['time'].day, point['time'].hour & ~3, 0, 0)
+					date = datetime(point['time'].year, point['time'].month, point['time'].day, point['time'].hour & ~7, 0, 0)
 				)
 				self.nrecs = 0
 			else:
 				self.nrecs = self.rec.count
 
 		#point['seconds'] = point['time'].minute * 60 + point['time'].second
-		point['seconds'] = (point['time'].hour & 3)*60*60 + point['time'].minute * 60 + point['time'].second
+		point['seconds'] = (point['time'].hour & 7)*60*60 + point['time'].minute * 60 + point['time'].second
 
 		change = self.rec.add_point(point)
 		if change:

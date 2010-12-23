@@ -1,3 +1,4 @@
+var show_bounds = false;
 
 var map = null;
 var ruler1 = null;
@@ -15,6 +16,8 @@ var showed_path = [];
 var flightPath = null; //[];
 var flightPathBounds = null;
 //var fpi = 0;
+
+var stop_markers = [];
 
 function Profile(name){
 	this.name = name;
@@ -109,6 +112,54 @@ mLatLng = function(la, lo, z){
 mLatLng.prototype = new google.maps.LatLng.prototype.constructor();
 */
 
+function dt_to_Date(d){
+/*	var h = parseInt(d.slice(6, 8), 10);
+	var dat = new Date(
+			parseInt('20' + d[0]+d[1], 10),	// год
+			parseInt(d[2]+d[3], 10) - 1,	// месяц
+			parseInt(d[4]+d[5], 10),	// день
+			parseInt(d[6]+d[7], 10),	// часы
+			parseInt(d[8]+d[9], 10),	// минуты
+			parseInt(d[10]+d[11], 10)	// секунды
+	);
+	console.log('d=' + d + ' h:' + h + '  new Date =', dat);
+	return dat;
+*/
+	return new Date(
+			parseInt('20' + d[0]+d[1], 10),	// год
+			parseInt(d[2]+d[3], 10) - 1,	// месяц
+			parseInt(d[4]+d[5], 10),	// день
+			parseInt(d[6]+d[7], 10),	// часы
+			parseInt(d[8]+d[9], 10),	// минуты
+			parseInt(d[10]+d[11], 10)	// секунды
+	);
+
+}
+
+function t_to_hms(d){
+	var minutes = (d - (d % 60)) / 60;
+	var hours = (minutes - (minutes % 60)) / 60;
+	minutes = minutes % 60;
+	var seconds = d % 60;
+	if(hours) return hours + ' ч ' + minutes + ' мин ' + seconds + ' сек';
+	else if(minutes) return minutes + ' мин ' + seconds + ' сек';
+	else return seconds + ' сек';
+}
+
+var Image_Stop = new google.maps.MarkerImage(
+	'/images/marker-stop.png',
+	new google.maps.Size(16, 16),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(7, 15)
+)
+
+var Image_Halt = new google.maps.MarkerImage(
+	'/images/marker-halt.png',
+	new google.maps.Size(16, 16),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(7, 15)
+)
+
 var ParcePath = function(data){
 	var profile = new Profile("GetPath");
 
@@ -123,6 +174,13 @@ var ParcePath = function(data){
 		l.angle = data.points[i][3];
 		l.zoom = data.points[i][4];
 		flightPlanCoordinates.push(l);
+		/*
+		if(i>0){
+			if(data.points[i][0]<data.points[i-1][0]){
+				console.log("========= ERROR in ", i);
+			}
+		}
+		*/
 	}
 
 	flightPathBounds = new google.maps.LatLngBounds(
@@ -165,29 +223,74 @@ var ParcePath = function(data){
 		));
 		sub_bound_indexes.push(data.subbounds[i].i);
 	}
-	/*
-	if(sub_bound_rectangles.length==0){
+
+	if(show_bounds){
 		for(var i in sub_bounds){
-			sub_bound_rectangles.push(
-				new google.maps.Rectangle({
-					bounds: sub_bounds[i],
-					map: map,
-					clickable: false,
-					fillColor: "#00FF00",
-					fillOpacity: 0.1,
-					strokeColor: "#00FF00",
-					strokeOpacity: 1.0,
-					strokeWeight: 1
-				})
-			);
+			if(sub_bound_rectangles.length <= i){
+				sub_bound_rectangles.push(
+					new google.maps.Rectangle({
+						bounds: sub_bounds[i],
+						map: map,
+						clickable: false,
+						fillColor: "#00FF00",
+						fillOpacity: 0.1,
+						strokeColor: "#00FF00",
+						strokeOpacity: 1.0,
+						strokeWeight: 1
+					})
+				);
+			} else {
+				sub_bound_rectangles[i].setBounds(sub_bounds[i]);
+			}
 		}
-	} else {
-		for(var i in sub_bounds){
-			sub_bound_rectangles[i].setBounds(sub_bounds[i]);
+		if(sub_bound_rectangles.length > sub_bounds.length){
+			for(var i=sub_bounds.length; i<sub_bound_rectangles.length; i++){
+				sub_bound_rectangles[i].setBounds(null);
+			}
 		}
 	}
-	*/
 
+	profile.show();
+
+	console.log("Clear stop_markers...");
+	for(var i in stop_markers){
+		stop_markers[i].setMap(null);
+	}
+	stop_markers = [];
+	console.log("Make stop_markers...");
+	for(var i in data.stops){
+		var dt = (dt_to_Date(data.points[data.stops[i].s][0]) - dt_to_Date(data.points[data.stops[i].i][0])) / 1000;
+		var tp = '';
+		var icon;
+
+		var d1 = dt_to_Date(data.points[data.stops[i].s][0]);
+		var d2 = dt_to_Date(data.points[data.stops[i].i][0]);
+
+		//console.log('src:' + data.points[data.stops[i].s][0] + ' , ' + data.points[data.stops[i].i][0]);
+		//console.log('dt=', dt, ' ', d1, '(', d1.getTime(), '-', d2, '(', d2.getTime());
+
+		if(dt > 5*60) {
+			tp = 'стоянка ';
+			icon = Image_Stop;
+		} else {
+			tp = 'остановка ';
+			icon = Image_Halt;
+		}
+		stop_markers.push(
+			//var d = data.points[data.stops[i].i][0];
+			new google.maps.Marker({
+		        	position: new google.maps.LatLng(data.stops[i].p[0], data.stops[i].p[1]),
+			        map: map,
+				title:
+					tp + t_to_hms(dt) +
+					'\n' + dt_to_date(data.points[data.stops[i].i][0]) + '...' + dt_to_date(data.points[data.stops[i].s][0]),
+				icon: icon,
+			        draggable: false,
+				zIndex: -1000
+			})
+		);
+	}
+	console.log('Stop markers: ', data.stops.length);
 	profile.show();
 
 	DrawPlyline();
@@ -272,7 +375,7 @@ var UpdateMarker = function (moev){
 	if(showed_path.length == 0) return;
 
 	var mapzoom = map.getZoom();
-	var size = 0.005*Math.pow(2,13-mapzoom);
+	var size = 0.003*Math.pow(2,13-mapzoom);
 	if(size < 0.0001) size = 0.0001;
 	var clat = Math.cos(moev.latLng.lat() * Math.PI / 180);
 	if(clat < 0.0001) clat = 0.0001;
@@ -286,21 +389,22 @@ var UpdateMarker = function (moev){
 	//rulers[0].setPosition(bound.getSouthWest());
 	//rulers[1].setPosition(bound.getNorthEast());
 
-	/*
-	if(!search_bound_rectangle){
-		search_bound_rectangle = new google.maps.Rectangle({
-			bounds: bound,
-			map: map,
-			fillColor: "#00FFFF",
-			fillOpacity: 0.1,
-			strokeColor: "#00FFFF",
-			strokeOpacity: 1.0,
-			strokeWeight: 1
-		});
-	} else {
-		search_bound_rectangle.setBounds(bound);
+	
+	if(show_bounds){
+		if(!search_bound_rectangle){
+			search_bound_rectangle = new google.maps.Rectangle({
+				bounds: bound,
+				map: map,
+				fillColor: "#00FFFF",
+				fillOpacity: 0.1,
+				strokeColor: "#00FFFF",
+				strokeOpacity: 1.0,
+				strokeWeight: 1
+			});
+		} else {
+			search_bound_rectangle.setBounds(bound);
+		}
 	}
-	*/
 
 	// Highlight intersect bounds and search in bounded points
 	var total_points = 0;
@@ -310,7 +414,9 @@ var UpdateMarker = function (moev){
 	if(sub_bound_indexes.length != 0){
 		for(var i in sub_bounds){
 			if(bound.intersects(sub_bounds[i])){
-				//sub_bound_rectangles[i].setOptions({strokeWeight: 3, fillOpacity:0.3});
+				if(show_bounds){
+					sub_bound_rectangles[i].setOptions({strokeWeight: 3, fillOpacity:0.3});
+				}
 				total_points += sub_bound_indexes[i].length;
 
 				for(var j in sub_bound_indexes[i]){
@@ -326,7 +432,9 @@ var UpdateMarker = function (moev){
 				}
 
 			} else {
-				//sub_bound_rectangles[i].setOptions({strokeWeight: 1, fillOpacity:0.1});
+				if(show_bounds){
+					sub_bound_rectangles[i].setOptions({strokeWeight: 1, fillOpacity:0.1});
+				}
 			}
 		}
 	}
@@ -525,5 +633,66 @@ var ClearPath = function(skey){
 	showed_path = []
 	console.log(" - purge points on map");
 	if(flightPath) flightPath.setPath(showed_path);
+	console.log("Clear stop_markers...");
+	for(var i in stop_markers){
+		stop_markers[i].setMap(null);
+	}
+	stop_markers = [];
 	profile.show();
+}
+
+function SetDay(skey, date){
+	var from = date+'000000';
+	var to = date+'235959';
+	console.log("::SetDay.start date=" + date + " from:" + from + " to:" + to);
+	GetPath(skey, from, to);
+}
+
+var dbg_data = null;
+
+function DayList(skey){
+	console.log("::DayList.start");
+	url = "/api/geo/dates?skey="+skey;
+	$.getJSON(url, function (data) {
+		//$("#progress").html("Обрабатываем...");
+		console.log("::DayList: getJSON parce " + data.years);
+		dbg_data = data;
+		if (data.answer && data.len > 0) {
+			$("#daylist").accordion( "destroy" );
+			for(var i in data.years){
+				var m = data.years[i];
+				var item = '<h3><a href="#">' + i + '</a></h3>';
+				console.log('year:' + i);
+				item += '<div class="list_months">';
+				for(var j in m){
+					item += '<h3><a href="#">' + j + '/' + i + '</a></h3><div>';
+					var d = m[j];
+
+					//item += '<ul class="list_days">';
+					for(var k in d){
+						item += '<a href="javascript:SetDay(\''+skey +'\',\''+(i%100)+j+d[k]+'\');">' + d[k] + '</a> ';
+					}
+					//item += '</ul>';
+					item += '</div>';
+
+					//item += '</li>';
+				}
+				item += '</div>';
+				//item += '</li>';
+				//$("#daylist").append('<li><a href="javascript:SetDay(\''+skey +'\',\''+d+'\');">'+d[4]+d[5]+'/'+d[2]+d[3]+'/20'+d[0]+d[1]+'</a></li>');
+				//$("#daylist").append('<li><a href="javascript:SetDay(\''+skey +'\',\''+d+'\');">'+i+'</a></li>');
+				//$("#daylist").append(item);
+				$("#daylist").html(item);
+				/*$(".list_days").sortable();
+				$(".list_days").disableSelection();
+				$(".list_months").sortable();
+				$(".list_months").disableSelection();*/
+				$("#daylist").accordion();
+				$(".list_months").accordion();
+			}
+			//$("button").button();
+		}
+	});
+	console.log("::DayList.end");
+
 }
