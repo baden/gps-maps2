@@ -20,27 +20,53 @@ from datetime import datetime, timedelta
 API_VERSION = 1.0
 SERVER_NAME = os.environ['SERVER_NAME']
 
-
 class BaseApi(webapp.RequestHandler):
 	def parcer(self):
 		return {"responseData": None}
 
 	def get(self):
 		self.response.headers['Content-Type']   = 'text/javascript; charset=utf-8'
-		callback = self.request.get('callback')
-		
+		#callback = self.request.get('callback')
+
 		acckey = self.request.get('acckey', None)
 		syskey = self.request.get('syskey', None)
 		
-		nejson = json.dumps(self.parcer())
-		self.response.out.write(callback + "(" + nejson + ")\r")
+		nejson = json.dumps(self.parcer(acckey = acckey), indent=2)
+		#self.response.out.write(callback + "(" + nejson + ")\r")
+		self.response.out.write(nejson + "\r")
 
 class Version(BaseApi):
 	def parcer(self):
 		return {"version": API_VERSION}
 
 class Info(BaseApi):
-	def parcer(self):
+	def parcer(self, acckey=None, **argw):
+		#if ('acckey' not in argw) or (argw['acckey'] is None):
+		if acckey is None:
+			return {"answer": "no", "reason": "acckey not defined or None"};
+
+		account = DBAccounts.get(db.Key(acckey))
+		lsys = []
+		for sys in account.systems:
+			lsys.append({
+				"key": str(sys.key()),
+				"imei": sys.imei,
+				"phone": sys.phone,
+				"desc": sys.desc,
+				"premium": sys.premium >= datetime.now(),
+			})
+		#accinfo["systems"] = lsys
+		accinfos = {
+			'key': "%s" % account.key(),
+			'name': account.name,
+			'user': {
+				'email': account.user.email(),
+				'id': account.user.user_id(),
+			},
+			'systems': lsys,
+		}
+
+		"""
 		accounts = DBAccounts.all().fetch(100)
 		accinfos = []
 		for rec in accounts:
@@ -63,9 +89,18 @@ class Info(BaseApi):
 				})
 			accinfo["systems"] = lsys
 			accinfos.append(accinfo)
+		"""
+
+		sysinfos = []
+		systems = DBSystem.all(keys_only=True).fetch(1000)
+		for rec in systems:
+			sysinfos.append({'imei': rec.name()[4:], 'key': "%s" % rec, })
+
 		jsonresp = {
-			"info": {
-				"accounts": accinfos,
+			'answer': 'ok',
+			'info': {
+				'account': accinfos,
+				'systems': sysinfos,
 			}
 		}
 		return jsonresp
@@ -823,6 +858,27 @@ class Geo_Dates(webapp.RequestHandler):
 
 		self.response.out.write(json.dumps(jsonresp, sort_keys=True) + "\r")
 
+class Sys_Add(BaseApi):
+	def parcer(self, acckey=None, **argw):
+		if acckey is None:
+			return {'answer': 'no', 'reason': 'acckey not defined or None'};
+
+		account = DBAccounts.get(db.Key(acckey))
+		if account is None:
+			return {'result': 'account not found'}
+
+		imei = self.request.get('imei', None)
+		if imei is None:
+			return {'result': 'imei not defined'}
+
+		res = account.AddSystem(imei)
+		if res == 0:
+			return {'result': 'not found'}
+		elif res == 2:
+			return {'result': 'already'}
+		return {'result': 'added'}
+
+
 application = webapp.WSGIApplication(
 	[
 	('/api/info.*', Info),
@@ -834,6 +890,7 @@ application = webapp.WSGIApplication(
 	('/api/geo/get*', Geo_Get),
 	('/api/geo/dates*', Geo_Dates),
 	('/api/geo/info*', Geo_Info),
+	('/api/sys/add*', Sys_Add),
 	#('/api/geo/test*', Geo_Test),
 	],
 	debug=True

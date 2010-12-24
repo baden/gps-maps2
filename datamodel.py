@@ -27,7 +27,8 @@ class DBAccounts(db.Expando):
 		#return 'aaa'
 		system_list = []
 		for rec in self.systems_key:
-			system_list.append(db.get(rec))
+			s = db.get(rec)
+			if s is not None: system_list.append(s)
 		return system_list
 
 	def RegisterSystem(self, imei):
@@ -39,6 +40,17 @@ class DBAccounts(db.Expando):
 		if system.key() not in self.systems_key:
 			self.systems_key.append(system.key())
 			self.put()
+
+	def AddSystem(self, imei):
+		system = DBSystem.get_by_key_name("sys_%s" % imei)
+		if system is None:
+			return 0
+
+		if system.key() not in self.systems_key:
+			self.systems_key.append(system.key())
+			self.put()
+			return 1
+		return 2
 
 	@property
 	def single(self):

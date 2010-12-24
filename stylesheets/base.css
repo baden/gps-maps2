@@ -13,14 +13,16 @@ html, body {
 
 body {
 	/*background-color: grey;*/
+	font-size: 75%;
+	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
 }
 
 h1 {
-	font-size: 1.2em;
+	/*font-size: 1.2em;*/
 }
 
 h2 {
-	font-size: 1.1em;
+	/*font-size: 1.1em;*/
 }
 
 #map {
@@ -28,4 +30,11 @@ h2 {
 	height: 100%;
 	/*cursor: pointer;*/
 }
+
+
+/*
+.ui-widget {
+	font-size: 1.0em !important;
+}
+*/
 
