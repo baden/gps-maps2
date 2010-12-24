@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <link type="text/css" href="/stylesheets/base.css" rel="stylesheet">
+
+  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/cupertino/jquery-ui.css" rel="stylesheet"/-->
+  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/flick/jquery-ui.css" rel="stylesheet" /-->
+  <link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/humanity/jquery-ui.css" rel="stylesheet" />
+  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/redmond/jquery-ui.css" rel="stylesheet" /-->
+
+  <!--link type="text/css" href="/stylesheets/map.css" rel="stylesheet" /-->
+
+  <script type="text/javascript" src="/js/jquery.min.js"></script>
+  <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script-->
+  <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
+
+  <script>
+
+	function UpdateSysList(){
+		$.getJSON("/api/info?acckey={{ account.key }}", function (data) {
+			if(data){
+				$("#config_sys_list").empty();
+				for(var i in data.info.account.systems){
+				$("#config_sys_list").append('<li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>IMEI:'+data.info.account.systems[i].imei+' '+data.info.account.systems[i].desc+'</li>');
+				/*$("#config_sys_list").append('<li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>2</li>');
+				$("#config_sys_list").append('<li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>3</li>');*/
+				}
+				$("#config_list").accordion("resize");
+			}
+		});
+	}
+
+	$(document).ready(function() {
+		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
+		//$("#dialog:ui-dialog").dialog("destroy");
+
+		//$('#switcher').themeswitcher();
+
+		$("button").button();
+		$("#button_sys_update").click(UpdateSysList)
+		$("#button_sys_add").click(function(){
+			//alert('a');
+			$("#dialog-addsys").dialog('open');
+		});
+		UpdateSysList();
+
+		$("#config_list").accordion({fillSpace: true, collapsible: true});
+		$("#config_sys_list").sortable({delay: 500});
+		$("#config_sys_list").disableSelection();
+
+		$(window).resize(function(){$("#config_list").accordion("resize");});
+
+		/*
+		$("#get_a_path").click(function(){
+			var skey = "{{ account.systems.0.key }}";// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
+			var from = "01012010000000";
+			var to = "31122010000000";
+			GetPath(skey, from, to);
+		});
+		$("#clear_a_path").click(function(){
+			var skey = "{{ account.systems.0.key }}";// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
+			ClearPath(skey);
+		});
+		$("#get_a_days").click(function(){
+			var skey = "{{ account.systems.0.key }}";// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
+			DayList(skey);
+		});
+		*/
+
+		$("#dialog-addsys").dialog({
+			width: 400,
+			height: 200,
+			modal: true,
+			autoOpen: false,
+			buttons: {
+				'Добавить систему.': function() {
+					var imei = document.getElementById('addsys_imei').value;
+					//var phone = document.getElementById('addsys_phone').value;
+					//$.getJSON("/config?cmd=addsys&imei=" + imei + "&phone=" + phone, function (data) {
+					$.getJSON("/api/sys/add?acckey={{ account.key }}&imei=" + imei, function (data) {
+						//window.location = "/config";
+						//$(this).dialog('close');
+						if(data.result){
+							result = data.result;
+							if(result == "not found"){
+								//alert("Система не найдена. возможно система ни разу не выходила на связь с сервером.");
+								$("#dialog-addsys-not-found").dialog('open');
+							} else if(result == "already"){
+								//alert("Вы уже наблюдаете за этой системой");
+								$("#dialog-addsys-already").dialog('open');
+							} else if(result == "added") {
+								UpdateSysList();
+								//window.location = "/config";
+							}
+						}
+					});
+					$(this).dialog('close');
+				},
+				'Отменить': function() {
+					$(this).dialog('close');
+				}
+			}
+		});
+
+		$("#dialog-addsys-not-found").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
+		$("#dialog-addsys-already").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
+	});
+
+
+  </script>
+  <style>
+	#config_sys_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+	#config_sys_list li { margin: 0 3px 3px 3px; /*padding: 0.4em;*/ padding-left: 1.5em; /*font-size: 1.4em; height: 18px;*/ }
+	#config_sys_list li span { position: absolute; margin-left: -1.3em; }
+	#config_sys_list2 li{
+		border: 1px solid black;
+		width: content;
+	}
+	/*body {
+		height: 100%;
+	}*/
+	#config_sys_list li {
+		border: 1px solid #666666;
+		background: #E6E6E6 /*url(images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x*/;
+		font-weight: normal;
+		/*color: #ffffff;*/
+		/*outline: none;*/
+	}
+
+  </style>
+
+</head>
+
+<body>
+	<!--script type="text/javascript"
+		src="http://jqueryui.com/themeroller/themeswitchertool/">
+	</script-->
+<div id="switcher"></div>
+	<div id="config_list">
+		<h3><a href="#">Наблюдаемые системы</a><h3><div>
+			<button id="button_sys_update">Получить список</button>
+			<ul id="config_sys_list">
+				<li>Пусто</li>
+			</ul>
+		
+			<button id="button_sys_add">Добавить систему</button>
+
+		</div>
+		<h3><a href="#">Настройки интерфейса</a><h3><div>
+			<button>Установить временную зону</button>
+		</div>
+
+	</div>
+
+	<div id="dialog-addsys" title="Добавление системы">
+	<form>
+		<label>Укажите IMEI добавляемой системы</label>
+		<br />
+       		<div><textarea id="addsys_imei" name="imei" rows="1" style="width:98%;"></textarea></div>
+		<!--br /-->
+		<!--label>Или номер SIM-карты в формате +380xxxxxxxxx</label>
+		<br /><br />
+       		<div><textarea id="addsys_phone" name="phone" rows="1" style="width:98%;"></textarea></div-->
+	</form>
+	</div>
+
+	<div id="dialog-addsys-not-found" title="Ошибка">
+	  <p>
+		<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+		Система не найдена.
+	  </p>
+	  <p>
+		Возможно система ни разу не выходила на связь с сервером.
+	  </p>
+	</div>
+
+	<div id="dialog-addsys-already" title="Ошибка">
+	  <p>
+		<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+		Вы уже наблюдаете за этой системой.
+	  </p>
+	</div>
+
+</body>
+</html>

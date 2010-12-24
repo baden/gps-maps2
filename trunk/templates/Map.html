@@ -36,10 +36,18 @@
 			DayList(skey);
 		});
 
+		$("#syslist li").click(function(){console.log('ok +', this.attributes['imei']);});
 
 	});
 
   </script>
+
+  <style>
+	#syslist {list-style-type: none; margin: 0; padding: 0;}
+	#syslist li { border: 1px solid black; margin: 3px 3px 3px 3px; padding: 1px; float: left; width: 16px; height: 16px; font-size: 1em; text-align: center; }
+	#syslist li:hover { background-color: lime;}
+
+  </style>
 
 </head>
 
@@ -53,6 +61,13 @@
 		<div id="point_info" style="display: inline;">M2</div>
 	</div>
 	<div id="panel" style="position: absolute; top: 10%; right: 0px; width: 200px; height: 80%; max-height: 80%; overflow-y: scroll; background-color: white;">
+		<div>Системы:
+			<ul id="syslist">
+				{% for sys in account.systems %}
+				<li title="{{ sys.imei }}: {{ sys.desc }}" imei="{{ sys.key }}">.</li>
+				{% endfor %}
+			</ul>
+		</div>
 		<button id="get_a_days">Обновить список</button>
 		<div id="daylist">
 			<h3>None</h3>
