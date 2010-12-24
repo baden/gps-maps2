@@ -17,26 +17,32 @@
 
   <script>
 
+	var sys_key = "{{ account.systems.0.key }}";
+
 	$(document).ready(function() {
 		CreateMap();
 
 		$("button").button();
 		$("#get_a_path").click(function(){
-			var skey = "{{ account.systems.0.key }}";// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
+			var skey = sys_key; // aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
 			var from = "01012010000000";
 			var to = "31122010000000";
 			GetPath(skey, from, to);
 		});
 		$("#clear_a_path").click(function(){
-			var skey = "{{ account.systems.0.key }}";// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
+			var skey = sys_key;// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
 			ClearPath(skey);
 		});
 		$("#get_a_days").click(function(){
-			var skey = "{{ account.systems.0.key }}";// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
+			var skey = sys_key;// aglncHMtbWFwczJyIQsSCERCU3lzdGVtIhNzeXNfMzU2ODk1MDM1Mzc2MjQ2DA";
 			DayList(skey);
 		});
 
-		$("#syslist li").click(function(){console.log('ok +', this.attributes['imei']);});
+		$("#syslist li").click(function(){
+			//console.log('ok +', this.attributes['imei']);
+			sys_key = this.attributes['imei'].value;
+			DayList(sys_key);
+		});
 
 	});
 
