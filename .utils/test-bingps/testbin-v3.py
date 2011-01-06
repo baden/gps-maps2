@@ -10,7 +10,7 @@ import re
 from glob import glob
 
 HOST = "127.0.0.1"
-PORT = 80
+PORT = 8080
 HOSTNAME = "gps-maps2.appspot.com"
 
 #HOST = "gps-maps2.appspot.com"
@@ -20,7 +20,8 @@ HOSTNAME = "gps-maps2.appspot.com"
 #PORT = 8015
 
 #SYS = 1
-IMAGE = "../bridge-get/*.bin"
+#IMAGE = "../bridge-get/*.bin"
+IMAGE = "*.bin"
 #IMEI = ("123123", "356895035376246", "356895035358996", "353358016204856", "356895035359317", "353358019726996")
 #IMEI = ("0", "35689503537624601", "35689503535899601", "35335801620485601")	#Fake
 

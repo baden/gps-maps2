@@ -31,6 +31,11 @@ class DBAccounts(db.Expando):
 			if s is not None: system_list.append(s)
 		return system_list
 
+	def system_by_imei(self, imei):
+		if imei not in [s.imei for s in self.systems]:
+			return None
+		return DBSystem.get_or_create(imei)
+	
 	def RegisterSystem(self, imei):
 		system = DBSystem.get_by_key_name("sys_%s" % imei)
 		if system is None:

@@ -3,6 +3,7 @@
 <head>
 
   <link type="text/css" href="/stylesheets/base.css" rel="stylesheet">
+  <link type="text/css" href="/stylesheets/config.css" rel="stylesheet">
 
   <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/cupertino/jquery-ui.css" rel="stylesheet"/-->
   <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/flick/jquery-ui.css" rel="stylesheet" /-->
@@ -16,17 +17,45 @@
   <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
 
   <script>
+  
+  	var sys_imeis = [];
+  	var sys_descs = [];
 
 	function UpdateSysList(){
 		$.getJSON("/api/info?acckey={{ account.key }}", function (data) {
 			if(data){
 				$("#config_sys_list").empty();
+				sys_imeis = [];
+				sys_descs = [];
 				for(var i in data.info.account.systems){
-				$("#config_sys_list").append('<li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>IMEI:'+data.info.account.systems[i].imei+' '+data.info.account.systems[i].desc+'</li>');
-				/*$("#config_sys_list").append('<li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>2</li>');
-				$("#config_sys_list").append('<li><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>3</li>');*/
+					var imei = data.info.account.systems[i].imei;
+					sys_imeis.push(imei);
+					sys_descs.push(data.info.account.systems[i].desc);
+					$("#config_sys_list").append(
+						'<li class="sli" index='+i+'><span class="ui-icon ui-icon-arrowthick-2-n-s mm"></span>' +
+						'<span class="bico hl mm" title="Выбрать пиктограмму" index='+i+'>P</span>' +
+						'<span class="bconf hl mm" title="Настроить систему" index='+i+'>C</span>' +
+						'IMEI:' + imei + ' ' + data.info.account.systems[i].desc +
+						'<button class="key bdesc" title="Изменить описание" index='+i+'>...</button>' +
+						'</li>'
+					);
 				}
+				$(".key").button();
 				$("#config_list").accordion("resize");
+				$(".sli").bind('contextmenu', function(e) {
+					//alert('Config');
+					//$("body").append('<div style="position: absolute; left: 0px; top: 0px; border:1px solid black; width: 100px; height: 200px;">Menu</div>');
+					$("#popup-sys").dialog('open');
+                  			return false;
+        			});
+				$(".bdesc").click(function(){
+					//alert(this.attributes['imei'].value);
+					var i = this.attributes['index'].value;
+					$("#sysdesc_imei").html(sys_imeis[i])
+					$("#sys_desc").val(sys_descs[i]);
+					console.log('Dialog: dialog-sys-desc ' + sys_imeis[i] + ' (' + sys_descs[i] + ')');
+					$("#dialog-sys-desc").dialog('open');
+				});
 			}
 		});
 	}
@@ -41,7 +70,7 @@
 		$("#button_sys_update").click(UpdateSysList)
 		$("#button_sys_add").click(function(){
 			//alert('a');
-			$("#dialog-addsys").dialog('open');
+			$("#dialog-addsys").dialog({title: 'aaa'});
 		});
 		UpdateSysList();
 
@@ -103,32 +132,47 @@
 			}
 		});
 
+		$("#dialog-sys-desc").dialog({
+			width: 500,
+			height: 150,
+			modal: true,
+			autoOpen: false,
+			buttons: {
+				'Применить изменения.': function() {
+					var imei = $("#sysdesc_imei").html(); //document.getElementById('sysdesc_imei').value;
+					var desc = document.getElementById('sys_desc').value;
+					console.log('Set desc for sys ' + imei + ' -> ' + desc);
+					$.getJSON("/api/sys/desc?acckey={{ account.key }}&imei=" + imei + "&desc=" + desc, function (data) {
+						if(data.result){
+							result = data.result;
+							if(result == "disabled"){
+								//$("#dialog-need-admin").dialog('open');
+							} else if(result == "ok") {
+								UpdateSysList();
+							}
+						}
+					});
+					$(this).dialog('close');
+				},
+				'Отменить': function() {
+					$(this).dialog('close');
+				}
+			}
+		});
+
+
+
 		$("#dialog-addsys-not-found").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
 		$("#dialog-addsys-already").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
+		$("#popup-sys").dialog({modal: true, autoOpen: false});
+		$("#popup-sys li").button();
 	});
 
-
+	$(document).bind('contextmenu', function(e) {
+                  return false;
+        });
+        $(document).disableSelection();
   </script>
-  <style>
-	#config_sys_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
-	#config_sys_list li { margin: 0 3px 3px 3px; /*padding: 0.4em;*/ padding-left: 1.5em; /*font-size: 1.4em; height: 18px;*/ }
-	#config_sys_list li span { position: absolute; margin-left: -1.3em; }
-	#config_sys_list2 li{
-		border: 1px solid black;
-		width: content;
-	}
-	/*body {
-		height: 100%;
-	}*/
-	#config_sys_list li {
-		border: 1px solid #666666;
-		background: #E6E6E6 /*url(images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x*/;
-		font-weight: normal;
-		/*color: #ffffff;*/
-		/*outline: none;*/
-	}
-
-  </style>
 
 </head>
 
@@ -180,6 +224,35 @@
 		<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
 		Вы уже наблюдаете за этой системой.
 	  </p>
+	</div>
+
+	<div id="dialog-sys-desc" title="Администрирование">
+	<form>
+		<label>Введите описание для системы IMEI:</label><label id="sysdesc_imei">IMEI</label>
+		<br />
+       		<div><textarea id="sys_desc" name="desc" rows="1" style="width:98%;"></textarea></div>
+	</form>
+	</div>
+	
+	<style>
+		#popup-sys ul {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		#popup-sys ul li {
+			width: 100%;
+			/*background-color: blue;*/
+		}
+	</style>
+	
+	<div id="popup-sys" title="Опции">
+		<ul>
+			<li>Конфигурация системы</li>
+			<li>Настройка вида</li>
+			<li>Показать на карте</li>
+			<li>Отказаться от слежения</li>
+		</ul>
 	</div>
 
 </body>

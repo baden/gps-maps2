@@ -1,0 +1,31 @@
+#config_sys_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+#config_sys_list li { margin: 0 3px 3px 3px; padding: 0.1em; padding-left: 4.5em; /*font-size: 1.4em; height: 18px;*/ }
+#config_sys_list li button { display: inline; }
+#config_sys_list li button span {padding: 0; }
+
+/*#config_sys_list li span {  }*/
+#config_sys_list li span.mm { position: absolute; margin-top: 3px; margin-left: -4.5em; }
+#config_sys_list li span.bico { margin-left: -3.3em; }
+#config_sys_list li span.bconf { margin-left: -1.9em; }
+#config_sys_list li span.hl {width: 16px; height: 16px; }
+#config_sys_list li span.hl:hover {
+	/*border: 2px solid black;*/
+
+	-webkit-box-shadow:0px 0px 3px #404040;
+	-moz-box-shadow:0px 0px 3px #404040;
+}
+
+#config_sys_list2 li{
+	border: 1px solid black;
+	width: content;
+}
+/*body {
+	height: 100%;
+}*/
+#config_sys_list li {
+	border: 1px solid #666666;
+	background: #E6E6E6 /*url(images/ui-bg_glass_75_e6e6e6_1x400.png) 50% 50% repeat-x*/;
+	font-weight: normal;
+	/*color: #ffffff;*/
+	/*outline: none;*/
+}

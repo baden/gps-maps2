@@ -878,6 +878,46 @@ class Sys_Add(BaseApi):
 			return {'result': 'already'}
 		return {'result': 'added'}
 
+class Sys_Desc(BaseApi):
+	def parcer(self, acckey=None, **argw):
+		if acckey is None:
+			return {'answer': 'no', 'reason': 'acckey not defined or None'};
+
+		account = DBAccounts.get(db.Key(acckey))
+		if account is None:
+			return {'result': 'account not found'}
+
+		imei = self.request.get('imei', None)
+		if imei is None:
+			return {'result': 'imei not defined'}
+
+		desc = self.request.get('desc', None)
+		if desc is None:
+			return {'result': 'desc not defined'}
+
+		s = account.system_by_imei(imei)
+		if s is None:
+			return {'result': 'nosys'}
+		s.desc = desc
+		s.put()
+		return {'result': 'ok', 'imei': s.imei, 'desc': s.desc}
+		#res = account.AddSystem(imei)
+		#if res == 0:
+		#	return {'result': 'not found'}
+		#elif res == 2:
+		#	return {'result': 'already'}
+		return {'result': 'ok'}
+
+class Global_DelAll(BaseApi):
+	def parcer(self, acckey=None, **argw):
+		#import random
+		#delkey = self.request.get("delkey", None)
+		#if delkey is None:
+		#	return {'delkey': random.randint(0, 10000)}
+		#else:
+		geos = DBGeo.all(keys_only=True).fetch(1000)
+		db.delete(geos)
+		return {'answer': 'ok'}
 
 application = webapp.WSGIApplication(
 	[
@@ -891,6 +931,8 @@ application = webapp.WSGIApplication(
 	('/api/geo/dates*', Geo_Dates),
 	('/api/geo/info*', Geo_Info),
 	('/api/sys/add*', Sys_Add),
+	('/api/sys/desc*', Sys_Desc),
+	('/api/global/delall*', Global_DelAll),
 	#('/api/geo/test*', Geo_Test),
 	],
 	debug=True
