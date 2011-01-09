@@ -1071,20 +1071,77 @@ class Report_Get(webapp.RequestHandler):
 				
 		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
 		'''
+		report = []
+		stop_start = None
+		move_start = None
+		prev_point = None
+		state = 0	# 0 - stop   1 - move
+		length = 0
+
+		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, 1000):
+			if move_start is None:
+				move_start = point
+
+			if point['fsource'] in (2, 3, 7):
+				if stop_start is None:
+					if prev_point:
+						stop_start = prev_point
+					else:
+						stop_start = point
+
+					dura = (stop_start['time'] - move_start['time'])
+					report.append({
+						'type': 'move',
+						'start': {
+							'time': local.fromUTC(move_start['time']).strftime("%y%m%d%H%M%S"),
+							'pos': (move_start['lat'], move_start['lon']),
+						},
+						'stop': {
+							'time': local.fromUTC(stop_start['time']).strftime("%y%m%d%H%M%S"),
+							'pos': (stop_start['lat'], stop_start['lon']),
+						},
+						'duration': dura.days * 24 * 3600 + dura.seconds,
+						'durationtxt': str(dura),
+						'length': length,
+						'startpos': (point['lat'], point['lon']),
+						'speed': point['speed'],
+						'fsource': point['fsource']
+					})
+
+			elif point['fsource'] == 6:
+				if stop_start is not None:
+					dura = (point['time'] - stop_start['time'])
+					report.append({
+						'type': 'stop',
+						'start': {
+							'time': local.fromUTC(stop_start['time']).strftime("%y%m%d%H%M%S"),
+							'pos': (stop_start['lat'], stop_start['lon']),
+						},
+						'stop': {
+							'time': local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
+							'pos': (point['lat'], point['lon']),
+						},
+						'duration': dura.days * 24 * 3600 + dura.seconds,
+						'durationtxt': str(dura),
+						'length': 0,
+						'startpos': (point['lat'], point['lon']),
+						'speed': point['speed'],
+						'fsource': point['fsource']
+					})
+					state = 1	# Начало движения
+					length = 0	# Пока не проехали нисколько
+					move_start = point
+					stop_start = None
+
+			length += 1
+			prev_point = point
+
 
 		jsonresp = {
 			'answer': 'ok',
 			'dtfrom': str(local.fromUTC(dtfrom)),
 			'dtto': str(local.fromUTC(dtto)),
-			'report': {
-				'moves': [
-					{
-						'start': '101201000000',
-						'stop': '101201010101',
-						'duration': '010101',
-					},
-				],
-			}
+			'report': report,
 		}
 		self.response.out.write(json.dumps(jsonresp, separators=(',',':'), indent=2) + "\r")
 

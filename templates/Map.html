@@ -9,6 +9,7 @@
   <!--link type="text/css" href="/plugins/cusel/css/cusel.css" rel="stylesheet" /-->
   <!--script type="text/javascript" src="/plugins/cusel/js/cusel-min-2.3.1.js"></script-->
 
+  <script src="/js/base.js"></script>
   <script src="/js/mymarker.js"></script>
   <script src="/js/map.js"></script>
 
@@ -31,6 +32,7 @@
 	}
 
 	$(document).ready(function() {
+		$("#nav_map").button("option", "disabled", true);
 		CreateMap();
 
 		/*

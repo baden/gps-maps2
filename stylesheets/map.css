@@ -5,7 +5,7 @@ div#controls {
 	left: 100px;
 	background-color: white;
 	padding: 10px 4px 4px 4px;
-	opacity: 0.2;
+	opacity: 0.3;
 
 	border-radius: 3px;
 	-moz-border-radius: 3px;
@@ -91,7 +91,9 @@ h3 a {
 	padding: 2px 2px 2px 16px !important;
 }
 
+/*
 .ui-button-text {
 	padding-top: 0.1em !important;
 	padding-bottom: 0.1em !important;
 }
+*/
