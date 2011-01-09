@@ -10,7 +10,7 @@ import re
 from glob import glob
 
 HOST = "127.0.0.1"
-PORT = 8080
+PORT = 80 #80
 HOSTNAME = "gps-maps2.appspot.com"
 
 #HOST = "gps-maps2.appspot.com"

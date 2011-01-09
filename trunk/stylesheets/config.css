@@ -4,7 +4,7 @@
 #config_sys_list li button span {padding: 0; }
 
 /*#config_sys_list li span {  }*/
-#config_sys_list li span.mm { position: absolute; margin-top: 3px; margin-left: -4.5em; }
+#config_sys_list li span.mm { position: absolute; margin-top: 3px; margin-left: -4.5em; text-align: center;}
 #config_sys_list li span.bico { margin-left: -3.3em; }
 #config_sys_list li span.bconf { margin-left: -1.9em; }
 #config_sys_list li span.hl {width: 16px; height: 16px; }
