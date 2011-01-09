@@ -46,12 +46,13 @@
 	}
 
 	$(document).ready(function() {
+		$("#nav_config").button("option", "disabled", true);
 		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
 		//$("#dialog:ui-dialog").dialog("destroy");
 
 		//$('#switcher').themeswitcher();
 
-		$("button").button();
+		/*$("button").button();*/
 		$("#button_sys_update").click(UpdateSysList)
 		$("#button_sys_add").click(function(){
 			//alert('a');

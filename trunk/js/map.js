@@ -138,6 +138,7 @@ function dt_to_Date(d){
 
 }
 
+/*
 function t_to_hms(d){
 	var minutes = (d - (d % 60)) / 60;
 	var hours = (minutes - (minutes % 60)) / 60;
@@ -147,6 +148,7 @@ function t_to_hms(d){
 	else if(minutes) return minutes + ' мин ' + seconds + ' сек';
 	else return seconds + ' сек';
 }
+*/
 
 var Image_Stop = new google.maps.MarkerImage(
 	'/images/marker-stop.png',
@@ -287,8 +289,8 @@ var ParcePath = function(data){
 		        	position: new google.maps.LatLng(data.stops[i].p[0], data.stops[i].p[1]),
 			        map: map,
 				title:
-					tp + t_to_hms(dt) +
-					'\n' + dt_to_date(data.points[data.stops[i].i][0]) + '...' + dt_to_date(data.points[data.stops[i].s][0]),
+					tp + td_to_hms(dt) +
+					'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 					//'\n' + dstop + '...' + dstart,
 				icon: icon,
 			        draggable: false
@@ -304,36 +306,9 @@ var ParcePath = function(data){
 			var position = this.position;
 			geocoder.geocode({'latLng': this.position}, function(results, status) {
 			      if (status == google.maps.GeocoderStatus.OK) {
-				var address = null; //'Адрес неизвестен';
-				for(var i in results){
-					var r = results[i];
-					console.log(r.types);
-/*
-Приоритет выдачи адреса:
-'street_address'	Точность до улицы
-'sublocality'		Точность до района
-'locality'		Точность до города
-results[1]		Как повезет :)
-*/
-					if((r.types.indexOf('street_address') != -1) ||
-					   (r.types.indexOf('sublocality') != -1) ||
-					   (r.types.indexOf('locality') != -1))
-					{
-						address = r.formatted_address;
-						break;
-					}
-				}
-				if(!address){
-					if(results[1]){
-						address = results[1].formatted_address;
-					} else if(results[0]) {
-						address = results[0].formatted_address;
-					} else {
-						address='Адрес неизвестен';
-					}
-				}
+				var address = geocode_to_addr(results);
 
-				  	//console.log(results);
+			  	//console.log(results);
 
 				if(stop_infowindow) stop_infowindow.close();
 				stop_infowindow = new google.maps.InfoWindow({content:

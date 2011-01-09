@@ -2,7 +2,6 @@
 <html>
 <head>
 
-  <link type="text/css" href="/stylesheets/base.css" rel="stylesheet">
 
   <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/cupertino/jquery-ui.css" rel="stylesheet"/-->
   <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/flick/jquery-ui.css" rel="stylesheet" /-->
@@ -15,6 +14,8 @@
   <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script-->
   <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
 
+  <link type="text/css" href="/stylesheets/base.css" rel="stylesheet">
+
   <!--style>
        .ui-sortable-placeholder { border: 1px dotted black !important; visibility: visible !important; }
        .ui-sortable-placeholder * { visibility: hidden; }
@@ -22,32 +23,44 @@
 
   <script>
 	$(document).ready(function() {
-		{% block javainit %}{% endblock %}
+		$("button").button();
+
+
+		/*$("#navigate").buttonset();*/
+		
 		$(".btn_menu:first").button({icons: {primary: "ui-icon-zoomin"}}).
 		next().button({icons: {primary: "ui-icon-info"}}).
 		next().button({icons: {primary: "ui-icon-alert"}}).
 		next().button({icons: {primary: "ui-icon-document"}}).
 		next().button({icons: {primary: "ui-icon-gear"}}).
 		next().button({icons: {primary: "ui-icon-help"}});
+
+		$(".btn_menu").click(function(){
+			//console.log($(this).attr('href'));
+			window.location = $(this).attr('href');
+		});
+
+
 	});
   </script>
 
-
   <style>
+
 	div#header {
 		position: relative;
-		height: 32px;
+		height: 24px;
 		/*background-color: #ff0;*/
 	}
 
 	div#container {
 		position: absolute;
-		top: 32px;
+		top: 24px;
 		bottom: 0px;
 		left: 0px;
 		right: 0px;
 		/*background-color: #f0f;*/
-		overflow: hidden;
+		/*overflow: hidden;*/
+		overflow: auto;
 	}
 	div#login {
 		position: absolute;
@@ -55,6 +68,13 @@
 		margin-top: -10px;
 		right: 10px;
 	}
+
+	.ui-state-disabled[name="btn_menu"] {
+		opacity: 1.0;
+		/*border: 2px solid black;*/
+		background-color: #cfc;
+	}
+
   </style>
 
 {% block head %}{% endblock %}
@@ -64,18 +84,20 @@
 <body>
 	<div id="header">
 		<div id="control">
-		<a class="btn_menu" id="btn_map" href="/s/Map">Карта</button>
+			<div id="navigate">
+		<!--a class="btn_menu" id="btn_map" href="/s/Map">Карта</button>
 		<a class="btn_menu" id="btn_reports" href="/s/Reports">Отчеты</button>
 		<a class="btn_menu" id="btn_logs" href="/s/Logs">События</button>
-		<a class="btn_menu" id="btn_gps" href="/s/GPS">Экспорт GPS</button>
+		<a class="btn_menu" id="btn_gps" href="/s/Geos">Экспорт GPS</button>
 		<a class="btn_menu" id="btn_configs" href="/s/Config">Настройки</button>
-		<a class="btn_menu" id="btn_help" href="/s/Help">Помощь</a>
-
-		<!--button id="get_a_path">Запросить трек</button-->
-		<!--button id="clear_a_path">Удалить трек</button-->
-		<!--div id="mark1" style="display: inline;">M1</div>
-		<div id="mark2" style="display: inline;">M2</div>
-		<div id="point_info" style="display: inline;">M2</div-->
+		<a class="btn_menu" id="btn_help" href="/s/Help">Помощь</a-->
+				<button class="btn_menu" name="btn_menu" id="nav_map" href="/s/Map">Карта</button>
+				<button class="btn_menu" name="btn_menu" id="nav_reports" href="/s/Reports">Отчеты</button>
+				<button class="btn_menu" name="btn_menu" id="nav_logs" href="/s/Logs">События</button>
+				<button class="btn_menu" name="btn_menu" id="nav_geos" href="/s/Geos">Экспорт GPS</button>
+				<button class="btn_menu" name="btn_menu" id="nav_config" href="/s/Config">Настройки</button>
+				<button class="btn_menu" name="btn_menu" id="nav_help" href="/s/Help">Помощь</button>
+			</div>
 
 		</div>
 		<div id="login">

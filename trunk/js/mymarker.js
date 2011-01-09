@@ -42,9 +42,11 @@ function more_info(data){
 	add_geo_row('Тип метки', data.point.fsource);
 }
 
+/*
 function dt_to_date(dt){
 	return dt[4]+dt[5] + '/' + dt[2]+dt[3] + '/20' + dt[0]+dt[1] + ' ' + dt[6]+dt[7] + ':' + dt[8]+dt[9] + ':' + dt[10]+dt[11];
 }
+*/
 
 MyMarker.prototype.Info = function() {
 	//alert('Bo ' + this.point.date);
@@ -53,7 +55,7 @@ MyMarker.prototype.Info = function() {
 	console.log("skey = " + skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
-		'<div style="width: 220px; height: 220px; border: none;"><div class="info-header">' + dt_to_date(point.date) + "</div>" +
+		'<div style="width: 220px; height: 220px; border: none;"><div class="info-header">' + dt_to_datetime(point.date) + "</div>" +
 		/*'Скорость: <b>' + point.speed.toFixed(1) + " км/ч" +*/
 		'<table id="tbl_info" width="100%">' +
 		'<tr><td>Направление:</td><td><b>' + point.angle.toFixed(0) + "°</b></td></tr>" +
@@ -207,7 +209,7 @@ MyMarker.prototype.setPosition = function(point) {
 	this.point = point;
 	this.arrdiv.setAttribute("style", "-webkit-transform: rotate(" + point.angle + "deg);z-index:-1;");
 //	console.log('MyMarker.protorype.setPosition');
-	this.setTitle(dt_to_date(point.date));
+	this.setTitle(dt_to_datetime(point.date));
 	this.draw();
 }
 

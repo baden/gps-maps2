@@ -1,0 +1,21 @@
+{% extends "_base.html" %}
+
+{% block head %}
+  <link type="text/css" href="/stylesheets/logs.css" rel="stylesheet">
+
+  <script>
+	$(document).ready(function() {
+		$("#nav_logs").button("option", "disabled", true);
+		$("#btn_1").button("option", "disabled", true);
+	});
+  </script>
+
+{% endblock %}
+
+{% block body %}
+	<h2>Отчеты</h2>
+
+	<button id="btn_1">Кнопка 1</button>
+	<button>Кнопка 2</button>
+	<button>Кнопка 3</button>
+{% endblock %}
