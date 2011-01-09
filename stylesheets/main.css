@@ -16,6 +16,10 @@ html, body {
 	padding:0 0 0 0;
 }
 
+span {
+	display: inline;
+}
+
 #Widget{
 	left: 0px;
 	top: 0px;

@@ -182,11 +182,13 @@ MyMarker.prototype.onAdd = function() {
 	// We'll add this overlay to the overlayImage pane.
 	var panes = this.getPanes();
 	this.panes = panes;
-//	panes.overlayLayer.appendChild(div);
 //  	panes.overlayLayer.appendChild(arrdiv);
+//	panes.overlayLayer.appendChild(div);
 //	panes.overlayMouseTarget.appendChild(arrdiv);
-	panes.overlayMouseTarget.appendChild(div);
+//	panes.overlayMouseTarget.appendChild(div);
+
 //	panes.floatPane.appendChild(div);
+	panes.overlayImage.appendChild(div);
 
 }
 

@@ -14,8 +14,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.0 r9654"
-   sodipodi:docname="marker-stop.svg"
-   inkscape:export-filename="D:\Work\MAIN\GPS\GGT-200\SRC\SITE\googleapp\gps-maps2\svg\marker-stop.png"
+   sodipodi:docname="marker-halt.svg"
+   inkscape:export-filename="D:\Work\MAIN\GPS\GGT-200\SRC\SITE\googleapp\gps-maps2\svg\marker-halt.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <defs
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="20.528194"
-     inkscape:cx="-17.705164"
-     inkscape:cy="10.051252"
+     inkscape:zoom="14.515625"
+     inkscape:cx="-20.725254"
+     inkscape:cy="8.6821496"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -62,7 +62,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -78,16 +78,16 @@
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="csscccc" />
     <path
-       style="fill:#00b4ff;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
+       style="fill:#ffff00;fill-opacity:1;stroke:#000000;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1"
        d="m 3,-3.5 c -0.831,0 -1.5,0.669 -1.5,1.5 l 0,10 c 0,0.831 0.669,1.5 1.5,1.5 l 3.5,0 1,6 1,-6 3.5,0 c 0.831,0 1.5,-0.669 1.5,-1.5 l 0,-10 c 0,-0.831 -0.669,-1.5 -1.5,-1.5 z"
        id="rect2992"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="sssscccsssss" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:round;stroke-linejoin:round;stroke-opacity:1"
-       d="m 5.5,3.5 c 0,0 4,0.5 4,-2 0,-2 -2,-2 -4,-2 0,2 0,6 0,6"
+       d="m 9.5,0.5 c 0,0 -0.5,-1 -2,-1 -1,0 -2,0.5 -2,1.5 0,1.5 4,1.5 4,3 0,1 -0.9604678,1.5 -2,1.5 -1,0 -2,-1 -2,-1"
        id="path3767"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cscc" />
+       sodipodi:nodetypes="cssssc" />
   </g>
 </svg>

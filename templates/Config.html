@@ -1,23 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends "_base.html" %}
 
-  <link type="text/css" href="/stylesheets/base.css" rel="stylesheet">
+{% block head %}
   <link type="text/css" href="/stylesheets/config.css" rel="stylesheet">
-
-  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/cupertino/jquery-ui.css" rel="stylesheet"/-->
-  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/flick/jquery-ui.css" rel="stylesheet" /-->
-  <link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/humanity/jquery-ui.css" rel="stylesheet" />
-  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/redmond/jquery-ui.css" rel="stylesheet" /-->
-
-  <!--link type="text/css" href="/stylesheets/map.css" rel="stylesheet" /-->
-
-  <script type="text/javascript" src="/js/jquery.min.js"></script>
-  <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script-->
-  <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
-
   <script>
-  
   	var sys_imeis = [];
   	var sys_descs = [];
 
@@ -32,10 +17,10 @@
 					sys_imeis.push(imei);
 					sys_descs.push(data.info.account.systems[i].desc);
 					$("#config_sys_list").append(
-						'<li class="sli" index='+i+'><span class="ui-icon ui-icon-arrowthick-2-n-s mm"></span>' +
+						'<li class="sli" index='+i+' imei="'+imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
 						'<span class="bico hl mm" title="Выбрать пиктограмму" index='+i+'>P</span>' +
 						'<span class="bconf hl mm" title="Настроить систему" index='+i+'>C</span>' +
-						'IMEI:' + imei + ' ' + data.info.account.systems[i].desc +
+						'IMEI:' + imei + ' <span id="sysdsc_'+imei+'">' + data.info.account.systems[i].desc + '</span>'+
 						'<button class="key bdesc" title="Изменить описание" index='+i+'>...</button>' +
 						'</li>'
 					);
@@ -70,12 +55,34 @@
 		$("#button_sys_update").click(UpdateSysList)
 		$("#button_sys_add").click(function(){
 			//alert('a');
-			$("#dialog-addsys").dialog({title: 'aaa'});
+			$("#dialog-addsys").dialog('open');
 		});
 		UpdateSysList();
 
 		$("#config_list").accordion({fillSpace: true, collapsible: true});
-		$("#config_sys_list").sortable({delay: 500});
+		$("#config_sys_list").sortable({
+			//delay: 500,
+			//axis: 'y',
+			//containment: 'parent',
+			handle: '.msp',
+			revert: true,
+			scrollSpeed: 5,
+			stop: function(event, ui){
+				/*console.log(ui.item.index());
+				console.log(ui.item.attr('imei'));
+				console.log(ui);*/
+				var imei = ui.item.attr('imei');
+				var index = ui.item.index();
+				$.getJSON("/api/sys/sort?acckey={{ account.key }}&imei=" + imei + "&index=" + index, function (data) {
+					//window.location = "/config";
+					//$(this).dialog('close');
+					if(data.result){
+						console.log('Set new position for ' + imei + ' to ' + index);
+					}
+				});
+
+			},
+		});
 		$("#config_sys_list").disableSelection();
 
 		$(window).resize(function(){$("#config_list").accordion("resize");});
@@ -131,6 +138,7 @@
 				}
 			}
 		});
+		//$("#dialog-addsys").dialog('open');
 
 		$("#dialog-sys-desc").dialog({
 			width: 500,
@@ -148,7 +156,8 @@
 							if(result == "disabled"){
 								//$("#dialog-need-admin").dialog('open');
 							} else if(result == "ok") {
-								UpdateSysList();
+								//UpdateSysList();
+								$("#sysdsc_"+imei).html(desc);
 							}
 						}
 					});
@@ -171,12 +180,11 @@
 	$(document).bind('contextmenu', function(e) {
                   return false;
         });
-        $(document).disableSelection();
+        //$(document).disableSelection();
   </script>
+{% endblock %}
 
-</head>
-
-<body>
+{% block body %}
 	<!--script type="text/javascript"
 		src="http://jqueryui.com/themeroller/themeswitchertool/">
 	</script-->
@@ -251,9 +259,7 @@
 			<li>Конфигурация системы</li>
 			<li>Настройка вида</li>
 			<li>Показать на карте</li>
-			<li>Отказаться от слежения</li>
+			<li style="margin-top: 16px;">Отказаться от слежения</li>
 		</ul>
 	</div>
-
-</body>
-</html>
+{% endblock %}

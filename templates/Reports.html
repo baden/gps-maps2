@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <!--link type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/humanity/jquery-ui.css" rel="stylesheet" /-->
+
+  <link type="text/css" href="/stylesheets/base.css" rel="stylesheet">
+  <link type="text/css" href="/stylesheets/config.css" rel="stylesheet">
+
+  <script type="text/javascript" src="/js/jquery.min.js"></script>
+  <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7.custom/js/jquery-ui-1.8.7.custom.min.js"></script-->
+
+  <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
+  <script type="text/javascript" src="/js/jquery.ui.datepicker-ru.js"></script>
+
+  <script>
+
+	function genReport(skey, start, stop) {
+		$( "#report tbody" ).empty();
+
+		url = "/api/report/get?skey="+skey+"&from="+start+"&to="+stop;
+		$.getJSON(url, function (data) {
+			//$("#progress").html("Обрабатываем...");
+			console.log("getJSON parce");
+			if (data.answer == 'ok') {
+				//ParcePath(data);
+				console.log("Show report...");
+			}
+		});
+		
+
+		for(var i=0; i<100; i++){
+			$( "#report tbody" ).append( "<tr>" +
+				"<td>" + start + "</td>" + 
+				"<td>" +
+				'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-cancel" title="Убрать из отчета информацию о движении"></span></button>' +
+				'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-locked" title="Оставить в отчете только информацию о движении"></span></button>' +
+				'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-zoomin" title="Показать этот путь на карте"></span></button>' +
+				'Движение ' + i + "</td>" + 
+				"<td>" + '12:00 - 13:00' + "</td>" +
+				"<td>" + '1 час 0 мин' + "</td>" +
+			"</tr>" ); 
+		}
+		$('.ctl').button({ disabled: true });
+	}
+	function purgeReport() {
+		$( "#report tbody" ).empty();
+	}
+
+	function date_to_url(ymd) {
+		return ymd.slice(8,10) + ymd.slice(3,5) + ymd.slice(0,2);
+	}
+
+	$(function(){
+
+		$('.control').button();
+
+		$.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
+		/*$( "#datepicker" ).datepicker($.datepicker.regional[ "ru" ], {altField: "#alternate",
+			altFormat: "DD, d MM, yy"});*/
+		$( "#datepicker" ).datepicker({altField: "#alternate",
+			altFormat: "DD, d MM, yy",
+			onSelect: function(dateText, inst) {
+				//console.log(inst);
+				console.log(dateText);
+				var start = date_to_url(dateText) + '000000'; //inst.currentYear, inst.currentMonth, inst.currentDay, '000000');
+				var stop = date_to_url(dateText) + '235959'; //inst.currentYear, inst.currentMonth, inst.currentDay, '235959');
+				genReport($('#my_syslist').attr('value'), start, stop);
+				//console.log(dateText);
+				//console.log(inst);
+			}
+		});
+
+		$('#control_day').click(function(){
+			//alert('bu');
+		});
+	});
+  </script>
+
+  <style>
+	.ctl .ui-button-text {
+		padding: 0px 0px 0px 0px !important;
+	}
+	.ctl{
+		margin: 0px 1px 0px 0px;
+	}
+
+	div#header {
+		position: relative;
+		height: 32px;
+		background-color: #ff0;
+	}
+
+	div#container {
+		position: absolute;
+		top: 32px;
+		bottom: 0px;
+		left: 0px;
+		right: 0px;
+		background-color: #f0f;
+		overflow: hidden;
+	}
+
+  </style>
+
+</head>
+
+<body>
+	<div id="header">
+		Управление
+	</div>
+
+	<div id="container">
+	Cистема: <select id="my_syslist" name="my_syslist" style="width:auto;" onchange="purgeReport();">
+		{% for sys in account.systems %}
+		<option imei="{{ sys.imei }}" value="{{ sys.key }}">{{ sys.desc }}</option>
+		{% endfor %}
+	</select>
+
+	<div>
+
+	<button class="control" id="control_day">Отчет за сутки: <input type="text" id="datepicker" size="10"/><input type="text" id="alternate" size="30"/></button>
+	<button class="control" id="control_week">Отчет за неделю</button>
+	<button class="control">Отчет за интервал времени</button>
+
+
+	<h3>Комплексный отчет:</h3>
+	<table id="report" class="ui-widget ui-widget-content">
+		<thead>
+			<tr class="ui-widget-header ">
+				<th>Дата</th>
+				<th>Действие</th>
+				<th>Период</th>
+				<th>Время</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+
+	<h3>Всего:</h3>
+
+	<table id="total" class="ui-widget ui-widget-content">
+		<thead>
+			<tr class="ui-widget-header ">
+				<th>Дата</th>
+				<th>Контролируемые параметры</th>
+				<th>Результат</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>26.07.2010</td>
+				<td>Пройденная дистанция</td>
+				<td>0 км</td>
+			</tr>
+			<tr>
+				<td>26.07.2010</td>
+				<td>Общее время в пути</td>
+				<td>4 ч</td>
+			</tr>
+			<tr>
+				<td>26.07.2010</td>
+				<td>Средняя скорость движения</td>
+				<td>0 км/ч</td>
+			</tr>
+			<tr>
+				<td>26.07.2010</td>
+				<td>Средняя скорость с учетом остановок</td>
+				<td>0 км/ч</td>
+			</tr>
+			<tr>
+				<td>26.07.2010</td>
+				<td>Общее время остановок</td>
+				<td>0 мин</td>
+			</tr>
+			<tr>
+				<td>26.07.2010</td>
+				<td>Общее время стоянок</td>
+				<td>1 час 5 мин</td>
+			</tr>
+		</tbody>
+	</table>
+
+	</div>
+	</div>
+</body>
+</html>

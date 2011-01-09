@@ -14,11 +14,14 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 #from template import TemplatedPage
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
 import local
+import geo
 
 from datetime import datetime, timedelta
 
 API_VERSION = 1.0
 SERVER_NAME = os.environ['SERVER_NAME']
+
+logging.getLogger().setLevel(logging.DEBUG)
 
 class BaseApi(webapp.RequestHandler):
 	def parcer(self):
@@ -48,6 +51,8 @@ class Info(BaseApi):
 		account = DBAccounts.get(db.Key(acckey))
 		lsys = []
 		for sys in account.systems:
+			logging.info(sys.key())
+			logging.info(sys.imei)
 			lsys.append({
 				"key": str(sys.key()),
 				"imei": sys.imei,
@@ -653,7 +658,8 @@ class Geo_Get(webapp.RequestHandler):
 			if point['fsource'] in (2, 3, 7):
 				if stop_start is None:
 					stop_start = {}
-					stop_start['ind'] = ind
+					stop_start['ind'] = max(0, ind-1)
+					#stop_start['ind'] = ind
 					stop_start['lat'] = plat
 					stop_start['lon'] = plon
 			if point['fsource'] == 6:
@@ -858,6 +864,249 @@ class Geo_Dates(webapp.RequestHandler):
 
 		self.response.out.write(json.dumps(jsonresp, sort_keys=True) + "\r")
 
+
+
+class Geo_Last(BaseApi):
+	def parcer(self, acckey=None, **argw):
+		"""from bisect import insort
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+		skey = self.request.get("skey", None)
+		if skey is None:
+			self.response.out.write(json.dumps({'answer': None, 'reason': 'skey is not defined'}) + "\r")
+			return
+
+		system_key = db.Key(skey)
+
+		#req = DBGeo.all(keys_only=True).ancestor(system_key).order('-date').fetch(1000)
+		systems = 
+		"""
+		if acckey is None:
+			return {'answer': 'no', 'reason': 'acckey not defined or None'}
+
+		account = DBAccounts.get(db.Key(acckey))
+		if account is None:
+			return {'answer': 'no', 'reason': 'account not found'}
+
+		#imei = self.request.get('imei', None)
+		#if imei is None:
+		#	return {'result': 'imei not defined'}
+
+		#res = account.AddSystem(imei)
+
+		systems = account.systems
+		recs = []
+		for s in systems:
+			recs.append({
+				'skey': str(s.key()),
+				'imei': s.imei,
+				'desc': s.desc,
+				'data': geo.getGeoLast(s),
+			})
+
+		jsonresp = {
+			'answer': 'ok',
+			'imeis': repr([r.imei for r in systems]),
+			'geo': recs,
+			#'dates': dates,
+			#'months': months,
+			#'years': years,
+			#'len': dlen,
+		}
+		return jsonresp
+
+		#self.response.out.write(json.dumps(jsonresp, sort_keys=True) + "\r")
+
+class Report_Get(webapp.RequestHandler):
+	def get(self):
+		from math import log, sqrt
+
+		"""
+		prof = "gc START: %s\n" % dir(gc)
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		logging.info(prof)
+		"""
+
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		skey = self.request.get("skey")
+		if skey is None:
+			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		system_key = db.Key(skey)
+
+
+		#pfrom = self.request.get("from")
+		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+
+		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+
+		'''
+		points = []
+		l_lat = []	# Список индексов (lat, index)
+		l_lon = []	# Список индексов (lon, index)
+		counts = []
+		stops = []
+		plat = 0.0
+		plon = 0.0
+
+		DS = 0.8
+		MS = DS/(2**20)
+
+		pl = 0
+		b_lat_l = 90.0
+		b_lon_l = 180.0
+		b_lat_r = -90.0
+		b_lon_r = -180.0
+
+		ind = 0 
+
+		stop_start = None
+
+		maxp = 5000
+		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, maxp):
+			d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
+			plat = point['lat']
+			plon = point['lon']
+				
+			points.append([
+				#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
+				local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
+				plat, #point['lat'],
+				plon, #point['lon'],
+				int(point['course']),
+				#20,
+				int(round(log(DS/d, 2), 0)),
+			])
+			l_lat.append((plat, ind))
+			#l_lon.append((plon, ind))
+
+			#if point['speed'] < 1.0:
+
+			if point['fsource'] in (2, 3, 7):
+				if stop_start is None:
+					stop_start = {}
+					stop_start['ind'] = max(0, ind-1)
+					#stop_start['ind'] = ind
+					stop_start['lat'] = plat
+					stop_start['lon'] = plon
+			if point['fsource'] == 6:
+				if stop_start is not None:
+					stops.append({
+						'i': stop_start['ind'],
+						'p': (stop_start['lat'], stop_start['lon']),
+						's': ind,
+					})
+					stop_start = None
+			"""
+			if point['fsource'] in (2, 3, 7):
+				if stop_start is None:
+					stop_start = {}
+					stop_start['ind'] = ind
+					stop_start['lat'] = plat
+					stop_start['lon'] = plon
+					stops.append({'i': ind, 'p': (plat, plon)})
+				else:
+					if stop_start['lat'] != plat or stop_start['lon'] != plon:
+						stop_start['ind'] = ind
+						stop_start['lat'] = plat
+						stop_start['lon'] = plon
+						stops.append({'i': ind, 'p': (plat, plon)})
+			"""
+
+
+			b_lat_l = min(b_lat_l, plat)
+			b_lon_l = min(b_lon_l, plon)
+			b_lat_r = max(b_lat_r, plat)
+			b_lon_r = max(b_lon_r, plon)
+
+			ind += 1
+
+		# Zoom для первой и последней точки наивысший (отображать всегда)
+		plen = len(points) 
+		if plen>0:
+			points[0][-1] = 0
+			points[-1][-1] = 0
+
+		# Вычислим subbounds (TBD)
+		
+		# Разобьем на 8 частей по lat
+		l_lat.sort()
+		#l_lon.sort()
+		subbounds = []
+		sbs_lat = int(sqrt(plen) / 24) + 1
+		sbs_lon = int(sqrt(plen) / 24) + 1
+		for i in range(sbs_lat):
+			l_lon = []
+			i1 = plen * i // sbs_lat
+			i2 = plen * (i+1) // sbs_lat
+			#logging.info('i1 = %s' % str(i1))
+			#logging.info('i2 = %s' % str(i2))
+			for i3 in xrange(i1, i2):
+				l_lon.append((points[l_lat[i3][1]][2], l_lat[i3][1]))
+			l_lon.sort()
+			for j in range(sbs_lon):
+				sbl = []
+				j1 = len(l_lon) * j // sbs_lon
+				j2 = len(l_lon) * (j+1) // sbs_lon
+				#logging.info(' j1 = %s' % str(j1))
+				#logging.info(' j2 = %s' % str(j2))
+				nmin_lat = 180
+				nmax_lat = -180
+				for j3 in xrange(j1, j2):
+					nmin_lat = min(nmin_lat, points[l_lon[j3][1]][1])
+					nmax_lat = max(nmax_lat, points[l_lon[j3][1]][1])
+					sbl.append(l_lon[j3][1])
+				if(len(sbl)):
+					subbounds.append({
+						#'sw': (l_lat[i1][0], l_lon[j1][0]),
+						#'ne': (l_lat[i2-1][0], l_lon[j2-1][0]),
+						'sw': (nmin_lat, l_lon[j1][0]),
+						'ne': (nmax_lat, l_lon[j2-1][0]),
+						'i': sbl,
+					})
+				
+		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
+		'''
+
+		jsonresp = {
+			'answer': 'ok',
+			'dtfrom': str(local.fromUTC(dtfrom)),
+			'dtto': str(local.fromUTC(dtto)),
+			'report': {
+				'moves': [
+					{
+						'start': '101201000000',
+						'stop': '101201010101',
+						'duration': '010101',
+					},
+				],
+			}
+		}
+		self.response.out.write(json.dumps(jsonresp, separators=(',',':'), indent=2) + "\r")
+
+		"""
+		prof = "gc AFTER:\n"
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		logging.info(prof)
+
+		gc.collect()
+
+		prof = "gc COLLECT:\n"
+		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
+		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
+		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
+		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
+		#prof += "gc.get_objects()=%s\n" % repr(gc.get_objects())
+		logging.info(prof)
+		"""
+
 class Sys_Add(BaseApi):
 	def parcer(self, acckey=None, **argw):
 		if acckey is None:
@@ -877,6 +1126,61 @@ class Sys_Add(BaseApi):
 		elif res == 2:
 			return {'result': 'already'}
 		return {'result': 'added'}
+
+class Sys_Sort(BaseApi):
+	def parcer(self, acckey=None, **argw):
+		if acckey is None:
+			return {'answer': 'no', 'reason': 'acckey not defined or None'};
+
+		account = DBAccounts.get(db.Key(acckey))
+		if account is None:
+			return {'result': 'no', 'reason': 'account not found'}
+
+		imei = self.request.get('imei', None)
+		if imei is None:
+			return {'result': 'no', 'reason': 'imei not defined'}
+
+		index = self.request.get('index', None)
+		if index is None:
+			return {'result': 'no', 'reason': 'index not defined'}
+		index = int(index)
+
+		systems = account.systems
+		slist = [s.imei for s in systems]
+		if imei not in slist:
+			return {'result': 'no', 'reason': 'unknown system imei'}
+
+		oldindex = slist.index(imei)
+
+		logging.info(
+			'\n=====\n OLD index ' + str(oldindex) +
+			'\nIMEI_1: ' + db.get(account.systems_key[oldindex]).imei +
+			#'\nIMEI_2: ' + systems[oldindex].imei +
+			'\nIMEI_S: ' + imei
+		)
+		logging.info( '\n ==\n' + repr(systems))
+		logging.info( '\n ==\n' + repr(slist))
+		logging.info( '\n ==\n' + repr(account.systems_key))
+
+		if oldindex != index:
+			#logging.info('\nchange ' + str(account.systems_key[oldindex]) + ' and ' + str(account.systems_key[index]))
+			#logging.info('change ' + db.get(account.systems_key[oldindex]).imei + ' and ' + db.get(account.systems_key[index]).imei)
+
+
+			goted = account.systems_key[oldindex]
+			del account.systems_key[oldindex]
+			account.systems_key.insert(index, goted)
+			logging.info('\n=====Change ' + str(goted) + '(' + db.get(goted).imei + ') to ' + str(index))
+
+			#account.systems_key[oldindex],account.systems_key[index] = account.systems_key[index],account.systems_key[oldindex]
+			account.put()
+
+		#res = account.AddSystem(imei)
+		#if res == 0:
+		#	return {'result': 'not found'}
+		#elif res == 2:
+		#	return {'result': 'already'}
+		return {'result': 'sorted', 'desc': {'imei': imei, 'oldindex': oldindex, 'newindex': index}}
 
 class Sys_Desc(BaseApi):
 	def parcer(self, acckey=None, **argw):
@@ -924,14 +1228,21 @@ application = webapp.WSGIApplication(
 	('/api/info.*', Info),
 	('/api/version.*', Version),
 	('/api/debug_jqGrid.*', Debug_jqGrid),
-	('/api/get_geo.*', GetGeo),
-	('/api/geo/del.*', Geo_Del),
 	('/api/debug_geo.*', DebugGeo),
+	('/api/get_geo.*', GetGeo),
+
+	('/api/geo/del.*', Geo_Del),
 	('/api/geo/get*', Geo_Get),
 	('/api/geo/dates*', Geo_Dates),
 	('/api/geo/info*', Geo_Info),
+	('/api/geo/last*', Geo_Last),
+
+	('/api/report/get*', Report_Get),
+
 	('/api/sys/add*', Sys_Add),
 	('/api/sys/desc*', Sys_Desc),
+	('/api/sys/sort*', Sys_Sort),
+
 	('/api/global/delall*', Global_DelAll),
 	#('/api/geo/test*', Geo_Test),
 	],

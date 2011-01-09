@@ -26,9 +26,17 @@ class DBAccounts(db.Expando):
 	def systems(self):
 		#return 'aaa'
 		system_list = []
-		for rec in self.systems_key:
+		purge = False
+		#for i in range(len(self.systems_key)):
+		for i, rec in enumerate(self.systems_key):
 			s = db.get(rec)
-			if s is not None: system_list.append(s)
+			if s is not None:
+				system_list.append(s)
+			else:
+				del self.systems_key[i]
+				purge = False
+		if purge:
+			self.put()
 		return system_list
 
 	def system_by_imei(self, imei):
@@ -228,7 +236,6 @@ class DBGeo(db.Model):
 			t['fsource'],
 			0, 0, 0#,  0, 0, 0, 0, 0, 0, 0	# Reserve
 		)
-
 
 	def get_item(self, offset):
 		return self.u_to_v(struct.unpack_from(PACK_STR, self.bin, offset * PACK_LEN))
