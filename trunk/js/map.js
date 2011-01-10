@@ -650,6 +650,8 @@ function CreateMap()
 
 }
 
+var last = null;
+
 function GetLastPositions(acckey) {
 	console.log('Get last positions...');
 	url = "/api/geo/last?acckey=" + acckey;
@@ -754,32 +756,57 @@ var ClearPath = function(skey){
 
 var prev_sender=null;
 
-function SetDay(skey, date, sender){
+function SetDay(skey, date){
 	var from = date+'000000';
 	var to = date+'235959';
 	console.log("::SetDay.start date=" + date + " from:" + from + " to:" + to);
 	GetPath(skey, from, to);
 	//console.log(sender + '-' + prev_sender);
 	//if(prev_sender) $('#'+prev_sender).css('background-color','');
-	if(prev_sender) $('#'+prev_sender).css({'background-color': '', '-webkit-box-shadow': ''});
-	prev_sender = sender;
+	//if(prev_sender) $('#'+prev_sender).css({'background-color': '', '-webkit-box-shadow': ''});
+	//prev_sender = sender;
 	//$('#'+sender).css('background-color', 'lime');
 	//$('#'+sender).css({'background-color': 'lime', 'border': '1px solid black'});
-	$('#'+sender).css({'background-color': 'lime', '-webkit-box-shadow': '0px 0px 3px #404040'});
+	//$('#'+sender).css({'background-color': 'lime', '-webkit-box-shadow': '0px 0px 3px #404040'});
 }
 
 var dbg_data = null;
 
 monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-function DayList(skey){
+function DayList(skey, month){
 	console.log("::DayList.start");
-	url = "/api/geo/dates?skey="+skey;
+	url = "/api/geo/dates?skey=" + skey + "&month="+ month;
 	$.getJSON(url, function (data) {
 		//$("#progress").html("Обрабатываем...");
 		console.log("::DayList: getJSON parce " + data.years);
 		dbg_data = data;
-		if (data.answer && data.len > 0) {
+		if (data.answer) {
+			console.log(data);
+
+			$("#datepicker").datepicker("refresh");
+
+			$("#date_select table tbody a").each(function(index){
+				var day = parseInt($(this).text(), 10);
+				console.log(index + ' : ' + day);
+
+				var parent = $(this).parent();
+
+				if(data.days.indexOf(day) == -1){
+					parent.addClass('ui-datepicker-unselectable');
+					parent.addClass('ui-state-disabled');
+					//parent.attr('onclick', '');
+					parent.removeAttr('onclick');
+					parent.empty();
+					parent.append('<span class="ui-state-default" href="#">'+day+'</span>');
+				}
+				//if(index % 5) $(this).css('opacity', '0.2');
+			});
+
+
+			//item += '<a id="lmlnk_'+j+'_'+k+'" href="javascript:SetDay(\''+skey+'\',\''+(i%100)+j+d[k]+'\', \'lmlnk_'+j+'_'+k+'\');">' + d[k] + '</a> ';
+
+			if(0){
 			$("#daylist").accordion( "destroy" );
 			var item = '';
 			var last;
@@ -821,6 +848,7 @@ function DayList(skey){
 			//$("button").button();
 			//$("#daylist").css('display', '');
 			$("#daylist").fadeIn();
+			}
 		}
 	});
 	console.log("::DayList.end");

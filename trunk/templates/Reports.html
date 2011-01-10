@@ -3,6 +3,8 @@
 {% block head %}
   <link type="text/css" href="/stylesheets/reports.css" rel="stylesheet">
 
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.datepicker.js"></script>
+  <!--script type="text/javascript" src="/js/jquery.ui.datepicker.js"></script-->
   <script type="text/javascript" src="/js/jquery.ui.datepicker-ru.js"></script>
   <script type="text/javascript" src="/js/base.js"></script>
   <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
@@ -42,7 +44,7 @@
 	}
 
 	function genReport(skey, start, stop) {
-		$(".control").hide();
+		//$(".control").hide();
 		for(var i in adrlist) { clearInterval(adrlist[i].cb); adrlist[i].stop = true; }
 		$( "#report tbody" ).empty();
 
@@ -53,6 +55,10 @@
 			if (data.answer == 'ok') {
 				//ParcePath(data);
 				console.log("Show report...");
+
+				$("#total_dist").html(ln_to_km(data.summary.length));
+				$("#total_movetime").html(td_to_hms(data.summary.movetime));
+
 				var tbody = $( "#report tbody" );
 				//console.log(tbody);
 				adrlist = [];
@@ -62,7 +68,7 @@
 					var tp;
 
 					switch(rec.type){
-						case 'move': {tp = 'Движение ' + ln_to_km(rec.length); break}
+						case 'move': {tp = 'Движение</td><td>' + ln_to_km(rec.length); break}
 						case 'stop': {
 							//var rdiv = $('div');
 							//console.log(rdiv);
@@ -70,28 +76,29 @@
 							else tp = 'Стоянка';
 							adrlist.push({pos: rec.start.pos, id: ad_id, stop: false});
 
-							tp += ' <span id="' + ad_id + '" title="Дождитесь окончания обновления">' + rec.start.pos + '</span>';
+							tp += '</td><td id="' + ad_id + '" title="Дождитесь окончания обновления">' + rec.start.pos;
 							break
 						}
 						default: {tp = 'Неизвестное событие (' + rec.type + ')'}
 					}
 					
 					tbody.append( "<tr>" +
-						"<td>" + start + "</td>" + 
+						"<td>" + dt_to_date(start) + "</td>" + 
 						"<td>" +
 						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-cancel" title="Убрать из отчета информацию о движении"></span></button>' +
 						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-locked" title="Оставить в отчете только информацию о движении"></span></button>' +
 						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-zoomin" title="Показать этот путь на карте"></span></button>' +
 						tp + "</td>" + 
 						"<td>" + dt_to_time(rec.start.time) + ' - ' + dt_to_time(rec.stop.time) + "</td>" +
-						"<td>" + td_to_hms(rec.duration) + "</td>" +
-						"<td>" + rec.length + "</td>" +
+						"<td>" + td_to_hms(rec.duration) + " ( " + td_to_time(rec.duration) + ")</td>" +
 					"</tr>" );
 					
 				}
 				console.log(adrlist);
 				for(i in adrlist){
-					var ci = i;
+					if(i==0){
+						$(".control").hide();
+					}
 					//console.log(i);
 					(function(i) {
 						adrlist[i].cb = setTimeout(function(){getGeocode(adrlist, i, 10)}, 1000);
@@ -110,9 +117,6 @@
 		$( "#report tbody" ).empty();
 	}
 
-	function date_to_url(ymd) {
-		return ymd.slice(8,10) + ymd.slice(3,5) + ymd.slice(0,2);
-	}
 
 	$(function(){
 		geocoder = new google.maps.Geocoder();
@@ -174,9 +178,9 @@
 			<tr class="ui-widget-header ">
 				<th>Дата</th>
 				<th>Действие</th>
+				<th>Примечание</th>
 				<th>Период</th>
 				<th>Время</th>
-				<th>Дистанция</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -197,35 +201,37 @@
 			<tr>
 				<td>26.07.2010</td>
 				<td>Пройденная дистанция</td>
-				<td>0 км</td>
+				<td id="total_dist">-</td>
 			</tr>
 			<tr>
 				<td>26.07.2010</td>
 				<td>Общее время в пути</td>
-				<td>4 ч</td>
+				<td id="total_movetime">-</td>
 			</tr>
 			<tr>
 				<td>26.07.2010</td>
 				<td>Средняя скорость движения</td>
-				<td>0 км/ч</td>
+				<td id="total_av_speed">-</td>
 			</tr>
-			<tr>
+			<!--tr>
 				<td>26.07.2010</td>
 				<td>Средняя скорость с учетом остановок</td>
-				<td>0 км/ч</td>
-			</tr>
+				<td>-</td>
+			</tr-->
 			<tr>
 				<td>26.07.2010</td>
 				<td>Общее время остановок</td>
-				<td>0 мин</td>
+				<td>-</td>
 			</tr>
 			<tr>
 				<td>26.07.2010</td>
 				<td>Общее время стоянок</td>
-				<td>1 час 5 мин</td>
+				<td>-</td>
 			</tr>
 		</tbody>
 	</table>
+
+	<button title="Загрузить отчет в формате CSV">Экспорт в Excel</button>
 
 	</div>
 {% endblock %}

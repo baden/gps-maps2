@@ -828,28 +828,58 @@ class Geo_Dates(webapp.RequestHandler):
 			self.response.out.write(json.dumps({'answer': None}) + "\r")
 			return
 
+		month = self.request.get("month")
+		if month is None:
+			self.response.out.write(json.dumps({'answer': None}) + "\r")
+			return
+
+		sy = int(month[:4])
+		sm = int(month[4:])
+
+		ny = sy
+		nm = sm + 1
+		if nm > 12:
+			nm = 1
+			ny += 1
+
 		system_key = db.Key(skey)
 
-		req = DBGeo.all(keys_only=True).ancestor(system_key).order('-date').fetch(1000)
+		#req = DBGeo.all(keys_only=True).ancestor(system_key).filter('date >=', datetime(sy,sm,1)).filter('date <', datetime(ny,nm,1)).order('date').fetch(31*3) # пачки по 8 часов
+		req = DBGeo.all().ancestor(system_key).filter('date >=', datetime(sy,sm,1)).filter('date <', datetime(ny,nm,1)).order('date').fetch(31*3) # пачки по 8 часов
 
 		#dates = []
 		#months = []
+		days = []
 		dlen = 0
-		years = {}
 		for rec in req:
-			dt = rec.name()[4:12]
-			y = dt[0:4]
-			m = dt[4:6]
+			dlen+=1;
+			"""
+			#dt = rec.name()[4:12]
+			dt = rec.key().name()[4:12]
+			y = int(dt[0:4])
+			m = int(dt[4:6])
 			d = dt[6:8]
-			if y not in years:
-				years[y] = {}
+			"""
 
-			if m not in years[y]:
-				years[y][m] = []
+			dt = local.fromUTC(rec.get_first()['time']).strftime("%Y%m%d")
+			#logging.info(dt)
+			y = int(dt[0:4])
+			m = int(dt[4:6])
+			d = int(dt[6:8])
 
-			if d not in years[y][m]:
-				insort(years[y][m], d)
-				dlen+=1;
+			if y == sy and m == sm:
+				if d not in days:
+					insort(days, d)
+
+			dt = local.fromUTC(rec.get_last()['time']).strftime("%Y%m%d")
+			#logging.info(dt)
+			y = int(dt[0:4])
+			m = int(dt[4:6])
+			d = int(dt[6:8])
+
+			if y == sy and m == sm:
+				if d not in days:
+					insort(days, d)
 
 			#if dt not in dates:
 			#	dates.append("%s" % dt)
@@ -858,11 +888,13 @@ class Geo_Dates(webapp.RequestHandler):
 			'answer': 'ok',
 			#'dates': dates,
 			#'months': months,
-			'years': years,
+			'year': sy,
+			'month': sm,
+			'days': days,
 			'len': dlen,
 		}
 
-		self.response.out.write(json.dumps(jsonresp, sort_keys=True) + "\r")
+		self.response.out.write(json.dumps(jsonresp, indent=2) + "\r")	#sort_keys=True,
 
 
 
@@ -1077,6 +1109,8 @@ class Report_Get(webapp.RequestHandler):
 		prev_point = None
 		state = 0	# 0 - stop   1 - move
 		length = 0
+		sum_length = 0	# Пройденая дистанция
+		sum_tmove = 0	# Общее время в пути
 
 		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, 1000):
 			if move_start is None:
@@ -1090,6 +1124,7 @@ class Report_Get(webapp.RequestHandler):
 						stop_start = point
 
 					dura = (stop_start['time'] - move_start['time'])
+					sum_tmove += dura.days * 24 * 3600 + dura.seconds
 					report.append({
 						'type': 'move',
 						'start': {
@@ -1102,7 +1137,7 @@ class Report_Get(webapp.RequestHandler):
 						},
 						'duration': dura.days * 24 * 3600 + dura.seconds,
 						'durationtxt': str(dura),
-						'length': length,
+						'length': "%.3f" % length,
 						'startpos': (point['lat'], point['lon']),
 						'speed': point['speed'],
 						'fsource': point['fsource']
@@ -1133,7 +1168,12 @@ class Report_Get(webapp.RequestHandler):
 					move_start = point
 					stop_start = None
 
-			length += 1
+			if prev_point:
+				d = geo.distance(point, prev_point)
+			else:
+				d = 0
+			length += d
+			sum_length += d
 			prev_point = point
 
 
@@ -1141,6 +1181,10 @@ class Report_Get(webapp.RequestHandler):
 			'answer': 'ok',
 			'dtfrom': str(local.fromUTC(dtfrom)),
 			'dtto': str(local.fromUTC(dtto)),
+			'summary': {
+				'length': "%.3f" % sum_length,
+				'movetime': sum_tmove,
+			},
 			'report': report,
 		}
 		self.response.out.write(json.dumps(jsonresp, separators=(',',':'), indent=2) + "\r")

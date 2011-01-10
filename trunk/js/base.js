@@ -20,11 +20,38 @@ function td_to_hms(d) {
 	else return seconds + ' сек';
 }
 
+function td_to_time(d) {
+	var minutes = (d - (d % 60)) / 60;
+	var hours = (minutes - (minutes % 60)) / 60;
+	minutes = minutes % 60;
+	var seconds = d % 60;
+	var r = '';
+	if(hours==0) r+='00:';
+	else if(hours<10) r+='0'+hours+':';
+	else r+=hours+':';
+	if(minutes==0) r+='00:';
+	else if(minutes<10) r+='0'+minutes+':';
+	else r+=minutes+':';
+	if(seconds==0) r+='00:';
+	else if(seconds<10) r+='0'+seconds+':';
+	else r+=seconds+':';
+	return r;
+}
+
+function date_to_url(ymd) {
+	return ymd.slice(8,10) + ymd.slice(3,5) + ymd.slice(0,2);
+}
+
+
 function ln_to_km(l) {
-	var k = (l - (l % 1000)) / 1000;
-	var m = l % 1000;
-	if(k) return k + ' км ' + m + ' м';
-	else return m + ' м';
+//	var k = parseInt(l, 10);
+//	var m = Math.round((l-parseInt(l, 10))*1000);
+//	if(k) return Math.round(l*10)/10 + ' км (' + k + ' км ' + m + ' м)';
+//	else return Math.round(l*10)/10 + ' км (' + m + ' м)';
+
+	if(l>=1.0) return Math.round(l*10)/10 + ' км';
+	else return Math.round(l*1000) + ' м';
+
 }
 
 function geocode_to_addr(results) {

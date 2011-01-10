@@ -2,6 +2,16 @@
 
 {% block head %}
   <link type="text/css" href="/stylesheets/config.css" rel="stylesheet">
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.accordion.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.mouse.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.position.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.draggable.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.resizable.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.dialog.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.sortable.js"></script>
+
+  <link href="/plugins/colorpicker/css/colorpicker.css" rel="stylesheet" type="text/css"/>
+  <script src="/plugins/colorpicker/js/colorpicker.js"></script>
   <script>
   	var sys_imeis = [];
   	var sys_descs = [];
@@ -59,34 +69,6 @@
 			$("#dialog-addsys").dialog('open');
 		});
 		UpdateSysList();
-
-		$("#config_list").accordion({fillSpace: true, collapsible: true});
-		$("#config_sys_list").sortable({
-			//delay: 500,
-			//axis: 'y',
-			//containment: 'parent',
-			handle: '.msp',
-			revert: true,
-			scrollSpeed: 5,
-			stop: function(event, ui){
-				/*console.log(ui.item.index());
-				console.log(ui.item.attr('imei'));
-				console.log(ui);*/
-				var imei = ui.item.attr('imei');
-				var index = ui.item.index();
-				$.getJSON("/api/sys/sort?acckey={{ account.key }}&imei=" + imei + "&index=" + index, function (data) {
-					//window.location = "/config";
-					//$(this).dialog('close');
-					if(data.result){
-						console.log('Set new position for ' + imei + ' to ' + index);
-					}
-				});
-
-			},
-		});
-		$("#config_sys_list").disableSelection();
-
-		$(window).resize(function(){$("#config_list").accordion("resize");});
 
 		/*
 		$("#get_a_path").click(function(){
@@ -176,13 +158,70 @@
 		$("#dialog-addsys-already").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
 		$("#popup-sys").dialog({modal: true, autoOpen: false});
 		$("#popup-sys li").button();
+
+
+		$('#colorpickerHolder').ColorPicker({
+			color: '#0000ff',
+			onShow: function (colpkr) {
+				$(colpkr).fadeIn(100);
+				return false;
+			},
+			onHide: function (colpkr) {
+				$(colpkr).fadeOut(100);
+				return false;
+			},
+			onChange: function (hsb, hex, rgb) {
+				$('#colorpickerHolder div').css('backgroundColor', '#' + hex);
+			}
+		});
+
+
+		$("#config_list").accordion({fillSpace: true, collapsible: true});
+		$("#config_sys_list").sortable({
+			//delay: 500,
+			//axis: 'y',
+			//containment: 'parent',
+			handle: '.msp',
+			revert: true,
+			scrollSpeed: 5,
+			stop: function(event, ui){
+				/*console.log(ui.item.index());
+				console.log(ui.item.attr('imei'));
+				console.log(ui);*/
+				var imei = ui.item.attr('imei');
+				var index = ui.item.index();
+				$.getJSON("/api/sys/sort?acckey={{ account.key }}&imei=" + imei + "&index=" + index, function (data) {
+					//window.location = "/config";
+					//$(this).dialog('close');
+					if(data.result){
+						console.log('Set new position for ' + imei + ' to ' + index);
+					}
+				});
+
+			},
+		});
+		$("#config_sys_list").disableSelection();
+
+		$(window).resize(function(){$("#config_list").accordion("resize");});
+		setTimeout(function(){$("#config_list").accordion("resize")}, 1000);
+
 	});
 
 	$(document).bind('contextmenu', function(e) {
                   return false;
         });
         //$(document).disableSelection();
+
+	function SetTheme() {
+		confole.log($('#cfg_theme').attr('value'));
+	}
+
   </script>
+  <style>
+	div#container {
+		overflow: hidden;
+	}
+  </style>
 {% endblock %}
 
 {% block body %}
@@ -191,7 +230,8 @@
 	</script-->
 <div id="switcher"></div>
 	<div id="config_list">
-		<h3><a href="#">Наблюдаемые системы</a><h3><div>
+		<h3><a href="#">Наблюдаемые системы</a></h3>
+		<div>
 			<button id="button_sys_update">Получить список</button>
 			<ul id="config_sys_list">
 				<li>Пусто</li>
@@ -200,8 +240,43 @@
 			<button id="button_sys_add">Добавить систему</button>
 
 		</div>
-		<h3><a href="#">Настройки интерфейса</a><h3><div>
-			<button>Установить временную зону</button>
+		<h3><a href="#">Настройки интерфейса</a></h3>
+		<div>
+			<div style="position: absolute; top:0px; bottom: 30px; left:0px; right:0px; overflow-y:auto; ">
+				Временная зона: <button>+2</button><br/>
+				Тема оформления:
+				<select id="cfg_theme" name="cfg_theme" style="" onchange="SetTheme();">
+					<option value="black-tie">black-tie</option>
+					<option value="blitzer">blitzer</option>
+					<option value="cupertino">cupertino</option>
+					<option value="dark-hive">dark-hive</option>
+					<option value="dot-luv">dot-luv</option>
+					<option value="eggplant">eggplant</option>
+					<option value="excite-bike">excite-bike</option>
+					<option value="flick">flick</option>
+					<option value="hot-sneaks">hot-sneaks</option>
+					<option value="humanity">humanity</option>
+					<option value="le-frog">le-frog</option>
+					<option value="mint-choc">mint-choc</option>
+					<option value="overcast">overcast</option>
+					<option value="pepper-grinder">pepper-grinder</option>
+					<option value="redmond">redmond</option>
+					<option value="smoothness">smoothness</option>
+					<option value="south-street">south-street</option>
+					<option value="start">start</option>
+					<option value="sunny">sunny</option>
+					<option value="swanky-purse">swanky-purse</option>
+					<option value="trontastic">trontastic</option>
+					<option value="ui-darkness">ui-darkness</option>
+					<option value="ui-lightness">ui-lightness</option>
+					<option value="vader">vader</option>
+				</select><br/>
+				<div id="colorpickerHolder">Цвет трека: <div style="width: 16px; height: 16px; border: 2px solid black; display: inline; position: absolute;"></div></div>
+			</div>
+			<div style="position: absolute; bottom: 2px; left: 50%; margin-left: -100px;">
+				<button>Сохранить</button>
+				<button>Отменить</button>
+			</div>
 		</div>
 
 	</div>
