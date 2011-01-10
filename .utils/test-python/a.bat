@@ -1,1 +1,1 @@
-python test01.py
+python dist.py

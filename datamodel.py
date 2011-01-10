@@ -240,7 +240,11 @@ class DBGeo(db.Model):
 	def get_item(self, offset):
 		return self.u_to_v(struct.unpack_from(PACK_STR, self.bin, offset * PACK_LEN))
 
+	def get_first(self):
+		return self.get_item(0)
+
 	def get_last(self):
+		#return self.get_item(self.count-1)
 		return self.u_to_v(struct.unpack_from(PACK_STR, self.bin, (self.count-1) * PACK_LEN))
 
 	def get_all(self, reverse=False):
