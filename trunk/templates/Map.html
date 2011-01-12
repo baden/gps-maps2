@@ -5,6 +5,9 @@
   <link type="text/css" href="/stylesheets/map.css" rel="stylesheet" />
 
   <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.datepicker.js"></script-->
+
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.tabs.js"></script>
+
   <!-- Нужен небольшой патч датепикера чтобы не обновлял дни при выборе даты -->
   <script type="text/javascript" src="/js/jquery.ui.datepicker.js"></script>
   <script type="text/javascript" src="/js/jquery.ui.datepicker-ru.js"></script>
@@ -16,7 +19,9 @@
 
   <script src="/js/base.js"></script>
   <script src="/js/mymarker.js"></script>
-  <script src="/js/map.js"></script>
+  <script src="/js/lastmarker.js"></script>
+  <!--script src="/js/lastmarker-min.js"></script-->
+  <script src="/js/maps.js"></script>
 
   <script>
 
@@ -45,13 +50,34 @@
 	}
 
 	$(document).ready(function() {
-		$(document).disableSelection();
+		//$(document).disableSelection();
+		//$('*').not('input').disableSelection();
+		//$("input").enableSelection();
+		//$('div').disableSelection();
+		//$('#int_select').unbind('selectstart');
 		CreateMap();
 
+		$("#date_tabs").tabs();
 		$("#nav_map").button("option", "disabled", true);
 
 		$("#ul_sys li").click(function(){
-			sys_key = this.attributes['value'].value;
+			/*
+			$("#ul_sys li").css({
+				'color': '',
+				//'padding-top': '',
+				//'padding-bottom': '',
+				'border': ''
+			});
+			$(this).css({
+				'color': 'black',
+				//'padding-top': '10px',
+				//'padding-bottom': '10px',
+				'border': '1px solid black'
+			});
+			*/
+			$("#ul_sys li").removeClass('ui-state-highlight');
+			$(this).addClass('ui-state-highlight');
+			sys_key = this.attributes['skey'].value;
 			UpdateDayList();
 		});
 
@@ -141,6 +167,24 @@
 			}
 			
 		});
+		$('div#carselect ul li span').click(function(){
+			var skey = $(this).attr('skey');
+			//console.log(lastpos[skey]);
+			map.panTo(lastpos[skey].position);
+		});
+		$('div#carselect ul li').mouseover(function(){
+			var skey = $(this).attr('skey');
+			//console.log(skey);
+			//map.panTo(lastpos[skey].position);
+			//$('.lastmarker').css('z-index', '100');
+			//$('.lastmarker[skey="'+skey+'"]').css('z-index', '101');
+			$('.lastmarker').removeClass('lastup');
+			$('.lastmarker[skey="'+skey+'"]').addClass('lastup');
+
+		});
+		$('div#carselect ul li').mouseout(function(){
+			$('.lastmarker[skey="'+$(this).attr('skey')+'"]').removeClass('lastup');
+		});
 
 	});
 
@@ -159,23 +203,7 @@
 
 	.cusel {z-index: 10 !important;}
 
-	.ui-datepicker {
-		/*padding: 0px 0px 0px 0px;*/
-		width: 98%;
-	}
 
-	.ui-datepicker th, .ui-datepicker td {
-		padding-left: 0px;
-		padding-right: 0px;
-	}
-	.ui-datepicker td span, .ui-datepicker td a {
-		padding: 0px 0px 0px 0px;
-		/*padding-right: 0px;*/
-	}
-        /*
-	table.ui-datepicker-calendar {
-		padding: 0px 0px 0px 0px;
-	}*/
 
   </style>
 {% endblock %}
@@ -196,7 +224,7 @@
 
 	</div>
 	<div id="panel">
-		<div style="position: absolute; width:100%; top: 0px; height: 24px;">
+		<div id="groupselect">
 			<select id="group_list" name="group_list" style="width:100%;" title="Группа" onchange="UpdateGroupList();">
 				<option value="*">Все</option>
 				<option value="Личные">Личные</option>
@@ -204,21 +232,13 @@
 			</select>
 
 		</div>
-		<div style="position: absolute; top: 24px; bottom: 180px; left:0px; right: 0px; overflow-x: hidden; overflow-y: auto;">
-		<!--Системы:-->
-			<!--ul id="syslist">
-				{% for sys in account.systems %}
-				<li title="{{ sys.imei }}: {{ sys.desc }}" imei="{{ sys.key }}">.</li>
-				{% endfor %}
-			</ul-->
-			<!--select id="my_syslist" name="my_syslist" style="width:100%;" onchange="UpdateDayList($('#my_syslist').attr('value'));">
-				{% for sys in account.systems %}
-				<option imei="{{ sys.imei }}" value="{{ sys.key }}">{{ sys.desc }}</option>
-				{% endfor %}
-			</select-->
+		<div id="carselect" class="nosel">
 			<ul id="ul_sys">
 				{% for sys in account.systems %}
-				<li class="ui-widget ui-state-default" imei="{{ sys.imei }}" value="{{ sys.key }}">{{ sys.desc }}</li>
+				<li class="ui-widget ui-state-default" imei="{{ sys.imei }}" skey="{{ sys.key }}">
+					<span class="ui-icon ui-icon-zoomin" skey="{{ sys.key }}" title="Центровать последнее положение на карте"></span>
+					{{ sys.desc }}
+				</li>
 				{% endfor %}
 			</ul>
 		</div>
@@ -226,8 +246,23 @@
 		<!--div id="daylist">
 			<h3>None</h3>
 		</div-->
-		<div id="date_select" style="float: bottom; position: absolute; bottom: 0px; width: 100%; height: 180px;">
-			<div id="datepicker"></div>
+		<div id="date_tabs" style="">
+			<ul>
+				<li><a href="#date_select">Сутки</a></li>
+				<li><a href="#int_select">Интервал</a></li>
+			</ul>
+			<div id="date_select" class="nosel">
+				<div id="datepicker"></div>
+			</div>
+			<div id="int_select">
+				<table class="int_select">
+				<tr><td>c:</td><td><input type="text" id="dp1" size="10"/></td><td><input type="text" id="tm1" size="8"/></td></tr>
+				<tr><td>по:</td><td><input type="text" id="dp2" size="10"/></td><td><input type="text" id="tm2" size="8"/></td></tr>
+				</table>
+				<div style="text-align: center;"><button>Показать</button></div>
+				<p style="text-align: center; color: red;">В разработке!!!</p>
+				
+			</div>
 		</div>
 	</div>
 {% endblock %}

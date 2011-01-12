@@ -29,6 +29,8 @@
 
   <script>
 	$(document).ready(function() {
+		//$(document).bind('contextmenu', function(e) {return false;});	// Запретим правую клавишу вобще и везде
+		$('.nosel').disableSelection();
 		$("button").button();
 		//$('#switcher').themeswitcher();
 
@@ -89,7 +91,7 @@
 </head>
 
 <body>
-	<div id="header">
+	<div id="header" class="nosel">
 		<div id="control">
 			<div id="navigate">
 		<!--a class="btn_menu" id="btn_map" href="/s/Map">Карта</button>
