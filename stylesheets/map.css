@@ -22,6 +22,35 @@ div#panel {
 	/*background-color: grey;*/
 }
 
+div#carselect {
+	position: absolute;
+	top: 24px;
+	bottom: 180px;
+	left:0px;
+	right: 0px;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+div#carselect ul li span {
+	float: left;
+}
+
+div#groupselect {
+	position: absolute;
+	width:100%;
+	top: 0px;
+	height: 24px;
+}
+
+div#date_tabs {
+	float: bottom;
+	position: absolute;
+	bottom: 0px;
+	width: 100%;
+	height: 180px;
+}
+
 div#controls {
 	position: absolute;
 	/*top: -10px;*/
@@ -144,3 +173,115 @@ ul#ul_sys li:hover {
 	color: blue;
 	border: 1px solid blue;
 }
+
+.ui-datepicker {
+	/*padding: 0px 0px 0px 0px;*/
+	width: 98%;
+}
+
+.ui-datepicker th {
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+
+.ui-datepicker th, .ui-datepicker td {
+	padding-left: 0px;
+	padding-right: 0px;
+}
+
+.ui-datepicker td span, .ui-datepicker td a {
+	padding: 0px 0px 0px 0px;
+	/*padding-right: 0px;*/
+}
+
+/*
+table.ui-datepicker-calendar {
+	padding: 0px 0px 0px 0px;
+}*/
+
+.ui-tabs .ui-tabs-panel {
+	padding: 0px 0px 0px 0px;
+}
+
+.ui-tabs .ui-tabs-nav li a {
+	padding-top: 1px;
+	padding-bottom: 1px;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+table.int_select td, table.int_select tr {
+	padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+}
+
+
+
+div.lastmarker {
+	position: absolute;
+	width: 16px;
+	height: 16px;
+	border: 1px solid black;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+
+	-webkit-box-shadow: 2px 2px 6px #606060;
+	-moz-box-shadow: 2px 2px 6px #606060;
+
+	text-align: center;
+	vertical-align: middle;
+	font-weight: bold;
+
+}
+
+
+div.lastmarker:hover, div.lastup {
+	border-color: #fff;
+	z-index: 102;
+	/*-webkit-box-shadow: 4px 4px 6px #606060;
+	-moz-box-shadow: 4px 4px 6px #606060;*/
+/*	width: 18px;
+	height: 18px;
+	margin-left: -1px;
+	margin-top: -1px;*/
+}
+
+div.lastmarker:hover div.lastmarker-label {
+	/*box-shadow: 0px 0px 30px #0f0;*/
+	box-shadow: 2px 2px 6px #000;
+	/*-webkit-box-shadow: 0px 0px 30px #0f0;
+	-moz-box-shadow: 0px 0px 30px #0f0;*/
+	min-width: 100px;
+	height: auto !important;
+	min-height: 100px;
+}
+
+div.lastup div.lastmarker-label {
+	box-shadow: 0px 0px 30px #0f0;
+}
+
+div.lastmarker-label {
+	position: absolute;
+	border: 1px solid black;
+	left: 0px;
+	bottom: 16px;
+	background-color: #fff;
+	white-space: nowrap;
+	padding: 0px 5px 0px 5px;
+	border-top-left-radius: 7px 7px;
+	border-bottom-right-radius: 7px 7px;
+	-webkit-transition: all 0.2s linear;
+	height: 18px;
+	min-height: 18px;
+	overflow: hidden;
+	opacity: 0.85;
+}
+
+div.lastmarker-control {
+	width: 100%;
+	background-color: #fff;
+	white-space: normal;
+	border-top: 1px solid black;
+}
+

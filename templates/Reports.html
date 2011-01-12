@@ -6,8 +6,14 @@
   <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.datepicker.js"></script>
   <!--script type="text/javascript" src="/js/jquery.ui.datepicker.js"></script-->
   <script type="text/javascript" src="/js/jquery.ui.datepicker-ru.js"></script>
+
+
   <script type="text/javascript" src="/js/base.js"></script>
   <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
+  <!--script type="text/javascript" src="https://www.google.com/jsapi"></script-->
+
+  <!--script type="text/javascript" src="/js/gmap.js"></script-->
+  <script type="text/javascript" src="/js/gmap-min.js"></script>
 
   <script>
 	var geocoder;
@@ -87,7 +93,7 @@
 						"<td>" +
 						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-cancel" title="Убрать из отчета информацию о движении"></span></button>' +
 						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-locked" title="Оставить в отчете только информацию о движении"></span></button>' +
-						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-zoomin" title="Показать этот путь на карте"></span></button>' +
+						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-zoomin" title="Показать этот путь на карте" onclick="showMap(' + rec.start.pos + ',\'Стоянка ' + td_to_hms(rec.duration) + ' с ' + dt_to_time(rec.start.time) + ' по ' + dt_to_time(rec.stop.time) + '\');"></span></button>' +
 						tp + "</td>" + 
 						"<td>" + dt_to_time(rec.start.time) + ' - ' + dt_to_time(rec.stop.time) + "</td>" +
 						"<td>" + td_to_hms(rec.duration) + " ( " + td_to_time(rec.duration) + ")</td>" +
@@ -106,7 +112,7 @@
 					})(i);
 				}
 
-				$('.ctl').button({ disabled: true });
+				$('.ctl').button(/*{ disabled: true }*/);
 			}
 		});
 
@@ -116,6 +122,47 @@
 	function purgeReport() {
 		$( "#report tbody" ).empty();
 	}
+
+	function showMap(lat, lon, title) {
+		//$(this).css('border','2px solid green');
+		//map = $("#map_div");
+		//map.css({'left': me.pageX+10, 'top': me.pageY+10});
+		var map_div = $('#map_preview');
+		if(map_div.length==0){
+			div = $('body')
+			.append('<div id="map_overlay" class="ui-widget-overlay"></div>')
+			.append('<div id="map_preview" style="">Тут будет карта</div>');
+			var map_div = $('#map_preview');
+			$('#map_preview')
+			.append('<div id="map"></div>')
+			.append('<div id="map_close" style="position: absolute; top: -10px; left: 50%; margin-left: -20px;"><span class="ui-icon ui-icon-close"></span></div>');
+			$('#map').gmap({
+				pos: new google.maps.LatLng(lat, lon),
+				zoom: 15,
+				marker: 'center',
+				markertitme: title
+			});
+			$('#map_close').button().click(function(){
+				$('#map').gmap('destroy');
+				$('#map_preview').remove();
+				$('#map_overlay').remove();
+			});
+
+			/*
+			var mapOptions = {
+				center: new google.maps.LatLng(48.5000, 34.599),
+				mapTypeId: google.maps.MapTypeId.ROADMAP,
+				//mapTypeControl: false,
+				disableDoubleClickZoom: true,
+				draggableCursor: "default",
+				zoom: 10,
+			};
+     
+			map = new google.maps.Map(document.getElementById("map"), mapOptions);
+			*/
+		}
+		console.log(map_div);
+	} 
 
 
 	$(function(){
@@ -142,6 +189,11 @@
 
 		$('#control_day').click(function(){
 			//alert('bu');
+		});
+
+		$('#total tbody tr td').bind('click', function(me){
+			console.log(me);
+			//showMap();
 		});
 	});
   </script>
@@ -231,7 +283,7 @@
 		</tbody>
 	</table>
 
-	<button title="Загрузить отчет в формате CSV">Экспорт в Excel</button>
+	<button title="Загрузить отчет в формате CSV">Экспорт в Excel</button><br/>
 
 	</div>
 {% endblock %}

@@ -650,7 +650,7 @@ function CreateMap()
 
 }
 
-var last = null;
+var lastpos = {};
 
 function GetLastPositions(acckey) {
 	console.log('Get last positions...');
@@ -663,7 +663,38 @@ function GetLastPositions(acckey) {
 			for(var i in data.geo){
 				var p = data.geo[i];
 				//console.log(' data['+i+']='+p.imei);
+				var pos = new google.maps.LatLng(p.data.point.lat, p.data.point.lon);
 
+				var tail_path = [];
+				for(j in p.data.tail){
+					tail_path.push(new google.maps.LatLng(p.data.tail[j][1], p.data.tail[j][2]));
+					//console.log(p.data.tail[j]);
+				}
+
+				// Последние несколько точек трека
+				tailPath = new google.maps.Polyline({
+					//path: flightPlanCoordinates,
+					path: tail_path,
+					strokeColor: "#FF0000",
+					strokeOpacity: 1.0,
+					strokeWeight: 3
+				});
+				tailPath.setMap(map);
+
+				lastpos[p.skey] = {
+					position: pos,
+					tail: tailPath
+				};
+				var last_pos = new LastMarker({
+					position: pos,
+					map: map,
+					title: p.desc + '\n' + p.data.point.time,
+					car: p.desc,
+					skey: p.skey
+					//color: 'lime'
+				});
+
+				/*
 				var last_pos = new google.maps.Marker({
 				        position: new google.maps.LatLng(p.data.point.lat, p.data.point.lon),
 				        map: map,
@@ -671,9 +702,16 @@ function GetLastPositions(acckey) {
 					title: p.desc,
 				        draggable: false
 				});
+				*/
+				
 
 			}
+			/*$('.lastmarker').mouseover(function(){
+				//console.log($(this));
+				console.log('aaa');
+			});*/
 			//ParcePath(data);
+			//$('.lastmarker').mouseover(function(){console.log('aaa');});
 		}
 	});
 }
@@ -788,7 +826,7 @@ function DayList(skey, month){
 
 			$("#date_select table tbody a").each(function(index){
 				var day = parseInt($(this).text(), 10);
-				console.log(index + ' : ' + day);
+				//console.log(index + ' : ' + day);
 
 				var parent = $(this).parent();
 
@@ -813,7 +851,7 @@ function DayList(skey, month){
 			for(var i in data.years){
 				var m = data.years[i];
 				item += '<h3><a href="#">' + i + '</a></h3>';
-				console.log('year:' + i);
+				//console.log('year:' + i);
 				item += '<div class="list_months">';
 				for(var j in m){
 					//item += '<h3><a href="#">' + j + '/' + i + '</a></h3><div>';

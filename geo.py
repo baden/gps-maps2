@@ -27,6 +27,8 @@ def repr_middle(point):
 		#'fsource': point['fsourcestr'],
 	}
 
+TAIL_LEN = 20
+
 def getGeoLast(system):
 	value = memcache.get("geolast_%s" % str(system.key()))
 	if value is not None:
@@ -37,8 +39,8 @@ def getGeoLast(system):
 		rec = req[0]
 		point = rec.get_last()
 		tail = []
-		if rec.count > 10:
-			for i in xrange(rec.count-2, rec.count-10, -1):
+		if rec.count > TAIL_LEN:
+			for i in xrange(rec.count-1, rec.count-TAIL_LEN, -1):
 				tail.append(repr_short(rec.get_item(i)))
 
 		value = {
