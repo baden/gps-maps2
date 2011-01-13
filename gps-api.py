@@ -1324,6 +1324,72 @@ class Global_DelAll(BaseApi):
 		db.delete(geos)
 		return {'answer': 'ok'}
 
+
+class Logs_Get(webapp.RequestHandler):
+	def get(self):
+		from datamodel import GPSLogs
+
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		cursor = self.request.get("cursor", None)
+		
+		skey = self.request.get("skey")
+		if skey:
+			system_key = db.Key(skey)
+		else:
+			self.response.out.write(json.dumps(none) + "\r")
+			return
+
+		logsq = GPSLogs.all().ancestor(system_key).order('-date').fetch(1000)
+
+		logs = []
+		for log in logsq:
+			logs.append({
+				'time': log.ldate.strftime("%d/%m/%Y %H:%M:%S"),
+				'text': log.text,
+				'label': log.label,
+				'key': "%s" % log.key()
+			})
+
+		jsonresp = {
+			"answer": "ok",
+			"logs": logs,
+		}
+		
+		self.response.out.write(json.dumps(jsonresp) + "\r")
+
+class Chanel_GetToken(webapp.RequestHandler):
+	def get(self):
+		import updater
+
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		akey = self.request.get("akey", None)
+		if akey is None:
+			return {'answer': 'no', 'reason': 'akey not defined or None'};
+
+		account = DBAccounts.get(db.Key(akey))
+		if account is None:
+			return {'result': 'account by akey not found'}
+
+
+		uuid = self.request.get("uuid")
+		if uuid is None:
+			return {'answer': 'no', 'reason': 'uuid not defined or None'};
+
+
+		token = updater.register(account, uuid)
+		#token = channel.create_channel(uuid)
+
+		jsonresp = {
+			'answer': 'ok',
+			'akey': akey,
+			'uuid': uuid,
+			'token': token
+		}
+		self.response.out.write(json.dumps(jsonresp) + "\r")
+
+
 application = webapp.WSGIApplication(
 	[
 	('/api/info.*', Info),
@@ -1343,6 +1409,10 @@ application = webapp.WSGIApplication(
 	('/api/sys/add*', Sys_Add),
 	('/api/sys/desc*', Sys_Desc),
 	('/api/sys/sort*', Sys_Sort),
+
+	('/api/logs/get*', Logs_Get),
+
+	('/api/chanel/gettoken*', Chanel_GetToken),
 
 	('/api/global/delall*', Global_DelAll),
 	#('/api/geo/test*', Geo_Test),

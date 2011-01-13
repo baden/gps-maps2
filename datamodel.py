@@ -39,6 +39,10 @@ class DBAccounts(db.Expando):
 			self.put()
 		return system_list
 
+	# Возвращает True если система с таким key контроллируется аккаунтом
+	def has_skey(self, skey):
+		return skey in systems_key
+
 	def system_by_imei(self, imei):
 		if imei not in [s.imei for s in self.systems]:
 			return None
@@ -420,3 +424,16 @@ class DBGPSBinBackup(db.Model):
 	dataid = db.IntegerProperty()
 	crcok = db.BooleanProperty(default=False)
 	data = db.BlobProperty()		# Пакет данных (размер ориентировочно до 64кбайт)
+
+
+"""
+	События не привязанные точно ко времени (включения/выключения, получение/выполнение SMS-команд и т.д.)
+"""
+class GPSLogs(db.Model):
+	text = db.StringProperty(multiline=True)
+	date = db.DateTimeProperty(auto_now_add=True)
+	label = db.IntegerProperty(default=0)		# Метка: 0-обычное сообщение, 1-отладочное сообщение, 2-срочное сообщение и т.д.
+	@property
+	def ldate(self):
+		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
+		return fromUTC(self.date)

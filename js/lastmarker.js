@@ -122,14 +122,19 @@ LastMarker.prototype.onAdd = function() {
 	div.marker = this;
 
 	div.setAttribute("class", "lastmarker");
-	div.setAttribute("style", "background-color:"+this.color+";");
 	div.setAttribute("title", this.title);
 	div.setAttribute("skey", this.skey);
 	//div.addEventListener('mouseover', function(e){
 	//	console.log('aa');
 	//});
 	//div.setAttribute("onclock", "function(){console.log('aa');}");
-	div.innerHTML = '2';
+	//div.innerHTML = '2';
+
+	var title = document.createElement('div');
+	title.setAttribute("class", "lastmarker-title");
+	title.setAttribute("style", "background-color:"+this.color+";");
+	div.appendChild(title);
+	title.innerHTML = '<p>'+Math.round(Math.random()*9)+'</p>';
 
 	var label = document.createElement('div');
 	label.setAttribute("class", "lastmarker-label");
@@ -144,7 +149,7 @@ LastMarker.prototype.onAdd = function() {
 	panel += '<tr><td>Питание</td><td>-</td></tr>';
 	panel += '<tr><td>Спутники</td><td>-</td></tr>';
 	panel += '<tr><td>Топливо</td><td>-</td></tr>';
-	panel += '<tr><td>Рефрежератор</td><td>-</td></tr>';
+	panel += '<tr><td>Рефрижератор</td><td>-</td></tr>';
 	panel += '</tbody></table>';
 	panel += '<button title="Послать сигнал системе.">Вызов</button>';
 //	panel += '<button title="Послать сигнал системе." class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-primary" name="btn_menu" id="nav_logs" href="/s/Logs" role="button" aria-disabled="false"><span class="ui-button-icon-primary ui-icon ui-icon-alert"></span><span class="ui-button-text">Сигнал</span></button>'

@@ -34,6 +34,7 @@ class TemplatedPage(webapp.RequestHandler):
 			values['username'] = self.user.nickname()
 			values['admin'] = users.is_current_user_admin()
 			values['server_name'] = SERVER_NAME
+			values['uid'] = self.user.user_id()
 			values['account'] = self.account
 
 			if alturl:
