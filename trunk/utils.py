@@ -12,7 +12,7 @@ def GetUserByIMEI(uimei):
 	if not uimei: return None
 	userdb = datamodel.DBUser().get_by_key_name("IMEI_%s" % uimei)
 	if not userdb:
-		userdbq = datamodel.DBUser().all().filter('imei =', uimei).fetch(1)
+		userdbq = datamodel.DBUser.all().filter('imei =', uimei).fetch(1)
 		if userdbq:
 			userdb = userdbq[0] 
 		else:
@@ -25,7 +25,7 @@ def GetUserByIMEI(uimei):
 #
 
 def CheckUpdates(userdb):
-	return datamodel.DBNewConfig().all().filter('user = ', userdb).fetch(1)
+	return datamodel.DBNewConfig.all().filter('user = ', userdb).fetch(1)
 
 
 # 16-bit CRCs should detect 65535/65536 or 99.998% of all errors in

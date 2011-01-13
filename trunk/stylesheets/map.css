@@ -222,19 +222,39 @@ div.lastmarker {
 	width: 16px;
 	height: 16px;
 	border: 1px solid black;
-	border-radius: 5px;
-	-moz-border-radius: 5px;
-	-webkit-border-radius: 5px;
+	border-radius: 9px;
+	-moz-border-radius: 9px;
+	-webkit-border-radius: 9px;
 
 	-webkit-box-shadow: 2px 2px 6px #606060;
 	-moz-box-shadow: 2px 2px 6px #606060;
 
-	text-align: center;
-	vertical-align: middle;
-	font-weight: bold;
+	padding: 0px 0px 0px 0px;
+	background-color: #fff;
 
 }
 
+div.lastmarker div.lastmarker-title {
+	position: absolute;
+	left: 1px;
+	top: 1px;
+	right: 1px;
+	bottom: 1px;
+	border: 1px solid black;
+
+	border-radius: 7px;
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+
+	text-align: center;
+	/*vertical-align: middle;*/
+	/*font-weight: bold;*/
+	padding-top: 0px;
+}
+
+div.lastmarker div.lastmarker-title p {
+	margin-top: -2px;
+}
 
 div.lastmarker:hover, div.lastup {
 	border-color: #fff;
@@ -264,9 +284,9 @@ div.lastup div.lastmarker-label {
 div.lastmarker-label {
 	position: absolute;
 	border: 1px solid black;
-	left: 0px;
+	left: 8px;
 	bottom: 16px;
-	background-color: #fff;
+	background-color: #fcf;
 	white-space: nowrap;
 	padding: 0px 5px 0px 5px;
 	border-top-left-radius: 7px 7px;
@@ -279,9 +299,20 @@ div.lastmarker-label {
 }
 
 div.lastmarker-control {
-	width: 100%;
+	/*width: 100%;*/
 	background-color: #fff;
 	white-space: normal;
 	border-top: 1px solid black;
+	display: none;
+	margin-left: -5px;
+	margin-right: -5px;
+	border-bottom-right-radius: 8px 8px;
 }
 
+div.lastmarker-control tr {
+	background: none;
+}
+
+div.lastmarker:hover div.lastmarker-control {
+	display: block;
+}
