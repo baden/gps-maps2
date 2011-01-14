@@ -1,130 +1,147 @@
-{% extends "nbase.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+  <link type="text/css" href="/stylesheets/tabs.css" rel="stylesheet">
 
-{% block head %}
-<script src='/_ah/channel/jsapi'></script>
-<style type="text/css">
-    /*#draggable { width: 100px; height: 70px; background: silver; }*/
-	body {
-		padding: 0 0 0 0;
-		margin: 0 0 0 0;
-		height: 100%;
-		overflow: hidden;
-		overflow-x: hidden;
-		overflow-y: hidden;
-		background-color: black;
-	}
-	#tabs {
-		width: 100%;
-		height: 100%;
-		position: absolute;
-		display: block;
-		padding: 0 0 0 0;
-		margin: 0 -10px 0 -2px;
-		left: 0px;
-		top: -2px;
-		/*background-color: lime;*/
-	}
+  <script type="text/javascript" src="/js/jquery.min.js"></script>
+  <script type="text/javascript" src="/js/jquery.cookie.js"></script>
+  <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
 
-	.ui-tabs-panel {
-		display:block !important; /* set up as a block */
-		position:relative; /* needed for footer positioning*/
-		background-color: yellow !important;
+  <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.core.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.widget.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.button.js"></script>
+  <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.tabs.js"></script-->
+  <script type="text/javascript" src="/js/alert.js"></script>
 
-		height:auto !important; /* real browsers */
-		height:80%; /* IE6: treaded as min-height*/
+  <script src='/_ah/channel/jsapi'></script>
 
-		min-height:80%; /* real browsers */
+  <script src="http://maps.google.com/maps/api/js?sensor=false" type="text/javascript"></script>
 
-		/*margin-top: 10px;
-		min-height: 80%;
-		height: auto;*/
-		border: 2px solid black !important;
-		margin-top: -100px !important;
-		top: 100px;
-		margin-bottom: 100px !important;
-	}
+  <script src="/js/base.js"></script>
+  <script src="/js/mymarker.js"></script>
+  <script src="/js/lastmarker.js"></script>
+  <!--script src="/js/lastmarker-min.js"></script-->
+  <script src="/js/maps.js"></script>
 
-</style>
-{% endblock %}
-
-{% block javainit %}
-	$("#tabs").tabs({effect: 'ajax', cache: true });
-
-	$("#draggable").draggable();
-{% endblock %}
-
-
-{% block body %}
-
-<!-- tabs -->
-<!--div-->
-<div id="tabs">
-  <ul>
-    <li><a href="/s/TabMain">Главная</a></li>
-    <li><a href="/s/TabMap">Карта</a></li>
-    <li><a href="/s/TabLogs">Отчеты</a></li>
-    <li><a href="/s/TabConfig">Настройка</a></li>
-    <li><a href="/s/TabHelp">Помощь</a></li>
-  </ul>
-
-  <div style="position: absolute; bottom: 0px;background-color: red;">Сообщение из канала:<div id="channel_msg" style="display:inline; border:1px solid blue;">EMPTY</div></div>
-</div>
-
-<!--/div-->
-
-
-
-<script>
-// What is $(document).ready ? See: http://flowplayer.org/tools/documentation/basics.html#document_ready
-$(document).ready(function() {
-
-	var connected = false;
-	
-	sendMessage = function(path, opt_param) {
-	  path += '?g=' + state.game_key;
-	  if (opt_param) {
-	    path += '&' + opt_param;
-	  }
-	  var xhr = new XMLHttpRequest();
-	  xhr.open('POST', path, true);
-	  xhr.send();
-	};
-
-	onOpened = function() {
-		console.log("goog.appengine.Channel: onOpened ({{ token }})");
-		connected = true;
-		//sendMessage('opened');
-		//updateBoard();
-	};
-
-	onMessage = function(m) {
+  <script>
+	var config = {};
+	config.updater = [function(msg){
 		console.log("goog.appengine.Channel: onMessage");
+		console.log(msg);
 		connected = true;
-		newState = JSON.parse(m.data);
-		console.log("goog.appengine.Channel message: " + newState.text);
-		$("#channel_msg").html(newState.text || "error message");
+		message("Получено сообщени об обновлении:<br />" + msg.msg + "<br />Для системы:" + msg.imei + "<br />Заметки:" + msg.comment);
+	}];
+	config.skey = "{{ account.systems.0.key }}";
+
+	$(document).ready(function() {
+		$("button").button();
+		$("#tabs").tabs({
+			cookie: { expires: 30, name: 'maintab' },
+			//cookie: { expires: 7, path: '/', domain: 'localhost', secure: true },
+			//cookie: { expires: 7, name: 't'},
+			effect: 'ajax',
+			cache: true,
+			spinner: 'Retrieving data...',
+			show: function(){
+				console.log('TAB: show: ' + $(this).tabs( "option", "selected" ));
+			},
+			load: function(){
+				console.log('TAB: tab loaded: ' + $(this).tabs( "option", "selected" ));
+				$("button").button();
+
+			}
+		});
+
+		$("button#tabreload").click(function(){
+			console.log('aaaaaaaaa0');
+		});
+
+		var connected = false;
+	
+		// Установим chanel-соединение
+		// Получим токен для установки соединения
+		var uuid = new Date().getTime();
+		var url = '/api/chanel/gettoken?akey={{ account.key }}&uuid={{ uid }}-'+uuid;
+		$.getJSON(url, function (data) {
+			if(data.token){
+				var token = data.token;
+				console.log("Token goted:" + token);
+
+				var onOpened = function() {
+					console.log('goog.appengine.Channel: onOpened ('+token+')');
+					connected = true;
+					//sendMessage('opened');
+					//updateBoard();
+				}
+
+				var onMessage = function(m) {
+					var msg = JSON.parse(m.data);
+
+					//if(window.updater) window.updater(msg);
+					for(var i in config.updater){
+						config.updater[i](msg);
+						/*(function(msg){
+							updater[i](msg);
+							//updater[i].call(1);
+							//updater[i].apply(1);
+						})(msg);*/
+					}
+
+					//newState = JSON.parse(m);
+					//console.log("goog.appengine.Channel message: " + newState.text);
+					//$("#channel_msg").html(newState.text || "error message");
+				}
+
+				var onError = function() {
+					console.log("goog.appengine.Channel: onError");
+				}
+
+				var onClose = function() {
+					console.log("goog.appengine.Channel: onClose");
+					connected = false;
+				}
+
+				// Чуть снизим нагрузку для локальной отладки
+				//if(document.URL.match(/localhost/g1)){
+				if(window.location.hostname == 'localhost'){
+					if(goog.appengine.Socket.POLLING_TIMEOUT_MS)
+						goog.appengine.Socket.POLLING_TIMEOUT_MS = 2000;
+				}
+				var channel = new goog.appengine.Channel(token);
+				var socket = channel.open();
+				socket.onopen = onOpened;
+				socket.onmessage = onMessage;
+				socket.onerror = onError;
+				socket.onclose = onClose;
+			}
+		});
+
+	});
+	//$("#draggable").draggable();
+  </script>
+  <style>
+	div#logout {
+		position: absolute;
+		top: 0px;
+		right: 0px;
 	}
+  </style>
+</head>
 
-	onError = function() {
-		console.log("goog.appengine.Channel: onError");
-	}
-
-	onClose = function() {
-		console.log("goog.appengine.Channel: onClose");
-		connected = false;
-	}
-
-	/*
-	channel = new goog.appengine.Channel('{{ token }}');
-	socket = channel.open();
-	socket.onopen = onOpened;
-	socket.onmessage = onMessage;
-	socket.onerror = onError;
-	socket.onclose = onClose;
-	*/
-
-});
-</script>
-
-
-{% endblock %}
+<body>
+	<div id="tabs">
+	  <ul>
+	    <li><a href="/s/Tab_Map"><span class="ui-icon ui-icon-zoomin"></span>Карта</a></li>
+	    <li><a href="/s/Tab_Reports"><span class="ui-icon ui-icon-info"></span>Отчеты</a></li>
+	    <li><a href="/s/Tab_Logs"><span class="ui-icon ui-icon-alert"></span>События</a></li>
+	    <li><a href="/s/Tab_Geos"><span class="ui-icon ui-icon-document"></span>Экспорт GPS</a></li>
+	    <li><a href="/s/Tab_Config"><span class="ui-icon ui-icon-gear"></span>Настройка</a></li>
+	    <li><a href="/s/Tab_Help"><span class="ui-icon ui-icon-help"></span>Помощь</a></li>
+	  </ul>
+	</div>
+	<div id="logout">
+		SSS
+		<button id="tabreload">Reload</button>
+	</div>
+</body>
+</html>

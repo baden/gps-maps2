@@ -1,0 +1,67 @@
+<html>
+<head>
+  <style>
+	.ui-tabs .ui-tabs-panel {
+		padding: 0;
+	}
+
+	div#customcss {
+		background-color: green;
+	}
+  </style>
+  <script>
+
+	$(document).ready(function() {
+		console.log('Загрузка закладки. События.');
+
+		config.updater.push(function(msg) {
+			console.log('Обработчик события на странице Logs.');
+			console.log(msg);
+		});
+
+	});
+	console.log('Верхний уровень. События.');
+  </script>
+</head>
+<body>
+
+События.
+
+<div id="customcss"> Локальный id и стиль оформления </div>
+
+Длинная таблица со скроллингом.
+
+<table>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
+<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
+<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
+</table>
+
+</body>
