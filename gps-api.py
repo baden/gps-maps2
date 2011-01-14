@@ -51,8 +51,8 @@ class Info(BaseApi):
 		account = DBAccounts.get(db.Key(acckey))
 		lsys = []
 		for sys in account.systems:
-			logging.info(sys.key())
-			logging.info(sys.imei)
+			#logging.info(sys.key())
+			#logging.info(sys.imei)
 			lsys.append({
 				"key": str(sys.key()),
 				"imei": sys.imei,
