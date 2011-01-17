@@ -520,7 +520,18 @@ var UpdateMarker = function (moev){
 
 var once_map_style = true;
 
-function CreateMap()
+function CreateMap() {
+	console.log('CreateMap: begin');
+	$('#map').gmap({
+		pos: new google.maps.LatLng(35.5, 48.5),
+		zoom: 15,
+		//marker: 'center',
+		markertitme: 'aaa'
+	});
+}
+
+
+function CreateMapOld()
 {
 	geocoder = new google.maps.Geocoder();
       var mapOptions = {

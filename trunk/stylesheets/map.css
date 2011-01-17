@@ -4,7 +4,7 @@ div#map {
 	/*cursor: pointer;*/
 	position: absolute;
 	left: 0px;
-	right: 200px;
+	right: 220px;
 	top: 0px;
 	bottom: 0px;
 	background-color: grey;
@@ -15,7 +15,7 @@ div#panel {
 	top: 0px;
 	bottom: 0px;
 	right: 0px;
-	width: 200px;
+	width: 220px;
 	/*height: 80%;
 	max-height: 80%;*/
 	overflow-x: hidden;
@@ -200,6 +200,7 @@ table.ui-datepicker-calendar {
 	padding: 0px 0px 0px 0px;
 }*/
 
+/*
 .ui-tabs .ui-tabs-panel {
 	padding: 0px 0px 0px 0px;
 }
@@ -215,7 +216,7 @@ table.int_select td, table.int_select tr {
 	padding: 0px 0px 0px 0px;
 	margin: 0px 0px 0px 0px;
 }
-
+*/
 
 
 div.lastmarker {
@@ -316,4 +317,9 @@ div.lastmarker-control tr {
 
 div.lastmarker:hover div.lastmarker-control {
 	display: block;
+}
+
+div#date_select {
+	overflow: hidden;
+	padding-right: 8px;
 }
