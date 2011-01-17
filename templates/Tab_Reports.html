@@ -12,8 +12,25 @@
   <script>
 	$(document).ready(function() {
 		console.log('Загрузка закладки. Отчеты.');
+
+		$('#testmap').gmap({
+			pos: new google.maps.LatLng(35.5, 48.5),
+			zoom: 15,
+			marker: 'center',
+			markertitme: 'aaa'
+		});
+
 	});
   </script>
+  
+  <style>
+   div#testmap {
+   	position: absolute;
+   	width: 700px;
+   	height: 250px;
+   	background-color: green;
+   }
+  </style>
 </head>
 <body>
 
@@ -21,39 +38,6 @@
 
 <div id="customcss"> Локальный id и стиль оформления </div>
 
-Длинная таблица со скроллингом.
-
-<table>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-<tr><td>AAAAAAAA</td><td>BBBBBBBB</td><td>CCCCCCCCCCC</td></tr>
-<tr><td>DDDDDDDDDD</td><td>EEEE</td><td>FFFFFFFFF</td></tr>
-<tr><td>ПАППАПВПУКЕКУ</td><td>2342342344</td><td>----------</td></tr>
-</table>
+<div id="testmap"></div>
 
 </body>

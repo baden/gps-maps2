@@ -121,6 +121,24 @@ $.extend(GMap.prototype, {
 		//var nodeName = '';
 		console.log('GMap:attach map to ' + nodeName + '(' + id + ') with settings:' + settings);
 
+		var mapdiv = document.createElement('div');
+		mapdiv.id = this._mainDivId + '_m';
+		mapdiv.className = "map-container";
+		var controldiv = document.createElement('div');
+		controldiv.className = "map-control";
+		controldiv.innerHTML = ''+
+'<input type="radio" class="btn_map_type" id="btn_map" name="map_type" checked="checked" /><label for="btn_map">Карта</label>'+
+'<input type="radio" class="btn_map_type" id="btn_sat" name="map_type" /><label for="btn_sat">Спутник</label>'+
+'<input type="radio" class="btn_map_type" id="btn_hybr" name="map_type" /><label for="btn_hybr">Гибрид</label>'+
+'<input type="radio" class="btn_map_type" id="btn_terr" name="map_type" /><label for="btn_terr">Рельеф</label>';
+		
+		divSpan.append(mapdiv);
+		divSpan.append(controldiv);
+
+		$(controldiv).buttonset();
+
+		//console.log(divSpan);
+		//console.log(divSpan.append('div'));
 		//console.log(target);
 		//console.log(settings);
 		//var inst = this._newInst($(target));
@@ -139,7 +157,8 @@ $.extend(GMap.prototype, {
 			draggableCursor: "default",
 			zoom: instsettings.zoom
 		}
-		instsettings.map = new google.maps.Map(document.getElementById(this._mainDivId), mapOptions);
+		//instsettings.map = new google.maps.Map(document.getElementById(this._mainDivId), mapOptions);
+		instsettings.map = new google.maps.Map(mapdiv, mapOptions);
 
 		if(instsettings.marker == 'center'){
 			var marker = new google.maps.Marker({
@@ -157,8 +176,6 @@ $.extend(GMap.prototype, {
 		}
 		//console.log();
 		inst = $.data(target, PROP_NAME, instsettings);
-
-
 
 	}
 

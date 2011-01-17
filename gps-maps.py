@@ -77,7 +77,12 @@ class AddLog(webapp.RequestHandler):
 		memcache.set("lastlogkey_%s" % system.key(), "%s" % gpslog.key())
 		logging.info("SET Memcache key: lastlogkey_%s = %s" % (system.key(), gpslog.key()))
 
-		updater.inform('addlog', system, text)	# Информировать всех пользователей, у которых открыта страница Отчеты
+		updater.inform('addlog', system, text, {
+			'time': gpslog.ldate.strftime("%d/%m/%Y %H:%M:%S"),
+			'text': gpslog.text,
+			'label': gpslog.label,
+			'key': "%s" % gpslog.key()
+		})	# Информировать всех пользователей, у которых открыта страница Отчеты
 
 		#token = memcache.get("geolast_%s" % str(system.key()))
 
