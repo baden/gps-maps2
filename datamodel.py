@@ -7,21 +7,28 @@ from datetime import datetime, timedelta
 import struct
 #import zlib
 import logging
+import pickle
 
 """
  Запись о пользователе
 """
 
-class DBAccounts(db.Expando):
+DEFAULT_CONFIG = repr({
+	'timezone': +2,
+	'uitheme': 'cupertino',
+})
+
+#class DBAccounts(db.Expando):
+class DBAccounts(db.Model):
 	user = db.UserProperty()						# Пользователь
 	name = db.StringProperty(multiline=False, default=u"Имя не задано")	# Отображаемое имя
 	#systems = db.StringListProperty()					# Перечень наблюдаемых систем (их keys)
 	systems_key = db.ListProperty(db.Key, default=None)			# Перечень наблюдаемых систем (их keys)
 	#systems = db.ListProperty(db.Blob)					# Перечень наблюдаемых систем
 	register = db.DateTimeProperty(auto_now_add=True)			# Дата регистрации аккаунта
-	config_list = db.ListProperty(unicode, default=[u"{timezone:0}"])	# Список записей конфигурации
+	config_list = db.StringProperty(multiline=True, default=DEFAULT_CONFIG)	# Список записей конфигурации
 	access = db.IntegerProperty(default=0)					# Уровень доступа
-										# 0-только просмотр, 1-возможность конфигурирования, 2-возможность правки данных и т.д.										 
+										# 0-только просмотр, 1-возможность конфигурирования, 2-возможность правки данных и т.д.
 	@property
 	def systems(self):
 		#return 'aaa'
@@ -75,10 +82,22 @@ class DBAccounts(db.Expando):
 
 	@property
 	def config(self):
-		configs = []
-		for rec in self.config_list:
-			configs.append(eval(rec))
-		return configs
+		from repy import simplejson as json
+		return json.dumps(self.getconfig(), indent=2)
+
+	@property
+	def pconfig(self):
+		return self.getconfig()
+
+	def getconfig(self):
+		#configs = pickle.loads(self.config_list)
+		#for rec in self.config_list:
+		#	configs.append(eval(rec))
+		return eval(self.config_list)
+
+	def putconfig(self, configdict):
+		self.config_list = repr(configdict)
+		self.put()
 
 """
  Запись о системе

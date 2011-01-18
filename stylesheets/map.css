@@ -175,7 +175,7 @@ ul#ul_sys li:hover {
 	border: 1px solid blue;
 }
 
-.ui-datepicker {
+#panel .ui-datepicker {
 	/*padding: 0px 0px 0px 0px;*/
 	width: 98%;
 }

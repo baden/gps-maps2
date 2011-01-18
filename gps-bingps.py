@@ -16,6 +16,7 @@ from datamodel import DBSystem, DBGeo, PointWorker, DBGPSBin, DBGPSBinBackup
 from datetime import date, timedelta, datetime
 
 import utils
+import updater
 
 SERVER_NAME = os.environ['SERVER_NAME']
 

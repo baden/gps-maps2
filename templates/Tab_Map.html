@@ -44,6 +44,7 @@
 			hideIfNoPrevNext: true,
 			onSelect: function(dateText, inst) {
 				SetDay(config.skey, date_to_url(dateText));
+				UpdateDayList();
 			},
 			onChangeMonthYear: function(year, month, inst) {
 				cur_month = '' + year + ((month<10)?('0'+month):month);
@@ -61,9 +62,9 @@
 
 		//GetLastPositions("{{ account.key }}");
 		GetLastPositions(config.akey);
+		//UpdateDayList(config.skey);
 
-		UpdateDayList(config.skey);
-
+		/*
 		$("#map-type").buttonset();
 		$(".btn_map_type").change(function(){
 			console.log($(this).attr("id"));
@@ -75,6 +76,7 @@
 			}
 			
 		});
+		*/
 		$('div#carselect ul li span').click(function(){
 			var skey = $(this).attr('skey');
 			//console.log(lastpos[skey]);

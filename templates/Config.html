@@ -222,6 +222,13 @@
 		});
 		{% endif %}
 
+
+		$('select#cfg_theme option[value="'+config.ui.theme+'"]').attr('selected', 'selected');
+		console.log('Set theme item:');
+		console.log(config.ui.theme);
+		console.log($('select#cfg_theme option[value="'+config.ui.theme+'"]'));
+
+
 	});
 
 	$(document).bind('contextmenu', function(e) {return false;});
@@ -232,6 +239,7 @@
 	}
 
   </script>
+
   <style>
 	div#container {
 		overflow: hidden;
