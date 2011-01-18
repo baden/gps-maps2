@@ -15,6 +15,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
 import local
 import geo
+import updater
 
 from datetime import datetime, timedelta
 
@@ -1267,7 +1268,6 @@ class Sys_Sort(BaseApi):
 			#logging.info('\nchange ' + str(account.systems_key[oldindex]) + ' and ' + str(account.systems_key[index]))
 			#logging.info('change ' + db.get(account.systems_key[oldindex]).imei + ' and ' + db.get(account.systems_key[index]).imei)
 
-
 			goted = account.systems_key[oldindex]
 			del account.systems_key[oldindex]
 			account.systems_key.insert(index, goted)
@@ -1281,6 +1281,8 @@ class Sys_Sort(BaseApi):
 		#	return {'result': 'not found'}
 		#elif res == 2:
 		#	return {'result': 'already'}
+		updater.inform_account('change_slist', account, {'type': 'Sorting'})
+
 		return {'result': 'sorted', 'desc': {'imei': imei, 'oldindex': oldindex, 'newindex': index}}
 
 class Sys_Desc(BaseApi):
@@ -1300,12 +1302,17 @@ class Sys_Desc(BaseApi):
 		if desc is None:
 			return {'result': 'desc not defined'}
 
-		s = account.system_by_imei(imei)
-		if s is None:
+		system = account.system_by_imei(imei)
+		if system is None:
 			return {'result': 'nosys'}
-		s.desc = desc
-		s.put()
-		return {'result': 'ok', 'imei': s.imei, 'desc': s.desc}
+		system.desc = desc
+		system.put()
+
+		updater.inform('changedesc', system.key(), {
+			'desc': desc
+		})
+
+		return {'result': 'ok', 'imei': system.imei, 'desc': system.desc}
 		#res = account.AddSystem(imei)
 		#if res == 0:
 		#	return {'result': 'not found'}
@@ -1390,6 +1397,50 @@ class Chanel_GetToken(webapp.RequestHandler):
 		self.response.out.write(json.dumps(jsonresp) + "\r")
 
 
+class SystemConfig(webapp.RequestHandler):
+	def get(self):
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		akey = self.request.get('akey', None)
+		if akey is None:
+			return {'answer': 'no', 'reason': 'akey not defined or None'};
+
+		account = DBAccounts.get(db.Key(akey))
+
+		self.response.out.write(json.dumps(account.getconfig) + "\r")
+
+	def post(self):
+		from urllib import unquote_plus
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		akey = self.request.get('akey', None)
+		if akey is None:
+			return {'answer': 'no', 'reason': 'akey not defined or None'};
+
+		#logging.info(self.request.body)
+		#logging.info(unquote_plus(self.request.body))
+		#logging.info(repr(self.request.body))
+		#logging.info(self.request.arguments())
+
+		account = DBAccounts.get(db.Key(akey))
+
+		config = account.getconfig()
+		#newconfig = {(k:self.request.get(k)) for k in self.request.arguments()}
+		newconfig = dict((k, self.request.get(k)) for k in self.request.arguments())
+		#newconfig = {}
+		#for k in self.request.arguments():
+		#	newconfig[k] = self.request.get(k)
+
+		config.update(newconfig)
+
+		#logging.info(repr(newconfig))
+		#config.
+		#for k in self.request.arguments():
+		#	if k in config
+		account.putconfig(config)
+
+		self.response.out.write(json.dumps(config) + "\r")
+
 application = webapp.WSGIApplication(
 	[
 	('/api/info.*', Info),
@@ -1415,6 +1466,9 @@ application = webapp.WSGIApplication(
 	('/api/chanel/gettoken*', Chanel_GetToken),
 
 	('/api/global/delall*', Global_DelAll),
+
+	('/api/system/config*', SystemConfig),
+
 	#('/api/geo/test*', Geo_Test),
 	],
 	debug=True

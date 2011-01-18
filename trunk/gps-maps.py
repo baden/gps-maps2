@@ -26,8 +26,8 @@ class MainPage(TemplatedPage):
 
 
 """
-	Информирование клиента о обновлении данных
-	Нужно перебрать всех подключенных клиентов, у кого есть данная системы и оповестить их об обновлении данных.
+	РРЅС„РѕСЂРјРёСЂРѕРІР°РЅРёРµ РєР»РёРµРЅС‚Р° Рѕ РѕР±РЅРѕРІР»РµРЅРёРё РґР°РЅРЅС‹С…
+	РќСѓР¶РЅРѕ РїРµСЂРµР±СЂР°С‚СЊ РІСЃРµС… РїРѕРґРєР»СЋС‡РµРЅРЅС‹С… РєР»РёРµРЅС‚РѕРІ, Сѓ РєРѕРіРѕ РµСЃС‚СЊ РґР°РЅРЅР°СЏ СЃРёСЃС‚РµРјС‹ Рё РѕРїРѕРІРµСЃС‚РёС‚СЊ РёС… РѕР± РѕР±РЅРѕРІР»РµРЅРёРё РґР°РЅРЅС‹С….
 """
 
 class StaticPage(TemplatedPage):
@@ -77,12 +77,13 @@ class AddLog(webapp.RequestHandler):
 		memcache.set("lastlogkey_%s" % system.key(), "%s" % gpslog.key())
 		logging.info("SET Memcache key: lastlogkey_%s = %s" % (system.key(), gpslog.key()))
 
-		updater.inform('addlog', system, text, {
+		updater.inform('addlog', system.key(), {
+			'skey': str(system.key()),
 			'time': gpslog.ldate.strftime("%d/%m/%Y %H:%M:%S"),
 			'text': gpslog.text,
 			'label': gpslog.label,
 			'key': "%s" % gpslog.key()
-		})	# Информировать всех пользователей, у которых открыта страница Отчеты
+		})	# РРЅС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РІСЃРµС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№, Сѓ РєРѕС‚РѕСЂС‹С… РѕС‚РєСЂС‹С‚Р° СЃС‚СЂР°РЅРёС†Р° РћС‚С‡РµС‚С‹
 
 		#token = memcache.get("geolast_%s" % str(system.key()))
 

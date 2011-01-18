@@ -51,17 +51,63 @@ class DBUpdater(db.Model):
 		return db.run_in_transaction(txn)
 
 	@classmethod
-	def inform(cls, msg, system, comment, data):
+	def inform_account(cls, msg, account, data):
+		#from datamodel import DBAccounts
+		uuids = memcache.get("updater_%s" % account.key())
+		entity = None
+		if uuids is None:
+			entity = cls.get_by_key_name("updater_%s" % account.key())
+			if entity is None:
+				#logging.info("UPDATER: NOT FOUND")
+				return
+			uuids = entity.uuids
+
+		#logging.info("UPDATER: uuids=%s" % repr(uuids))
+
+		for uuid in uuids:
+			#logging.info("Update for account[%s] uuid[%s]" % (account.user.email(), uuid))
+			message = {
+				'msg': '%s' % msg,
+				'account': {
+					'akey': '%s' % account.key(),
+					'email': account.user.email(),
+				},
+				'data': data
+			}
+			try:
+				channel.send_message(uuid, json.dumps(message))
+			#except:
+			#except channel._ToChannelError, e:
+			except channel.InvalidChannelClientIdError, e:
+				#logging.info("UPDATER: InvalidChannelClientIdError")
+				# Тут по идее должно быть удаление устаревших uuid
+				if entity is None:
+					entity = cls.get_by_key_name("updater_%s" % account.key())
+					
+				if entity is not None:
+					#logging.info("UPDATER: purge old uuid (%s) in (%s)" % (uuid, repr(entity.uuids)))
+					entity.uuids = [u for u in entity.uuids if u!=uuid]
+					memcache.set("updater_%s" % account.key(), entity.uuids)
+					#logging.info("UPDATER: purge old uuid (%s) in (%s)" % (uuid, repr(entity.uuids)))
+					entity.put()
+					#if uuid in entity.uuids:
+					#	del entity.uuids[entity.uuids.index(uuid)]
+
+	@classmethod
+	def inform(cls, msg, systemkey, data):
 		from datamodel import DBAccounts
 
+		data['skey'] = str(systemkey)
 		#logging.info("UPDATER: Inform msg[%s] for system[%s] comment[%s]" % (msg, system.imei, comment))
 		
 		# Если маленькое сомнение что фильтер будет работать так как я предполагаю.
 		# Возможно будет проверка только по первому элементу, я не очень понял документацию
 
 		# Этот запрос тоже наверное можно оптимизировать через memcache (вобщето даже желательно)
-		allacc = DBAccounts.all().filter('systems_key =', system.key()).fetch(1000)
+		allacc = DBAccounts.all().filter('systems_key =', systemkey).fetch(1000)
 		for account in allacc:
+			cls.inform_account(msg, account, data)
+			"""
 			#logging.info("UPDATER: account=%s" % account.user.email())
 			#logging.info("UPDATER: account=%s" % account.key())
 			uuids = memcache.get("updater_%s" % account.key())
@@ -84,10 +130,10 @@ class DBUpdater(db.Model):
 						'email': account.user.email(),
 					},
 					'skey': '%s' % system.key(),
-					'imei': system.imei,
+					#'imei': system.imei,
 					'comment': comment,
-					'data': data,
-					'systems': len(allacc)
+					'data': data
+					#'systems': len(allacc)
 				}
 				try:
 					channel.send_message(uuid, json.dumps(message))
@@ -107,7 +153,7 @@ class DBUpdater(db.Model):
 						entity.put()
 						#if uuid in entity.uuids:
 						#	del entity.uuids[entity.uuids.index(uuid)]
-				
+			"""	
 
 
 """
@@ -116,6 +162,7 @@ class DBUpdater(db.Model):
 """
 register = DBUpdater.register
 inform = DBUpdater.inform
+inform_account = DBUpdater.inform_account
 """
 def register(account, uuid):
 	token = channel.create_channel(uuid)

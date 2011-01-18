@@ -522,14 +522,27 @@ var once_map_style = true;
 
 function CreateMap() {
 	console.log('CreateMap: begin');
-	$('#map').gmap({
+	var $map = $('#map').gmap({
 		pos: new google.maps.LatLng(35.5, 48.5),
-		zoom: 15,
+		zoom: 10,
 		//marker: 'center',
 		markertitme: 'aaa'
 	});
-}
 
+	//var map = $('#map').gmap('option', 'getMap');
+	map = $($map).gmap('option', 'map');
+	//$(
+	//console.log(map);
+
+	google.maps.event.addListener(map, 'zoom_changed', function(){
+		//console.log("Map: zoom_changed.");
+		PathRebuild();
+	});
+	google.maps.event.addListener(map, 'mousemove', UpdateMarker);
+
+	ruler1 = new MyMarker(map);
+
+}
 
 function CreateMapOld()
 {

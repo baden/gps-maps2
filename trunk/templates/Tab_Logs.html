@@ -9,42 +9,18 @@
 		background-color: green;
 	}
   </style>
+
   <script>
  	(function(){
 
-	add_log_line = function() {
+	function log_line(d) {
+		var row = '<td>'+d.time+'</td><td>'+d.text+'<td>'+d.label+'</td></td>';
+		if(config.admin){
+			console.log('ADMIN');
+			row += '<td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td>'
+		}
+		return row;
 	}
-
-	$(document).ready(function() {
-
-		UpdateLog();
-
-		$('select').bind('change', function(){
-			//console.log($(this).attr('value'));
-			config.skey = $(this).attr('value');
-			UpdateLog();
-		});
-
-		console.log('Загрузка закладки. События.');
-
-		config.updater.push(function(msg) {
-			console.log('Обработчик события на странице Logs.');
-			console.log(msg);
-			if(msg.msg=='addlog' && msg.skey == config.skey){
-				console.log('Logs:updater HURA!!!');
-				
-				//UpdateLog();
-				var d = msg.data;
-				var row = '><td>'+d.time+'</td><td>'+d.text+'<td>'+d.label+'</td></td';
-				{% if admin %}
-				row += '<td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td>'
-				{% endif %}
-				$("#log_table tbody tr:first").before('<tr>'+row+'</tr>');
-				//add_log_line(msg.comment);
-			}
-		});
-	});
-	
 
 	function UpdateLog() {
 		console.log('UpdateLog');
@@ -57,13 +33,7 @@
 			console.log("getJSON parce");
 			if (data.answer && data.answer == 'ok') {
 				for(var i in data.logs){
-					var d = data.logs[i];
-					var row = '<td>'+d.time+'</td><td>'+d.text+'</td><td>'+d.label+'</td>';
-					{% if admin %}
-					row += '<td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td>'
-					{% endif %}
-					table.append('<tr>'+row+'</tr>');
-
+					table.append('<tr>' + log_line(data.logs[i]) + '</tr>');
 				}
 			}
 			$('td.del_log').click(function(){
@@ -73,12 +43,61 @@
 
 	}
 
-	function changeSys() {
+	$(document).ready(function() {
+
+		UpdateLog();
+
+		/*$('select').bind('change', function(){
+			//console.log($(this).attr('value'));
+			config.skey = $(this).attr('value');
+			UpdateLog();
+		});*/
+
+			//function updateLogList(){
+		var list = $('#log_syslist');
+
+		list.empty();
+		for(i in config.systems){
+			var s = config.systems[i];
+			list.append('<option imei="'+s.imei+'" value="'+s.skey+'">'+s.desc+'</option>');
+		}
+		//}
+		//updateLogList();
+		config.updater.add('changedesc', function(msg) {
+			console.log('LOGS: Update descriptions');
+			//updateLogList();
+			$(list).find('option[value="' + msg.data.skey + '"]').html(msg.data.desc);
+			//console.log(l);
+		});
+
+		//$('#log_syslist').bind('change', function(){
+		list.bind('change', function(){
+			config.skey = $(this).attr('value');
+			UpdateLog();
+		});
+
+		console.log('Загрузка закладки. События.');
+
+		config.updater.add('addlog', function(msg) {
+			if(msg.data.skey == config.skey){
+				//console.log('Logs:updater HURA!!!');
+				//UpdateLog();
+				$("#log_table tbody tr:first").before('<tr>' + log_line(msg.data) + '</tr>');
+				//add_log_line(msg.comment);
+			}
+		});
+	});
+
+
+/*	function changeSys() {
 		config.skey = $('#my_syslist').attr('value');
 		UpdateLog();
 	}
+*/
 	
 	})();
+
+
   </script>
 
   <style>
@@ -116,15 +135,16 @@
 
   </style>
 
+
 </head>
 
 <body>
 
 	<div id="log_head">
-		Cистема: <select id="my_syslist" name="my_syslist" style="width:auto;" on_change="changeSys();">
-		{% for sys in account.systems %}
+		Cистема: <select id="log_syslist" name="my_syslist" style="width:auto;">
+		<!--{% for sys in account.systems %}
 		<option imei="{{ sys.imei }}" value="{{ sys.key }}">{{ sys.desc }}</option>
-		{% endfor %}
+		{% endfor %}-->
 		</select><!--button id="btn_1">Обновить</button-->
 		Канал: {{ token }}
 	</div>

@@ -64,18 +64,8 @@ $.extend(GMap.prototype, {
 			return $.data(target, PROP_NAME);
 		}
 		catch (err) {
-			throw 'Missing instance data for this datepicker';
+			throw 'Missing instance data for this gmap';
 		}
-	},
-
-	_findPos: function(obj) {
-		var inst = this._getInst(obj);
-		var isRTL = this._get(inst, 'isRTL');
-	        while (obj && (obj.type == 'hidden' || obj.nodeType != 1)) {
-	            obj = obj[isRTL ? 'previousSibling' : 'nextSibling'];
-	        }
-        	var position = $(obj).offset();
-		    return [position.left, position.top];
 	},
 
 	_setPos: function(inst, date, noChange) {
@@ -113,10 +103,33 @@ $.extend(GMap.prototype, {
 		$target.removeClass(this.markerClassName).empty();
 	},
 
+	_optionGMap: function(target, name, value) {
+		var inst = this._getInst(target);
+		if (arguments.length == 2 && typeof name == 'string') {
+			return (name == 'defaults' ? $.extend({}, $.gmap._defaults) :
+				(inst ? (name == 'all' ? $.extend({}, inst.settings) :
+				this._get(inst, name)) : null));
+		}
+	},
+
+	_get: function(inst, name) {
+		console.log('GMAP: get');
+		console.log(inst);
+		return inst.settings[name] !== undefined ?
+			inst.settings[name] : this._defaults[name];
+	},
+
 	_attachMap: function(target, settings) {
 		var nodeName = target.nodeName.toLowerCase();
 		var id = this._mainDivId = target.id;
 		var divSpan = $(target);
+
+
+		//console.log();
+		var inst = $.data(target, PROP_NAME, $.extend({}, this._defaults, settings || {}));
+		//var inst = this._newInst($(target));
+		inst.settings = $.extend({}, settings || {});
+
 		//this._dialogInst
 		//var nodeName = '';
 		console.log('GMap:attach map to ' + nodeName + '(' + id + ') with settings:' + settings);
@@ -127,44 +140,43 @@ $.extend(GMap.prototype, {
 		var controldiv = document.createElement('div');
 		controldiv.className = "map-control";
 		controldiv.innerHTML = ''+
-'<input type="radio" class="btn_map_type" id="btn_map" name="map_type" checked="checked" /><label for="btn_map">Карта</label>'+
-'<input type="radio" class="btn_map_type" id="btn_sat" name="map_type" /><label for="btn_sat">Спутник</label>'+
-'<input type="radio" class="btn_map_type" id="btn_hybr" name="map_type" /><label for="btn_hybr">Гибрид</label>'+
-'<input type="radio" class="btn_map_type" id="btn_terr" name="map_type" /><label for="btn_terr">Рельеф</label>';
+'<input type="radio" class="btn_map_type" id="'+this._mainDivId+'btn_map" value="0" name="'+this._mainDivId+'_type" checked="checked" /><label for="'+this._mainDivId+'btn_map">Карта</label>'+
+'<input type="radio" class="btn_map_type" id="'+this._mainDivId+'btn_sat" value="1" name="'+this._mainDivId+'_type" /><label for="'+this._mainDivId+'btn_sat">Спутник</label>'+
+'<input type="radio" class="btn_map_type" id="'+this._mainDivId+'btn_hybr" value="2" name="'+this._mainDivId+'_type" /><label for="'+this._mainDivId+'btn_hybr">Гибрид</label>'+
+'<input type="radio" class="btn_map_type" id="'+this._mainDivId+'btn_terr" value="3" name="'+this._mainDivId+'_type" /><label for="'+this._mainDivId+'btn_terr">Рельеф</label>';
 		
 		divSpan.append(mapdiv);
 		divSpan.append(controldiv);
 
-		$(controldiv).buttonset();
 
 		//console.log(divSpan);
 		//console.log(divSpan.append('div'));
 		//console.log(target);
 		//console.log(settings);
-		//var inst = this._newInst($(target));
-		//inst.settings = $.extend({}, settings || {});
 		divSpan.addClass(this.markerClassName);
 
-		var instsettings = $.extend({}, this._defaults, settings || {});
-		//console.log('inst.settings = ');
-		//console.log(instsettings);
+		console.log('inst.settings = ');
+		console.log(inst.settings);
 
 		var mapOptions = {
-			center: instsettings.pos || new google.maps.LatLng(48.5000, 34.599),
-			mapTypeId: instsettings.maptype,
+			center: inst.settings.pos || new google.maps.LatLng(48.5000, 34.599),
+			mapTypeId: inst.settings.maptype || google.maps.MapTypeId.ROADMAP,
 			mapTypeControl: false,
 			disableDoubleClickZoom: true,
 			draggableCursor: "default",
-			zoom: instsettings.zoom
+			zoom: inst.settings.zoom
 		}
 		//instsettings.map = new google.maps.Map(document.getElementById(this._mainDivId), mapOptions);
-		instsettings.map = new google.maps.Map(mapdiv, mapOptions);
+		console.log('mapdiv == ');
+		console.log(mapdiv);
+		var map = new google.maps.Map(mapdiv, mapOptions);
+		inst.settings.map = map;
 
-		if(instsettings.marker == 'center'){
+		if(inst.settings.marker == 'center'){
 			var marker = new google.maps.Marker({
-		        	position: instsettings.pos,
-			        map: instsettings.map,
-				title: instsettings.markertitme,
+		        	position: inst.settings.pos,
+			        map: map,
+				title: inst.settings.markertitme,
 					//tp + td_to_hms(dt) +
 					//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 					//'\n' + dstop + '...' + dstart,
@@ -174,8 +186,19 @@ $.extend(GMap.prototype, {
 				//zIndex: -1000
 			});
 		}
-		//console.log();
-		inst = $.data(target, PROP_NAME, instsettings);
+
+		$(controldiv).buttonset();
+		$(controldiv).find('input').change(function(){
+			console.log($(this).attr("value"));
+			switch($(this).attr("value")){
+				case '0': {map.setMapTypeId(google.maps.MapTypeId.ROADMAP); break }
+				case '1': {map.setMapTypeId(google.maps.MapTypeId.SATELLITE); break }
+				case '2': {map.setMapTypeId(google.maps.MapTypeId.HYBRID); break }
+				case '3': {map.setMapTypeId(google.maps.MapTypeId.TERRAIN); break }
+			}
+			
+		});
+
 
 	}
 
@@ -208,13 +231,17 @@ $.fn.gmap = function(options){
 	
 //	console.log('GMap:create');
 	var otherArgs = Array.prototype.slice.call(arguments, 1);
-//	if (options == 'option' && arguments.length == 2 && typeof arguments[1] == 'string'){
-//		return $.gmap['_' + options + 'GMap'].apply($.gmap, [this[0]].concat(otherArgs));
-//	}
+	if (options == 'option' && arguments.length == 2 && typeof arguments[1] == 'string'){
+		console.log('arguments==');
+		console.log(arguments);
+		return $.gmap['_' + options + 'GMap'].apply($.gmap, [this[0]].concat(otherArgs));
+	}
 
 	return this.each(function() {
-		console.log('options==' + options);
-		//console.log('arguments==' + arguments);
+		//console.log('options==');
+		//console.log(options);
+		//console.log('arguments==');
+		//console.log(arguments);
 		//console.log($.gmap['_' + options + 'GMap']);
 		//console.log('_' + options + 'GMap');
 		typeof options == 'string' ?
