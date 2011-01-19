@@ -21,13 +21,12 @@
   <!--  Mobile viewport optimized: j.mp/bplateviewport -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link id="themecss" type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/{{ account.pconfig.theme }}/jquery.ui.all.css" rel="stylesheet">
-
   <!-- CSS : implied media="all" -->
   <link rel="stylesheet" href="/stylesheets/style.css?v=2">
   <!-- Uncomment if you are specifically targeting less enabled mobile browsers
   <link rel="stylesheet" media="handheld" href="css/handheld.css?v=2">  -->
 
+  <link id="themecss" type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/{{ account.pconfig.theme }}/jquery.ui.all.css" rel="stylesheet">
   <link type="text/css" href="/stylesheets/tabs.css" rel="stylesheet">
 
   <!--script type="text/javascript" src="/js/jquery.min.js"></script-->
@@ -49,7 +48,7 @@
   <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.widget.js"></script>
   <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.button.js"></script>
   <script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.tabs.js"></script-->
-  <script type="text/javascript" src="/js/alert.js"></script>
+  <script type="text/javascript" src="/js/alert-min.js"></script>
 
   <script src='/_ah/channel/jsapi'></script>
 
@@ -136,8 +135,6 @@
 	//console.log("ConfigUI: ");
 	//console.log(config.ui);
 	log("ConfigUI: ", config.ui);
-
-
 
 	config.updater.add('changedesc', function(msg) {
 		//console.log('Обработчик события для обновления списка config.systems');
@@ -274,6 +271,13 @@
 		top: 0px;
 		right: 0px;
 	}
+
+	{% if not admin %}
+	.admin {
+		display: none;
+	}
+	{% endif %}
+
   </style>
 </head>
 
@@ -281,12 +285,12 @@
 	<div id="tabs">
 	  <!--div style="position: absolute; left:0px; top:0px;">C</div-->
 	  <ul>
-	    <li><a href="/s/Tab_Map"><span class="ui-icon ui-icon-zoomin"></span>Карта</a></li>
-	    <li><a href="/s/Tab_Reports"><span class="ui-icon ui-icon-info"></span>Отчеты</a></li>
-	    <li><a href="/s/Tab_Logs"><span class="ui-icon ui-icon-alert"></span>События</a></li>
-	    <li><a href="/s/Tab_Geos"><span class="ui-icon ui-icon-document"></span>Экспорт GPS</a></li>
-	    <li><a href="/s/Tab_Config"><span class="ui-icon ui-icon-gear"></span>Настройка</a></li>
-	    <li><a href="/s/Tab_Help"><span class="ui-icon ui-icon-help"></span>Помощь</a></li>
+	    <li><a href="/html/Tab_Map.html"><span class="ui-icon ui-icon-zoomin"></span>Карта</a></li>
+	    <li><a href="/html/Tab_Reports.html"><span class="ui-icon ui-icon-info"></span>Отчеты</a></li>
+	    <li><a href="/html/Tab_Logs.html"><span class="ui-icon ui-icon-alert"></span>События</a></li>
+	    <li><a href="/html/Tab_Geos.html"><span class="ui-icon ui-icon-document"></span>Экспорт GPS</a></li>
+	    <li><a href="/html/Tab_Config.html"><span class="ui-icon ui-icon-gear"></span>Настройка</a></li>
+	    <li><a href="/html/Tab_Help.html"><span class="ui-icon ui-icon-help"></span>Помощь</a></li>
 	  </ul>
 	</div>
 	<div id="logout">

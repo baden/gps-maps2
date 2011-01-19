@@ -4,7 +4,7 @@
 #config_sys_list li button span {padding: 0; }
 
 /*#config_sys_list li span {  }*/
-#config_sys_list li span.mm { position: absolute; margin-top: 3px; margin-left: -4.5em; text-align: center;}
+#config_sys_list li span.mm { position: absolute; margin-top: 1px; margin-left: -4.5em; text-align: center;}
 #config_sys_list li span.bico { margin-left: -3.3em; }
 #config_sys_list li span.bconf { margin-left: -1.9em; }
 #config_sys_list li span.hl {width: 16px; height: 16px; }
@@ -28,4 +28,19 @@
 	font-weight: normal;
 	/*color: #ffffff;*/
 	/*outline: none;*/
+}
+
+#config_sys_list .ui-button-text-only .ui-button-text {
+	padding: 0;
+}
+
+
+
+div#config_params {
+	position: absolute;
+	top: 10%;
+	left: 10%;
+	right: 10%;
+	bottom: 10%;
+	background-color: green;
 }

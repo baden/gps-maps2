@@ -2,8 +2,8 @@ application: gps-maps2
 version: 1
 runtime: python
 api_version: 1
-#default_expiration: "1d"
-default_expiration: "1s"
+default_expiration: "1d"
+#default_expiration: "1s"
 
 handlers:
 
@@ -22,6 +22,10 @@ handlers:
 
 - url: /js
   static_dir: js
+
+- url: /html
+  static_dir: html
+
 
 - url: /svg
   static_dir: svg
