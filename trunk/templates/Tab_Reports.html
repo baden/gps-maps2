@@ -14,11 +14,11 @@
 
 	function getGeocode(adrlist, i, recur) {
 		//console.log(adrlist[i]);
-		console.log('geoget at ' + i);
-		if(adrlist[i].stop) console.log('stop: ' + i);
+		log('geoget at ' + i);
+		if(adrlist[i].stop) log('stop: ' + i);
 
 		geocoder.geocode({'latLng': new google.maps.LatLng(adrlist[i].pos[0], adrlist[i].pos[1]) }, function(results, status) {
-			if(adrlist[i].stop) {console.log('stop2: ' + i); return;}
+			if(adrlist[i].stop) {log('stop2: ' + i); return;}
     			if (status == google.maps.GeocoderStatus.OK) {
 				var address = geocode_to_addr(results);
 				$('#'+adrlist[i].id).html(address);
@@ -34,7 +34,7 @@
 				if(recur) {
 					adrlist[i].cb = setTimeout(function(){getGeocode(adrlist, i, recur-1)}, 3000);
 				} else {
-					console.log('Error geocoding at ' + i + ' with ');
+					log('Error geocoding at ' + i + ' with ');
 				}
 			}
 		});
@@ -49,10 +49,10 @@
 		url = "/api/report/get?skey="+skey+"&from="+start+"&to="+stop;
 		$.getJSON(url, function (data) {
 			//$("#progress").html("Обрабатываем...");
-			console.log("getJSON parce");
+			log("getJSON parce");
 			if (data.answer == 'ok') {
 				//ParcePath(data);
-				console.log("Show report...");
+				log("Show report...");
 
 				$("#total_dist").html(ln_to_km(data.summary.length));
 				$("#total_movetime").html(td_to_hms(data.summary.movetime));
@@ -92,7 +92,7 @@
 					"</tr>" );
 					
 				}
-				console.log(adrlist);
+				log(adrlist);
 				for(i in adrlist){
 					if(i==0){
 						$(".control").hide();
@@ -153,7 +153,7 @@
 			map = new google.maps.Map(document.getElementById("map"), mapOptions);
 			*/
 		}
-		console.log(map_div);
+		log(map_div);
 	} 
 
 
@@ -170,7 +170,7 @@
 			altFormat: "DD, d MM, yy",
 			onSelect: function(dateText, inst) {
 				//console.log(inst);
-				console.log(dateText);
+				log(dateText);
 				var start = date_to_url(dateText) + '000000'; //inst.currentYear, inst.currentMonth, inst.currentDay, '000000');
 				var stop = date_to_url(dateText) + '235959'; //inst.currentYear, inst.currentMonth, inst.currentDay, '235959');
 				genReport($('#my_syslist').attr('value'), start, stop);
@@ -184,12 +184,12 @@
 		});
 
 		$('#total tbody tr td').bind('click', function(me){
-			console.log(me);
+			log(me);
 			//showMap();
 		});
 	});
 	$(document).ready(function() {
-		console.log('Загрузка закладки. Отчеты.');
+		log('Загрузка закладки. Отчеты.');
 
 	});
   </script>

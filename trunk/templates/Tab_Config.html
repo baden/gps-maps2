@@ -5,7 +5,7 @@
   <script src="/plugins/colorpicker/js/colorpicker.js"></script>
   <script>
 	$(document).ready(function() {
-		console.log('Загрузка закладки. Конфигурация.');
+		log('Загрузка закладки. Конфигурация.');
 	});
 
   	var sys_imeis = [];
@@ -26,7 +26,7 @@
 		  dataType: 'json',
 		  data: config.ui,
 		  type: 'POST',
-		  success: function(){console.log('Saved.');}
+		  success: function(){log('Saved.');}
 		});
 	}
 
@@ -64,7 +64,7 @@
 					var i = this.attributes['index'].value;
 					$("#sysdesc_imei").html(sys_imeis[i])
 					$("#sys_desc").val(sys_descs[i]);
-					console.log('Dialog: dialog-sys-desc ' + sys_imeis[i] + ' (' + sys_descs[i] + ')');
+					log('Dialog: dialog-sys-desc ' + sys_imeis[i] + ' (' + sys_descs[i] + ')');
 					$("#dialog-sys-desc").dialog('open');
 				});
 			}
@@ -149,7 +149,7 @@
 				'Применить изменения.': function() {
 					var imei = $("#sysdesc_imei").html(); //document.getElementById('sysdesc_imei').value;
 					var desc = document.getElementById('sys_desc').value;
-					console.log('Set desc for sys ' + imei + ' -> ' + desc);
+					log('Set desc for sys ' + imei + ' -> ' + desc);
 					$.getJSON('/api/sys/desc?acckey='+config.akey+'&imei=' + imei + '&desc=' + desc, function (data) {
 						if(data.result){
 							result = data.result;
@@ -211,7 +211,7 @@
 					//window.location = "/config";
 					//$(this).dialog('close');
 					if(data.result){
-						console.log('Set new position for ' + imei + ' to ' + index);
+						log('Set new position for ' + imei + ' to ' + index);
 					}
 				});
 
@@ -232,9 +232,7 @@
 		{% endif %}
 
 		$('select#cfg_theme option[value="'+config.ui.theme+'"]').attr('selected', 'selected');
-		console.log('Set theme item:');
-		console.log(config.ui.theme);
-		console.log($('select#cfg_theme option[value="'+config.ui.theme+'"]'));
+		log('Set theme item:', config.ui.theme, $('select#cfg_theme option[value="'+config.ui.theme+'"]'));
 
 	});
 
@@ -243,7 +241,7 @@
 
 	function SetTheme() {
 		var themename = $('#cfg_theme').attr('value');
-		console.log(themename);
+		log(themename);
 		saveconfig('theme', themename);
 
 
@@ -257,7 +255,7 @@
 		*/
 		var hl = $('head #themecss');
 		hl.attr('href', '/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/'+themename+'/jquery.ui.all.css');
-		console.log(hl);
+		log(hl);
 	}
 
 

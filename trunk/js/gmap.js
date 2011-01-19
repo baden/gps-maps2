@@ -50,10 +50,10 @@ $.extend(GMap.prototype, {
 	/* Class name added to elements to indicate already configured with a gmap widget. */
 	markerClassName: 'hasGMap',
 	/* Debug logging (if enabled). */
-	log: function () {
+	/*log: function () {
 		if (this.debug)
 			console.log.apply('', arguments);
-	},
+	},*/
 	// TODO rename to "widget" when switching to widget factory
 	_widgetGMap: function() {
 		return this.dpDiv;
@@ -90,16 +90,16 @@ $.extend(GMap.prototype, {
 	},
 
 	_destroyGMap: function(target) {
-		console.log('GMAP: destroy');
+		/*console.*/log('GMAP: destroy');
 		var $target = $(target);
 		var inst = $.data(target, PROP_NAME);
 		if (!$target.hasClass(this.markerClassName)) {
-			console.log('not a map');
+			/*console.*/log('not a map');
 			return;
 		}
 		var nodeName = target.nodeName.toLowerCase();
 		$.removeData(target, PROP_NAME);
-		console.log($target);
+		/*console.*/log($target);
 		$target.removeClass(this.markerClassName).empty();
 	},
 
@@ -113,8 +113,7 @@ $.extend(GMap.prototype, {
 	},
 
 	_get: function(inst, name) {
-		console.log('GMAP: get');
-		console.log(inst);
+		/*console.*/log('GMAP: get', inst);
 		return inst.settings[name] !== undefined ?
 			inst.settings[name] : this._defaults[name];
 	},
@@ -132,7 +131,7 @@ $.extend(GMap.prototype, {
 
 		//this._dialogInst
 		//var nodeName = '';
-		console.log('GMap:attach map to ' + nodeName + '(' + id + ') with settings:' + settings);
+		/*console.*/log('GMap:attach map to ' + nodeName + '(' + id + ') with settings:' + settings);
 
 		var mapdiv = document.createElement('div');
 		mapdiv.id = this._mainDivId + '_m';
@@ -155,8 +154,8 @@ $.extend(GMap.prototype, {
 		//console.log(settings);
 		divSpan.addClass(this.markerClassName);
 
-		console.log('inst.settings = ');
-		console.log(inst.settings);
+		/*console.*/log('inst.settings = ', inst.settings);
+		//console.log();
 
 		var mapOptions = {
 			center: inst.settings.pos || new google.maps.LatLng(48.5000, 34.599),
@@ -167,8 +166,7 @@ $.extend(GMap.prototype, {
 			zoom: inst.settings.zoom
 		}
 		//instsettings.map = new google.maps.Map(document.getElementById(this._mainDivId), mapOptions);
-		console.log('mapdiv == ');
-		console.log(mapdiv);
+		/*console.*/log('mapdiv == ', mapdiv);
 		var map = new google.maps.Map(mapdiv, mapOptions);
 		inst.settings.map = map;
 
@@ -189,7 +187,7 @@ $.extend(GMap.prototype, {
 
 		$(controldiv).buttonset();
 		$(controldiv).find('input').change(function(){
-			console.log($(this).attr("value"));
+			/*console.*/log($(this).attr("value"));
 			switch($(this).attr("value")){
 				case '0': {map.setMapTypeId(google.maps.MapTypeId.ROADMAP); break }
 				case '1': {map.setMapTypeId(google.maps.MapTypeId.SATELLITE); break }
@@ -232,8 +230,7 @@ $.fn.gmap = function(options){
 //	console.log('GMap:create');
 	var otherArgs = Array.prototype.slice.call(arguments, 1);
 	if (options == 'option' && arguments.length == 2 && typeof arguments[1] == 'string'){
-		console.log('arguments==');
-		console.log(arguments);
+		/*console.*/log('arguments==', arguments);
 		return $.gmap['_' + options + 'GMap'].apply($.gmap, [this[0]].concat(otherArgs));
 	}
 

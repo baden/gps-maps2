@@ -52,7 +52,7 @@ MyMarker.prototype.Info = function() {
 	//alert('Bo ' + this.point.date);
 	var point = this.point;
 	var skey = this.skey;
-	console.log("skey = " + skey);
+	/*console.*/log("skey = " + skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
 		'<div style="width: 220px; height: 220px; border: none;"><div class="info-header">' + dt_to_datetime(point.date) + "</div>" +
@@ -76,7 +76,7 @@ MyMarker.prototype.Info = function() {
 		url = "/api/geo/info?skey="+skey+"&point="+point.date;
 		$.getJSON(url, function (data) {
 			//$("#progress").html("Обрабатываем...");
-			console.log("JSON data: " + data);
+			/*console.*/log("JSON data: " + data);
 			if (data.answer && data.answer === 'ok'){
 				/*this.infowindow.close();
 				this.infowindow = new google.maps.InfoWindow({content:
@@ -87,7 +87,7 @@ MyMarker.prototype.Info = function() {
 
 				if($('#tbl_info tbody')){
 					$('#tbl_info tbody').ready(function(){
-						console.log("JSON data: jquery domready.");
+						/*console.*/log("JSON data: jquery domready.");
 						more_info(data);
 					});
 					//console.log("JSON data: ready on request.");

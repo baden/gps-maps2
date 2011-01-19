@@ -16,28 +16,28 @@
 	function log_line(d) {
 		var row = '<td>'+d.time+'</td><td>'+d.text+'<td>'+d.label+'</td></td>';
 		if(config.admin){
-			console.log('ADMIN');
+			log('ADMIN');
 			row += '<td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td>'
 		}
 		return row;
 	}
 
 	function UpdateLog() {
-		console.log('UpdateLog');
+		log('UpdateLog');
 		var table = $("#log_table tbody");
 		table.empty();
 
 		var url = '/api/logs/get?skey=' + config.skey;
 		$.getJSON(url, function (data) {
 			//$("#progress").html("Обрабатываем...");
-			console.log("getJSON parce");
+			log("getJSON parce");
 			if (data.answer && data.answer == 'ok') {
 				for(var i in data.logs){
 					table.append('<tr>' + log_line(data.logs[i]) + '</tr>');
 				}
 			}
 			$('td.del_log').click(function(){
-				console.log('del:' + $(this).attr('key'));
+				log('del:' + $(this).attr('key'));
 			});
 		});
 
@@ -64,7 +64,7 @@
 		//}
 		//updateLogList();
 		config.updater.add('changedesc', function(msg) {
-			console.log('LOGS: Update descriptions');
+			log('LOGS: Update descriptions');
 			//updateLogList();
 			$(list).find('option[value="' + msg.data.skey + '"]').html(msg.data.desc);
 			//console.log(l);
@@ -76,7 +76,7 @@
 			UpdateLog();
 		});
 
-		console.log('Загрузка закладки. События.');
+		log('Загрузка закладки. События.');
 
 		config.updater.add('addlog', function(msg) {
 			if(msg.data.skey == config.skey){

@@ -1,14 +1,48 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>  
+
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ --> 
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+
 <head>
+  <meta charset="utf-8">
+
+  <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame 
+       Remove this if you use the .htaccess -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>GPS наблюдение</title>
+  <meta name="description" content="GPS logging">
+  <meta name="author" content="Batrak Denis">
+
+  <!--  Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link id="themecss" type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/{{ account.pconfig.theme }}/jquery.ui.all.css" rel="stylesheet">
 
+  <!-- CSS : implied media="all" -->
+  <link rel="stylesheet" href="/stylesheets/style.css?v=2">
+  <!-- Uncomment if you are specifically targeting less enabled mobile browsers
+  <link rel="stylesheet" media="handheld" href="css/handheld.css?v=2">  -->
+
   <link type="text/css" href="/stylesheets/tabs.css" rel="stylesheet">
 
-  <script type="text/javascript" src="/js/jquery.min.js"></script>
+  <!--script type="text/javascript" src="/js/jquery.min.js"></script-->
+
+  <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/jquery.min.js"%3E%3C/script%3E'))</script>
+
   <script type="text/javascript" src="/js/jquery.cookie.js"></script>
-  <script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script>
+  <!--script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script-->
+
+  <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.7/jquery-ui.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/jquery-ui.min-1.8.7.js"%3E%3C/script%3E'))</script>
+
   <script type="text/javascript" src="/js/jquery.ui.datepicker-ru.js"></script>
 
   <!--script type="text/javascript" src="/plugins/jquery-ui-1.8.7/jquery-ui-1.8.7/ui/jquery.ui.core.js"></script>
@@ -28,6 +62,32 @@
   <!--script src="/js/lastmarker-min.js"></script-->
   <script src="/js/maps.js"></script>
   <script src="/js/gmap.js"></script>
+
+  <!--[if lt IE 7 ]>
+    <script src="js/libs/dd_belatedpng.js"></script>
+    <script> DD_belatedPNG.fix('img, .png_bg'); //fix any <img> or .png_bg background-images </script>
+  <![endif]-->
+
+
+  <!-- yui profiler and profileviewer - remove for production ->
+  <script src="/js/profiling/yahoo-profiling.min.js"></script>
+  <script src="/js/profiling/config.js"></script>
+  <!- end profiling code -->
+
+
+  <script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-20843583-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+  </script>
 
   <script>
 	var config = {};
@@ -50,14 +110,15 @@
 	}
 
 	config.updater.add('*', function(msg){
-		console.log("goog.appengine.Channel: onMessage");
-		console.log(msg);
+		//console.log("goog.appengine.Channel: onMessage");
+		//console.log(msg);
+		log('goog.appengine.Channel: onMessage:', msg);
 		connected = true;
 		message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
 	});
 
-	console.log('Default updater');
-	console.log(config.updater);
+	log('Default updater', config.updater);
+	//log(config.updater);
 
 	//$.getJSON('/api/info?acckey='+config.akey, function (data) {
 	//}
@@ -74,23 +135,27 @@
 	config.ui = {{ account.config }};
 	//console.log("ConfigUI: ");
 	//console.log(config.ui);
+	log("ConfigUI: ", config.ui);
 
 
 
 	config.updater.add('changedesc', function(msg) {
-		console.log('Обработчик события для обновления списка config.systems');
-		console.log(msg);
+		//console.log('Обработчик события для обновления списка config.systems');
+		//console.log(msg);
+		log('Обработчик события для обновления списка config.systems', msg);
 		for(var i in config.systems){
 			if(config.systems[i].skey == msg.data.skey){
 				config.systems[i].desc = msg.data.desc;
 			}
 		}
-		console.log('CONFIG==');
-		console.log(config);
+		//console.log('CONFIG==');
+		//console.log(config);
+		log('CONFIG==', config);
 	});
 
-	console.log('CONFIG==');
-	console.log(config);
+	//console.log('CONFIG==');
+	//console.log(config);
+	log('CONFIG==', config);
 
 	$(document).ready(function() {
 
@@ -105,17 +170,17 @@
 			cache: true,
 			spinner: 'Retrieving data...',
 			show: function(){
-				console.log('TAB: show: ' + $(this).tabs( "option", "selected" ));
+				/*console.*/log('TAB: show: ', $(this).tabs( "option", "selected" ));
 			},
 			load: function(){
-				console.log('TAB: tab loaded: ' + $(this).tabs( "option", "selected" ));
+				/*console.*/log('TAB: tab loaded: ', $(this).tabs( "option", "selected" ));
 				$("button").button();
 
 			}
 		});
 
 		$("button#tabreload").click(function(){
-			console.log('Reload tab...');
+			/*console.*/log('Reload tab...');
 			//var tabs = $('#tabs').tabs;
 			//console.log($tabs);
 			//var index = $tabs.tabs('option', 'selected');
@@ -132,10 +197,10 @@
 		$.getJSON(url, function (data) {
 			if(data.token){
 				var token = data.token;
-				console.log("Token goted:" + token);
+				/*console.*/log("Token goted:" + token);
 
 				var onOpened = function() {
-					console.log('goog.appengine.Channel: onOpened ('+token+')');
+					/*console.*/log('goog.appengine.Channel: onOpened ('+token+')');
 					connected = true;
 					//sendMessage('opened');
 					//updateBoard();
@@ -173,11 +238,11 @@
 				}
 
 				var onError = function() {
-					console.log("goog.appengine.Channel: onError");
+					/*console.*/log("goog.appengine.Channel: onError");
 				}
 
 				var onClose = function() {
-					console.log("goog.appengine.Channel: onClose");
+					/*console.*/log("goog.appengine.Channel: onClose");
 					connected = false;
 				}
 
@@ -197,7 +262,7 @@
 		});
 
 		$('#test').click(function(){
-			console.log('Test');
+			/*console.*/log('Test');
 		});
 
 	});
@@ -225,9 +290,8 @@
 	  </ul>
 	</div>
 	<div id="logout">
-		SSS
+		<a href="{{ login_url }}">{{ username }}</a>
 		<!--button id="tabreload">Reload</button-->
 		<button id="test">Test</button>
 	</div>
 </body>
-</html>

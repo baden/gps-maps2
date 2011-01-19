@@ -12,7 +12,7 @@
 	function UpdateDayList(){
 		var date = $("#datepicker").datepicker('getDate');
 		if(!config.cur_month) config.cur_month = $.datepicker.formatDate('yymm', date);
-		console.log('Update for sys ' + config.skey + ' and month ' + config.cur_month);
+		log('Update for sys ' + config.skey + ' and month ' + config.cur_month);
 
 		DayList(config.skey, config.cur_month);
 	}
@@ -96,7 +96,7 @@
 
 	function UpdateGroupList(){
 		var group = $('#group_list').attr('value');
-		console.log('Select group:' + group);
+		log('Select group:' + group);
 	}
 
 
