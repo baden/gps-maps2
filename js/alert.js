@@ -9,7 +9,7 @@
 initHA = function() {
 
 	var is_ie6 = (window.external && typeof window.XMLHttpRequest == "undefined");
-	var styles = "div#messages{position:fixed;top:0px;right:0px;width:250px;margin:0px;padding:7px;background:transparent;z-index:2}"+
+	var styles = "div#messages{position:fixed;top:0px;right:0px;width:250px;margin:0px;padding:0px;background:transparent;z-index:2}"+
 	"div#messages div{cursor: pointer;color:#fff;padding:7px;margin-bottom:7px;-moz-border-radius:5px;-webkit-border-radius:5px;-khtml-border-radius:5px;opacity:0.75;background:#888;font: normal 12px 'Georgia'}"+
 	"div#messages div.error{background:#98001b}	div#messages div.message{background:#0d8529}div#messages div.warning{background:#dd6; color:#333}";
 	var iestyles = "body{position:relative}div#messages{position:absolute; -ms-filter:'progid:DXImageTransform.Microsoft.Alpha(Opacity=75)'; filter: alpha(opacity=75)}div#messages div{cursor: hand}";

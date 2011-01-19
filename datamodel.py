@@ -15,7 +15,7 @@ import pickle
 
 DEFAULT_CONFIG = repr({
 	'timezone': +2,
-	'uitheme': 'cupertino',
+	'theme': 'cupertino',
 })
 
 #class DBAccounts(db.Expando):

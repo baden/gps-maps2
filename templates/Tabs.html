@@ -47,14 +47,12 @@
 	}
 
 	config.updater.add('*', function(msg){
-		console.log("goog.appengine.Channel: onMessage");
-		console.log(msg);
+		log("goog.appengine.Channel: onMessage", msg);
 		connected = true;
 		message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
 	});
 
-	console.log('Default updater');
-	console.log(config.updater);
+	log('Default updater: ', config.updater);
 
 	//$.getJSON('/api/info?acckey='+config.akey, function (data) {
 	//}
@@ -69,19 +67,16 @@
 	{% endfor %}
 
 	config.updater.add('changedesc', function(msg) {
-		console.log('Обработчик события для обновления списка config.systems');
-		console.log(msg);
+		log('Обработчик события для обновления списка config.systems', msg);
 		for(var i in config.systems){
 			if(config.systems[i].skey == msg.data.skey){
 				config.systems[i].desc = msg.data.desc;
 			}
 		}
-		console.log('CONFIG==');
-		console.log(config);
+		log('CONFIG==', config);
 	});
 
-	console.log('CONFIG==');
-	console.log(config);
+	log('CONFIG==', config);
 
 	$(document).ready(function() {
 		$("button").button();
@@ -93,17 +88,17 @@
 			cache: true,
 			spinner: 'Retrieving data...',
 			show: function(){
-				console.log('TAB: show: ' + $(this).tabs( "option", "selected" ));
+				log('TAB: show: ' + $(this).tabs( "option", "selected" ));
 			},
 			load: function(){
-				console.log('TAB: tab loaded: ' + $(this).tabs( "option", "selected" ));
+				log('TAB: tab loaded: ' + $(this).tabs( "option", "selected" ));
 				$("button").button();
 
 			}
 		});
 
 		$("button#tabreload").click(function(){
-			console.log('Reload tab...');
+			log('Reload tab...');
 			//var tabs = $('#tabs').tabs;
 			//console.log($tabs);
 			//var index = $tabs.tabs('option', 'selected');
@@ -120,10 +115,10 @@
 		$.getJSON(url, function (data) {
 			if(data.token){
 				var token = data.token;
-				console.log("Token goted:" + token);
+				log("Token goted:" + token);
 
 				var onOpened = function() {
-					console.log('goog.appengine.Channel: onOpened ('+token+')');
+					log('goog.appengine.Channel: onOpened ('+token+')');
 					connected = true;
 					//sendMessage('opened');
 					//updateBoard();
@@ -161,11 +156,11 @@
 				}
 
 				var onError = function() {
-					console.log("goog.appengine.Channel: onError");
+					log("goog.appengine.Channel: onError");
 				}
 
 				var onClose = function() {
-					console.log("goog.appengine.Channel: onClose");
+					log("goog.appengine.Channel: onClose");
 					connected = false;
 				}
 

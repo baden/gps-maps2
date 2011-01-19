@@ -24,13 +24,13 @@ var stop_markers = [];
 function Profile(name){
 	this.name = name;
 	this.start = new Date();
-	console.log("Profile: " + name + " start ");
+	log("Profile: " + name + " start ");
 }
 
 Profile.prototype.show = function(){
 	var end = new Date();
 	var time = end.getTime() - this.start.getTime();
-	console.log("Profile: " + this.name + " - " + time + " ms");
+	log("Profile: " + this.name + " - " + time + " ms");
 }
 
 
@@ -50,16 +50,16 @@ function LoadPoints1(){
 var GetPath = function(skey_, from, to){
 	skey = skey_;
 	ruler1.setSysKey(skey);
-	console.log("::GetPath.start");
+	log("::GetPath.start");
 	url = "/api/geo/get?skey="+skey+"&from="+from+"&to="+to;
 	$.getJSON(url, function (data) {
 		//$("#progress").html("Обрабатываем...");
-		console.log("getJSON parce");
+		log("getJSON parce");
 		if (data.answer && data.points.length > 0) {
 			ParcePath(data);
 		}
 	});
-	console.log("::GetPath.end");
+	log("::GetPath.end");
 }
 
 //google.maps.LatLng.prototype.setZoom = function(z){this.zoom = z;}
@@ -169,10 +169,10 @@ var stop_infowindow;
 var ParcePath = function(data){
 	var profile = new Profile("GetPath");
 
-	console.log("Loading a path...");
+	log("Loading a path...");
 
 	profile.show();
-	console.log("Create LatLng and calculate bounds...");
+	log("Create LatLng and calculate bounds...");
 	flightPlanCoordinates = [];
 	for(var i in data.points){
 		var l = new google.maps.LatLng(data.points[i][1], data.points[i][2], false);
@@ -212,12 +212,12 @@ var ParcePath = function(data){
 	//var sw = flightPathBounds.getSouthWest();
 	//var ne = flightPathBounds.getNorthEast();
 
-	console.log("Bound in request: (" + data.bounds.sw[0] + "," + data.bounds.sw[1] + ")-(" + data.bounds.ne[0] + "," + data.bounds.ne[1] + ")" );
+	log("Bound in request: (" + data.bounds.sw[0] + "," + data.bounds.sw[1] + ")-(" + data.bounds.ne[0] + "," + data.bounds.ne[1] + ")" );
 	//map.panToBounds(flightPathBounds);
 	map.panTo(flightPlanCoordinates[0]);
 
 	profile.show();
-	console.log("Prepare sub bounds...");
+	log("Prepare sub bounds...");
 	sub_bounds = [];
 	sub_bound_indexes = [];
 	
@@ -258,12 +258,12 @@ var ParcePath = function(data){
 
 	profile.show();
 
-	console.log("Clear stop_markers...");
+	log("Clear stop_markers...");
 	for(var i in stop_markers){
 		stop_markers[i].setMap(null);
 	}
 	stop_markers = [];
-	console.log("Make stop_markers...");
+	log("Make stop_markers...");
 	for(var i in data.stops){
 
 		var dstop = dt_to_Date(data.points[data.stops[i].i][0]);
@@ -297,7 +297,7 @@ var ParcePath = function(data){
 				//zIndex: -1000
 			});
 		google.maps.event.addListener(marker, 'click', function(moev){
-			console.log("Stop marker: click.");
+			log("Stop marker: click.");
 			//console.log(this);
 			//console.log(moev);
 
@@ -336,7 +336,7 @@ var ParcePath = function(data){
 		stop_markers.push(marker);
 
 	}
-	console.log('Stop markers: ', data.stops.length);
+	log('Stop markers: ', data.stops.length);
 	profile.show();
 
 	DrawPlyline();
@@ -354,7 +354,7 @@ var PathRebuild = function(){
 	//	flightPath.setPath(null);
 	//}
 
-	console.log("Select points for this zoom [" + mapzoom + "]");
+	log("Select points for this zoom [" + mapzoom + "]");
 
 	// Now we use STUPID optimization methon - simple skip points
 	
@@ -384,7 +384,7 @@ var PathRebuild = function(){
 	//if(flightPath) flightPath.setPath(path);
 	//profile.show();
 
-	console.log(" - collect new points");
+	log(" - collect new points");
 	for(var i=0; i<flightPlanCoordinates.length; i++){
 		//if(zooms[i] <= mapzoom)
 		var p = flightPlanCoordinates[i];
@@ -399,7 +399,7 @@ var PathRebuild = function(){
 	}
 	profile.show();
 
-	console.log(" - assign points to map");
+	log(" - assign points to map");
 //	if(once){
 	//if(flightPath[fpi]) flightPath[fpi].setPath(showed_path);
 	if(flightPath) flightPath.setPath(showed_path);
@@ -521,7 +521,7 @@ var UpdateMarker = function (moev){
 var once_map_style = true;
 
 function CreateMap() {
-	console.log('CreateMap: begin');
+	log('CreateMap: begin');
 	var $map = $('#map').gmap({
 		pos: new google.maps.LatLng(35.5, 48.5),
 		zoom: 10,
@@ -583,7 +583,7 @@ function CreateMapOld()
 	google.maps.event.addListener(map, 'idle', function(){
 		if(once_map_style){
 			once_map_style = false;
-			console.log("Map: idle.");
+			log("Map: idle.");
 			//$('#map div:first > div:eq(4) > div > div').css('background-color', 'green');
 			//$('#map div:first > div:eq(4) > div > div').button();
 			var el = $('#map div:first > div:eq(4) > div:first');
@@ -635,7 +635,7 @@ function CreateMapOld()
 	*/
 
 	$('#map div').ready(function(){
-		console.log("Map: ready.");
+		log("Map: ready.");
 		//console.log(map.controls);
 		$('#map div').css('background-color', 'green');
 	}); 
@@ -677,12 +677,12 @@ function CreateMapOld()
 var lastpos = {};
 
 function GetLastPositions(acckey) {
-	console.log('Get last positions...');
+	log('Get last positions...');
 	url = "/api/geo/last?acckey=" + acckey;
 	$.getJSON(url, function (data) {
 		//$("#progress").html("Обрабатываем...");
 		if (data.answer && data.answer == 'ok') {
-			console.log('Show last positions...');
+			log('Show last positions...');
 			//console.log()
 			for(var i in data.geo){
 				var p = data.geo[i];
@@ -787,7 +787,7 @@ function DrawPlyline()
 
 	if(0){
 	google.maps.event.addListener(flightPath, 'click', function(moev){
-		console.log("flightPath: click.");
+		log("flightPath: click.");
 	});
 
 	google.maps.event.addListener(flightPath, 'mouseover', function(moev){
@@ -799,16 +799,16 @@ function DrawPlyline()
 	});
 	}
 	//google.maps.event.addListener(flightPath, 'mousemove', UpdateMarker);
-	console.log("Draw polyline.");
+	log("Draw polyline.");
 }
 
 var ClearPath = function(skey){
 	var profile = new Profile("Clear path");
-	console.log("Clear path.");
+	log("Clear path.");
 	showed_path = []
-	console.log(" - purge points on map");
+	log(" - purge points on map");
 	if(flightPath) flightPath.setPath(showed_path);
-	console.log("Clear stop_markers...");
+	log("Clear stop_markers...");
 	for(var i in stop_markers){
 		stop_markers[i].setMap(null);
 	}
@@ -821,7 +821,7 @@ var prev_sender=null;
 function SetDay(skey, date){
 	var from = date+'000000';
 	var to = date+'235959';
-	console.log("::SetDay.start date=" + date + " from:" + from + " to:" + to);
+	log("::SetDay.start date=" + date + " from:" + from + " to:" + to);
 	GetPath(skey, from, to);
 	//console.log(sender + '-' + prev_sender);
 	//if(prev_sender) $('#'+prev_sender).css('background-color','');
@@ -837,14 +837,14 @@ var dbg_data = null;
 monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
 function DayList(skey, month){
-	console.log("::DayList.start");
+	log("::DayList.start");
 	url = "/api/geo/dates?skey=" + skey + "&month="+ month;
 	$.getJSON(url, function (data) {
 		//$("#progress").html("Обрабатываем...");
-		console.log("::DayList: getJSON parce " + data.years);
+		log("::DayList: getJSON parce " + data.years);
 		dbg_data = data;
 		if (data.answer) {
-			console.log(data);
+			log(data);
 
 			$("#datepicker").datepicker("refresh");
 
@@ -913,6 +913,5 @@ function DayList(skey, month){
 			}
 		}
 	});
-	console.log("::DayList.end");
-
+	log("::DayList.end");
 }
