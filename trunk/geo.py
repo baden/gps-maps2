@@ -29,12 +29,12 @@ def repr_middle(point):
 
 TAIL_LEN = 20
 
-def getGeoLast(system):
-	value = memcache.get("geolast_%s" % str(system.key()))
+def getGeoLast(systemkey):
+	value = memcache.get("geolast_%s" % str(systemkey))
 	if value is not None:
 		return value
 
-	req = DBGeo.all().ancestor(system).order('-date').fetch(1)
+	req = DBGeo.all().ancestor(systemkey).order('-date').fetch(1)
 	if req:
 		rec = req[0]
 		point = rec.get_last()
@@ -48,8 +48,8 @@ def getGeoLast(system):
 			'tail': tail,
 			'tailformat': ["date", "lat", "lon", "course"],
 		}
-		memcache.add("geolast_%s" % str(system.key()), value)
-		#logging.info("\n\n=== geolast_%s\n\n" % str(system.key()))
+		memcache.add("geolast_%s" % str(systemkey), value)
+		#logging.info("\n\n=== geolast_%s\n\n" % str(systemkey))
 
 		return value
 	else:
@@ -58,8 +58,8 @@ def getGeoLast(system):
 """
 	При получении новых гео-данных необходимо вызвать эту процедуру для сброса memcache
 """
-def updateLasts(system):
-	memcache.delete("geolast_%s" % str(system.key()))
+def updateLasts(systemkey):
+	memcache.delete("geolast_%s" % str(systemkey))
 
 def distance(p1, p2):
 	from math import pi, sin, cos, atan2, sqrt

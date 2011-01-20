@@ -885,14 +885,18 @@ class Geo_Dates(webapp.RequestHandler):
 class Geo_Last(BaseApi):
 	requred = ('account')
 	def parcer(self, **argw):
-		systems = self.account.systems
+		skey = self.request.get("skey", None)
+		if skey is not None:
+			systems = [db.get(db.Key(skey))]
+		else:
+			systems = self.account.systems
 		recs = []
 		for s in systems:
 			recs.append({
 				'skey': str(s.key()),
 				'imei': s.imei,
 				'desc': s.desc,
-				'data': geo.getGeoLast(s),
+				'data': geo.getGeoLast(s.key()),
 			})
 
 		return {
@@ -1076,7 +1080,124 @@ class Sys_Desc(BaseApi):
 		return {'result': 'ok', 'imei': system.imei, 'desc': system.desc}
 
 class Sys_Config(BaseApi):
+	requred = ('imei')
 	def parcer(self, **argw):
+		#from zlib import decompress
+		from datamodel import DBConfig, DBDescription, DBNewConfig
+
+		cmd = self.request.get('cmd', None)
+		if cmd is None:
+			return {'answer': 'no', 'reason': 'cmd not defined'}
+
+		# Запросить список программируемых параметров
+		if cmd == 'get':
+			descriptions = DBDescription().all() #.fetch(MAX_TRACK_FETCH)
+
+			descs={}
+			fdescs={}
+			for description in descriptions:
+				descs[description.name] = description.value
+				fdescs[description.name] = {
+					'name': description.name,
+					'value': description.value,
+					'unit': description.unit,
+					'coef': description.coef,
+					'mini': description.mini,
+					'maxi': description.maxi,
+					'private': description.private
+				}
+
+			config = DBConfig.get_by_imei(self.imei)
+			configs = config.config
+			'''
+			if config.config:
+				configs = eval(decompress(config.config))
+			else:
+				configs = {}
+			'''
+			waitconfigs = DBNewConfig.get_by_imei(self.imei)
+			waitconfig = waitconfigs.config
+			'''
+			if waitconfigs.config:
+				waitconfig = eval(decompress(waitconfigs.config))
+			else:
+				waitconfig = {}
+			'''
+			nconfigs = {}
+
+			for config, value in configs.items():
+				#desc = u"Нет описания"
+				desc = None	#u"Нет описания"
+				fdesc = None
+				if config in descs:
+					desc = descs[config]
+					fdesc = fdescs[config]
+				else:
+					pass
+					#continue
+
+				if config in waitconfig: wc = waitconfig[config]
+				else: wc = None
+
+				nconfigs[config] = {
+					'type': configs[config][0],
+					'value': configs[config][1],
+					'default': configs[config][2],
+					'desc': desc,
+					'fdesc': fdesc,
+					'wait': wc
+				}
+
+				"""
+				if config in waitconfig:
+					nconfigs[config] = (configs[config][0], configs[config][1], configs[config][2], waitconfig[config], desc, fdesc)
+				else:
+					nconfigs[config] = (configs[config][0], configs[config][1], configs[config][2], None, desc, fdesc)
+					#configs[config] = (configs[config][0], configs[config][1], configs[config][2], configs[config][1])
+				"""
+
+			# Для удобства отсортируем словарь в список
+			#sconfigs = sortDict(configs)
+			sconfigs = [(key, nconfigs[key]) for key in sorted(nconfigs.keys())]
+
+			return {
+				'answer': 'ok',
+				'config': sconfigs,
+				'raw': configs
+			}
+
+		# Установить параметр
+		if cmd == 'set':
+			#from zlib import compress, decompress
+			name = self.request.get('name', 'unknown')
+			value = self.request.get('value', '0')
+
+			waitconfigs = DBNewConfig.get_by_imei(self.imei)
+			waitconfig = waitconfigs.config
+			'''
+			if waitconfigs.config:
+				waitconfig = eval(decompress(waitconfigs.config))
+			else:
+				waitconfig = {}
+			'''
+			waitconfig[name] = value
+			waitconfigs.config = waitconfig #compress(repr(waitconfig), 9)
+			waitconfigs.put()
+
+		# Отменить задание (действие аналогичное /params?cmd=check&imei=xxxxxxxx)
+		if cmd == 'cancel':
+			newconfigs = DBNewConfig().get_by_imei(self.imei)
+			newconfigs.config = {}
+			newconfigs.put()
+
+		return {'result': 'ok'}
+
+class Param_Desc(BaseApi):
+	def parcer(self):
+		from datamodel import DBDescription
+
+		name = self.request.get('name', '-error-')
+		DBDescription(key_name = "dbdescription_%s" % name, name=name, value=self.request.get('value', '')).put()
 		return {'result': 'ok'}
 
 """
@@ -1203,6 +1324,8 @@ application = webapp.WSGIApplication(
 	('/api/sys/desc*', Sys_Desc),
 	('/api/sys/sort*', Sys_Sort),
 	('/api/sys/config*', Sys_Config),
+
+	('/api/param/desc*', Param_Desc),
 
 	('/api/logs/get*', Logs_Get),
 

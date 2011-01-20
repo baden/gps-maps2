@@ -27,20 +27,23 @@
   <link rel="stylesheet" media="handheld" href="css/handheld.css?v=2">  -->
 
   <link id="themecss" type="text/css" href="/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/{{ account.pconfig.theme }}/jquery.ui.all.css" rel="stylesheet">
+  <link type="text/css" href="/stylesheets/e.css" rel="stylesheet">
   <link type="text/css" href="/stylesheets/tabs.css" rel="stylesheet">
 
   <!--script type="text/javascript" src="/js/jquery.min.js"></script-->
 
+  <script src="/js/jquery.min.js"></script>
   <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/jquery.min.js"%3E%3C/script%3E'))</script>
+  <!--script src="//ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/jquery.min.js"%3E%3C/script%3E'))</script-->
 
   <script type="text/javascript" src="/js/jquery.cookie.js"></script>
   <!--script type="text/javascript" src="/js/jquery-ui.min-1.8.7.js"></script-->
 
+  <script src="/js/jquery-ui.min-1.8.7.js"></script>
   <!-- Grab Google CDN's jQuery. fall back to local if necessary -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.7/jquery-ui.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/jquery-ui.min-1.8.7.js"%3E%3C/script%3E'))</script>
+  <!--script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.7/jquery-ui.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/js/jquery-ui.min-1.8.7.js"%3E%3C/script%3E'))</script-->
 
   <script type="text/javascript" src="/js/jquery.ui.datepicker-ru.js"></script>
 
@@ -59,8 +62,23 @@
   <script src="/js/mymarker.js"></script>
   <script src="/js/lastmarker.js"></script>
   <!--script src="/js/lastmarker-min.js"></script-->
-  <script src="/js/maps.js"></script>
   <script src="/js/gmap.js"></script>
+
+
+  <script type="text/javascript">
+      WebFontConfig = {
+        google: { families: [ 'Gurkner-Jump', 'Tangerine', 'Cantarell' ] }
+      };
+      (function() {
+        var wf = document.createElement('script');
+        wf.src = ('https:' == document.location.protocol ? 'https' : 'http') +
+            '://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js';
+        wf.type = 'text/javascript';
+        wf.async = 'true';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(wf, s);
+      })();
+    </script>
 
   <!--[if lt IE 7 ]>
     <script src="js/libs/dd_belatedpng.js"></script>
@@ -116,7 +134,7 @@
 		message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
 	});
 
-	log('Default updater', config.updater);
+	//log('Default updater', config.updater);
 	//log(config.updater);
 
 	//$.getJSON('/api/info?akey='+config.akey, function (data) {
@@ -134,7 +152,7 @@
 	config.ui = {{ account.config }};
 	//console.log("ConfigUI: ");
 	//console.log(config.ui);
-	log("ConfigUI: ", config.ui);
+	//log("ConfigUI: ", config.ui);
 
 	config.updater.add('changedesc', function(msg) {
 		//console.log('Обработчик события для обновления списка config.systems');
@@ -152,7 +170,7 @@
 
 	//console.log('CONFIG==');
 	//console.log(config);
-	log('CONFIG==', config);
+	//log('CONFIG==', config);
 
 	$(document).ready(function() {
 

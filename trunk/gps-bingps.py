@@ -169,10 +169,13 @@ def SaveGPSPointFromBin(pdata, result):
 
 class BinGpsParse(webapp.RequestHandler):
 	def get(self):
+		from geo import updateLasts
+		from updater import inform
+
 		_log = "\n== BINGPS/PARSE ["
 
 		key = db.Key(self.request.get('key'))
-		result = DBGPSBin().get(key)
+		result = DBGPSBin.get(key)
 		#result = db.get(key)
 
 		if result:
@@ -219,10 +222,17 @@ class BinGpsParse(webapp.RequestHandler):
 
 			if points > 0:
 				_log += '\n==\tSaved points: %d\n' % points
+
+				updateLasts(result.parent().key());
+				inform('geo_change', result.parent().key(), {
+					'points': points
+				})
+
 			else:
 				logging.error("Packet has no data or data is corrupted.\n")
 
 			result.delete()
+
 			#_log += '\nData deleted.\n'
 			_log += 'Ok\n'
 			
