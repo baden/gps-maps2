@@ -19,7 +19,7 @@
 	}
 
 	function UpdateSysList(){
-		$.getJSON('/api/info?acckey='+config.akey, function (data) {
+		$.getJSON('/api/info?akey='+config.akey, function (data) {
 			if(data){
 				$("#config_sys_list").empty();
 				for(var i in data.info.account.systems){
@@ -66,12 +66,13 @@
 					var desc = par.find('desc').html();
 					log('TBD! config', i);
 					div = $('body')
-					.append('<div id="config_overlay" class="ui-widget-overlay"></div>')
-					.append('<div id="config_params" style="">Тут будет окно настройки системы '+desc+'</div>');
-
-					$('#config_params')
-					.append('<div id="config_params_body">Всякая хрень</div>')
-					.append('<div id="config_params_close" style="position: absolute; top: -10px; left: 50%; margin-left: -20px;"><span class="ui-icon ui-icon-close"></span></div>');
+					.append(
+						'<div id="config_overlay" class="ui-widget-overlay"></div>' +
+						'<div id="config_params" style="">Тут будет окно настройки системы ' + desc +
+						'<div id="config_params_body">Всякая хрень</div>' +
+						'<div id="config_params_close" style="position: absolute; top: -10px; left: 50%; margin-left: -20px;"><span class="ui-icon ui-icon-close"></span></div>' +
+						'</div>'
+					);
 
 					$('#config_params_close').button().click(function(){
 						$('#config_params, #config_overlay').remove();
@@ -111,7 +112,7 @@
 					var imei = $('#config_dialog_addsys #config_addsys_imei').val();
 					//var phone = document.getElementById('addsys_phone').value;
 					//$.getJSON("/config?cmd=addsys&imei=" + imei + "&phone=" + phone, function (data) {
-					$.getJSON('/api/sys/add?acckey='+config.akey+'&imei=' + imei, function (data) {
+					$.getJSON('/api/sys/add?akey='+config.akey+'&imei=' + imei, function (data) {
 						//window.location = "/config";
 						//$(this).dialog('close');
 						if(data.result){
@@ -156,7 +157,7 @@
 					//var imei = $("#sysdesc_imei").html(); //document.getElementById('sysdesc_imei').value;
 					//var desc = document.getElementById('sys_desc').value;
 					log('Set desc for sys ' + imei + ' -> ' + desc);
-					$.getJSON('/api/sys/desc?acckey='+config.akey+'&imei=' + imei + '&desc=' + desc, function (data) {
+					$.getJSON('/api/sys/desc?akey='+config.akey+'&imei=' + imei + '&desc=' + desc, function (data) {
 						if(data.result){
 							var result = data.result;
 							if(result == "disabled"){
@@ -211,7 +212,7 @@
 				console.log(ui);*/
 				var imei = ui.item.attr('imei');
 				var index = ui.item.index();
-				$.getJSON('/api/sys/sort?acckey='+config.akey+'&imei=' + imei + '&index=' + index, function (data) {
+				$.getJSON('/api/sys/sort?akey='+config.akey+'&imei=' + imei + '&index=' + index, function (data) {
 					//window.location = "/config";
 					//$(this).dialog('close');
 					if(data.result){

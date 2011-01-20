@@ -25,35 +25,56 @@ SERVER_NAME = os.environ['SERVER_NAME']
 logging.getLogger().setLevel(logging.DEBUG)
 
 class BaseApi(webapp.RequestHandler):
+	requred = ()
 	def parcer(self):
-		return {"responseData": None}
+		return {'answer': 'no', 'reason': 'base api'}
+
+	def _parcer(self):
+		if 'account' in self.requred:
+			self.akey = self.request.get('akey', None)
+			if self.akey is None:
+				return {"answer": "no", "reason": "akey not defined or None"}
+
+			try:
+				self.account = DBAccounts.get(db.Key(self.akey))
+			except db.datastore_errors.BadKeyError, e:
+				return {'answer': 'no', 'reason': 'account key error', 'comments': '%s' % e}
+
+			if self.account is None:
+				return {'answer': 'no', 'reason': 'account not found'}
+
+		if 'skey' in self.requred:
+			skey = self.request.get("skey", None)
+			if skey is None:
+				{'answer': 'no', 'reason': 'skey not defined or None'}
+				return
+
+			try:
+				self.skey = db.Key(skey)
+			except db.datastore_errors.BadKeyError, e:
+				return {'answer': 'no', 'reason': 'skey key error', 'comments': '%s' % e}
+
+		if 'imei' in self.requred:
+			self.imei = self.request.get('imei', None)
+			if self.imei is None:
+				return {'answer': 'no', 'result': 'imei not defined'}
+
+
+		return self.parcer()
 
 	def get(self):
-		self.response.headers['Content-Type']   = 'text/javascript; charset=utf-8'
-		#callback = self.request.get('callback')
-
-		acckey = self.request.get('acckey', None)
-		syskey = self.request.get('syskey', None)
-		
-		nejson = json.dumps(self.parcer(acckey = acckey), indent=2)
-		#self.response.out.write(callback + "(" + nejson + ")\r")
-		self.response.out.write(nejson + "\r")
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+		self.response.out.write(json.dumps(self._parcer(), indent=2) + "\r")
 
 class Version(BaseApi):
 	def parcer(self):
-		return {"version": API_VERSION}
+		return {'answer': 'ok', 'version': API_VERSION}
 
 class Info(BaseApi):
-	def parcer(self, acckey=None, **argw):
-		#if ('acckey' not in argw) or (argw['acckey'] is None):
-		if acckey is None:
-			return {"answer": "no", "reason": "acckey not defined or None"};
-
-		account = DBAccounts.get(db.Key(acckey))
+	requred = ('account')
+	def parcer(self, **argw):
 		lsys = []
-		for sys in account.systems:
-			#logging.info(sys.key())
-			#logging.info(sys.imei)
+		for sys in self.account.systems:
 			lsys.append({
 				"key": str(sys.key()),
 				"imei": sys.imei,
@@ -61,58 +82,29 @@ class Info(BaseApi):
 				"desc": sys.desc,
 				"premium": sys.premium >= datetime.now(),
 			})
-		#accinfo["systems"] = lsys
 		accinfos = {
-			'key': "%s" % account.key(),
-			'name': account.name,
+			'key': "%s" % self.account.key(),
+			'name': self.account.name,
 			'user': {
-				'email': account.user.email(),
-				'id': account.user.user_id(),
+				'email': self.account.user.email(),
+				'id': self.account.user.user_id(),
 			},
 			'systems': lsys,
 		}
-
-		"""
-		accounts = DBAccounts.all().fetch(100)
-		accinfos = []
-		for rec in accounts:
-			accinfo = {
-				"key": str(rec.key()),
-				"name": rec.name,
-				"user": {
-					"email": rec.user.email(),
-					"id": rec.user.user_id(),
-				},
-			}
-			lsys = []
-			for sys in rec.systems:
-				lsys.append({
-					"key": str(sys.key()),
-					"imei": sys.imei,
-					"phone": sys.phone,
-					"desc": sys.desc,
-					"premium": sys.premium >= datetime.now(),
-				})
-			accinfo["systems"] = lsys
-			accinfos.append(accinfo)
-		"""
 
 		sysinfos = []
 		systems = DBSystem.all(keys_only=True).fetch(1000)
 		for rec in systems:
 			sysinfos.append({'imei': rec.name()[4:], 'key': "%s" % rec, })
 
-		jsonresp = {
+		return {
 			'answer': 'ok',
 			'info': {
 				'account': accinfos,
 				'systems': sysinfos,
 			}
 		}
-		return jsonresp
 		
-		#answer(self.response, jsonresp)
-
 
 class Debug_jqGrid(webapp.RequestHandler):
 	def get(self):
@@ -586,8 +578,9 @@ class Geo_GetO(webapp.RequestHandler):
 		logging.info(prof)
 		"""
 
-class Geo_Get(webapp.RequestHandler):
-	def get(self):
+class Geo_Get(BaseApi):
+	requred = ('skey')
+	def parcer(self):
 		from math import log, sqrt
 
 		"""
@@ -599,21 +592,11 @@ class Geo_Get(webapp.RequestHandler):
 		logging.info(prof)
 		"""
 
-		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
-
-		skey = self.request.get("skey")
-		if skey is None:
-			self.response.out.write(json.dumps({'answer': None}) + "\r")
-			return
-
-		system_key = db.Key(skey)
-
 
 		#pfrom = self.request.get("from")
 		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
 
 		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
-
 
 		points = []
 		l_lat = []	# Список индексов (lat, index)
@@ -637,7 +620,7 @@ class Geo_Get(webapp.RequestHandler):
 		stop_start = None
 
 		maxp = 5000
-		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, maxp):
+		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, maxp):
 			d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
 			plat = point['lat']
 			plon = point['lon']
@@ -741,7 +724,7 @@ class Geo_Get(webapp.RequestHandler):
 				
 		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
 
-		jsonresp = {
+		return {
 			'answer': 'ok',
 			#'bcount': len(recs),
 			'count': len(points),
@@ -754,7 +737,7 @@ class Geo_Get(webapp.RequestHandler):
 			#'slat': l_lat,
 			#'slon': l_lon,
 		}
-		self.response.out.write(json.dumps(jsonresp, separators=(',',':')) + "\r")
+		#self.response.out.write(json.dumps(jsonresp, separators=(',',':')) + "\r")
 
 		"""
 		prof = "gc AFTER:\n"
@@ -900,33 +883,9 @@ class Geo_Dates(webapp.RequestHandler):
 
 
 class Geo_Last(BaseApi):
-	def parcer(self, acckey=None, **argw):
-		"""from bisect import insort
-		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
-		skey = self.request.get("skey", None)
-		if skey is None:
-			self.response.out.write(json.dumps({'answer': None, 'reason': 'skey is not defined'}) + "\r")
-			return
-
-		system_key = db.Key(skey)
-
-		#req = DBGeo.all(keys_only=True).ancestor(system_key).order('-date').fetch(1000)
-		systems = 
-		"""
-		if acckey is None:
-			return {'answer': 'no', 'reason': 'acckey not defined or None'}
-
-		account = DBAccounts.get(db.Key(acckey))
-		if account is None:
-			return {'answer': 'no', 'reason': 'account not found'}
-
-		#imei = self.request.get('imei', None)
-		#if imei is None:
-		#	return {'result': 'imei not defined'}
-
-		#res = account.AddSystem(imei)
-
-		systems = account.systems
+	requred = ('account')
+	def parcer(self, **argw):
+		systems = self.account.systems
 		recs = []
 		for s in systems:
 			recs.append({
@@ -936,7 +895,7 @@ class Geo_Last(BaseApi):
 				'data': geo.getGeoLast(s),
 			})
 
-		jsonresp = {
+		return {
 			'answer': 'ok',
 			'imeis': repr([r.imei for r in systems]),
 			'geo': recs,
@@ -945,165 +904,17 @@ class Geo_Last(BaseApi):
 			#'years': years,
 			#'len': dlen,
 		}
-		return jsonresp
 
-		#self.response.out.write(json.dumps(jsonresp, sort_keys=True) + "\r")
-
-class Report_Get(webapp.RequestHandler):
-	def get(self):
+class Report_Get(BaseApi):
+	requred = ('skey')
+	def parcer(self):
 		from math import log, sqrt
-
-		"""
-		prof = "gc START: %s\n" % dir(gc)
-		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
-		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
-		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
-		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
-		logging.info(prof)
-		"""
-
-		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
-
-		skey = self.request.get("skey")
-		if skey is None:
-			self.response.out.write(json.dumps({'answer': None}) + "\r")
-			return
-
-		system_key = db.Key(skey)
-
 
 		#pfrom = self.request.get("from")
 		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
 
 		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
 
-		'''
-		points = []
-		l_lat = []	# Список индексов (lat, index)
-		l_lon = []	# Список индексов (lon, index)
-		counts = []
-		stops = []
-		plat = 0.0
-		plon = 0.0
-
-		DS = 0.8
-		MS = DS/(2**20)
-
-		pl = 0
-		b_lat_l = 90.0
-		b_lon_l = 180.0
-		b_lat_r = -90.0
-		b_lon_r = -180.0
-
-		ind = 0 
-
-		stop_start = None
-
-		maxp = 5000
-		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, maxp):
-			d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
-			plat = point['lat']
-			plon = point['lon']
-				
-			points.append([
-				#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
-				local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
-				plat, #point['lat'],
-				plon, #point['lon'],
-				int(point['course']),
-				#20,
-				int(round(log(DS/d, 2), 0)),
-			])
-			l_lat.append((plat, ind))
-			#l_lon.append((plon, ind))
-
-			#if point['speed'] < 1.0:
-
-			if point['fsource'] in (2, 3, 7):
-				if stop_start is None:
-					stop_start = {}
-					stop_start['ind'] = max(0, ind-1)
-					#stop_start['ind'] = ind
-					stop_start['lat'] = plat
-					stop_start['lon'] = plon
-			if point['fsource'] == 6:
-				if stop_start is not None:
-					stops.append({
-						'i': stop_start['ind'],
-						'p': (stop_start['lat'], stop_start['lon']),
-						's': ind,
-					})
-					stop_start = None
-			"""
-			if point['fsource'] in (2, 3, 7):
-				if stop_start is None:
-					stop_start = {}
-					stop_start['ind'] = ind
-					stop_start['lat'] = plat
-					stop_start['lon'] = plon
-					stops.append({'i': ind, 'p': (plat, plon)})
-				else:
-					if stop_start['lat'] != plat or stop_start['lon'] != plon:
-						stop_start['ind'] = ind
-						stop_start['lat'] = plat
-						stop_start['lon'] = plon
-						stops.append({'i': ind, 'p': (plat, plon)})
-			"""
-
-
-			b_lat_l = min(b_lat_l, plat)
-			b_lon_l = min(b_lon_l, plon)
-			b_lat_r = max(b_lat_r, plat)
-			b_lon_r = max(b_lon_r, plon)
-
-			ind += 1
-
-		# Zoom для первой и последней точки наивысший (отображать всегда)
-		plen = len(points) 
-		if plen>0:
-			points[0][-1] = 0
-			points[-1][-1] = 0
-
-		# Вычислим subbounds (TBD)
-		
-		# Разобьем на 8 частей по lat
-		l_lat.sort()
-		#l_lon.sort()
-		subbounds = []
-		sbs_lat = int(sqrt(plen) / 24) + 1
-		sbs_lon = int(sqrt(plen) / 24) + 1
-		for i in range(sbs_lat):
-			l_lon = []
-			i1 = plen * i // sbs_lat
-			i2 = plen * (i+1) // sbs_lat
-			#logging.info('i1 = %s' % str(i1))
-			#logging.info('i2 = %s' % str(i2))
-			for i3 in xrange(i1, i2):
-				l_lon.append((points[l_lat[i3][1]][2], l_lat[i3][1]))
-			l_lon.sort()
-			for j in range(sbs_lon):
-				sbl = []
-				j1 = len(l_lon) * j // sbs_lon
-				j2 = len(l_lon) * (j+1) // sbs_lon
-				#logging.info(' j1 = %s' % str(j1))
-				#logging.info(' j2 = %s' % str(j2))
-				nmin_lat = 180
-				nmax_lat = -180
-				for j3 in xrange(j1, j2):
-					nmin_lat = min(nmin_lat, points[l_lon[j3][1]][1])
-					nmax_lat = max(nmax_lat, points[l_lon[j3][1]][1])
-					sbl.append(l_lon[j3][1])
-				if(len(sbl)):
-					subbounds.append({
-						#'sw': (l_lat[i1][0], l_lon[j1][0]),
-						#'ne': (l_lat[i2-1][0], l_lon[j2-1][0]),
-						'sw': (nmin_lat, l_lon[j1][0]),
-						'ne': (nmax_lat, l_lon[j2-1][0]),
-						'i': sbl,
-					})
-				
-		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
-		'''
 		report = []
 		stop_start = None
 		move_start = None
@@ -1113,7 +924,7 @@ class Report_Get(webapp.RequestHandler):
 		sum_length = 0	# Пройденая дистанция
 		sum_tmove = 0	# Общее время в пути
 
-		for point in DBGeo.get_items_by_range(system_key, dtfrom, dtto, 1000):
+		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, 1000):
 			if move_start is None:
 				move_start = point
 
@@ -1178,7 +989,7 @@ class Report_Get(webapp.RequestHandler):
 			prev_point = point
 
 
-		jsonresp = {
+		return {
 			'answer': 'ok',
 			'dtfrom': str(local.fromUTC(dtfrom)),
 			'dtto': str(local.fromUTC(dtto)),
@@ -1188,123 +999,73 @@ class Report_Get(webapp.RequestHandler):
 			},
 			'report': report,
 		}
-		self.response.out.write(json.dumps(jsonresp, separators=(',',':'), indent=2) + "\r")
-
-		"""
-		prof = "gc AFTER:\n"
-		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
-		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
-		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
-		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
-		logging.info(prof)
-
-		gc.collect()
-
-		prof = "gc COLLECT:\n"
-		prof += "gc.get_count()=%s\n" % repr(gc.get_count())
-		prof += "gc.get_debug()=%s\n" % repr(gc.get_debug())
-		prof += "gc.get_threshold()=%s\n" % repr(gc.get_threshold())
-		prof += "gc.isenabled()=%s\n" % repr(gc.isenabled())
-		#prof += "gc.get_objects()=%s\n" % repr(gc.get_objects())
-		logging.info(prof)
-		"""
 
 class Sys_Add(BaseApi):
-	def parcer(self, acckey=None, **argw):
-		if acckey is None:
-			return {'answer': 'no', 'reason': 'acckey not defined or None'};
-
-		account = DBAccounts.get(db.Key(acckey))
-		if account is None:
-			return {'result': 'account not found'}
-
-		imei = self.request.get('imei', None)
-		if imei is None:
-			return {'result': 'imei not defined'}
-
-		res = account.AddSystem(imei)
+	requred = ('account', 'imei')
+	def parcer(self, **argw):
+		res = self.account.AddSystem(self.imei)
 		if res == 0:
-			return {'result': 'not found'}
+			return {'answer': 'no', 'result': 'not found'}
 		elif res == 2:
-			return {'result': 'already'}
-		return {'result': 'added'}
+			return {'answer': 'no', 'result': 'already'}
+		return {'answer': 'yes', 'result': 'added'}
 
 class Sys_Sort(BaseApi):
-	def parcer(self, acckey=None, **argw):
-		if acckey is None:
-			return {'answer': 'no', 'reason': 'acckey not defined or None'};
-
-		account = DBAccounts.get(db.Key(acckey))
-		if account is None:
-			return {'result': 'no', 'reason': 'account not found'}
-
-		imei = self.request.get('imei', None)
-		if imei is None:
-			return {'result': 'no', 'reason': 'imei not defined'}
-
+	requred = ('account', 'imei')
+	def parcer(self, account=None, **argw):
 		index = self.request.get('index', None)
 		if index is None:
 			return {'result': 'no', 'reason': 'index not defined'}
 		index = int(index)
 
-		systems = account.systems
+		systems = self.account.systems
 		slist = [s.imei for s in systems]
-		if imei not in slist:
+		if self.imei not in slist:
 			return {'result': 'no', 'reason': 'unknown system imei'}
 
-		oldindex = slist.index(imei)
+		oldindex = slist.index(self.imei)
 
 		logging.info(
 			'\n=====\n OLD index ' + str(oldindex) +
 			'\nIMEI_1: ' + db.get(account.systems_key[oldindex]).imei +
 			#'\nIMEI_2: ' + systems[oldindex].imei +
-			'\nIMEI_S: ' + imei
+			'\nIMEI_S: ' + self.imei
 		)
 		logging.info( '\n ==\n' + repr(systems))
 		logging.info( '\n ==\n' + repr(slist))
-		logging.info( '\n ==\n' + repr(account.systems_key))
+		logging.info( '\n ==\n' + repr(self.account.systems_key))
 
 		if oldindex != index:
 			#logging.info('\nchange ' + str(account.systems_key[oldindex]) + ' and ' + str(account.systems_key[index]))
 			#logging.info('change ' + db.get(account.systems_key[oldindex]).imei + ' and ' + db.get(account.systems_key[index]).imei)
 
-			goted = account.systems_key[oldindex]
-			del account.systems_key[oldindex]
-			account.systems_key.insert(index, goted)
+			goted = self.account.systems_key[oldindex]
+			del self.account.systems_key[oldindex]
+			self.account.systems_key.insert(index, goted)
 			logging.info('\n=====Change ' + str(goted) + '(' + db.get(goted).imei + ') to ' + str(index))
 
 			#account.systems_key[oldindex],account.systems_key[index] = account.systems_key[index],account.systems_key[oldindex]
-			account.put()
+			self.account.put()
 
 		#res = account.AddSystem(imei)
 		#if res == 0:
 		#	return {'result': 'not found'}
 		#elif res == 2:
 		#	return {'result': 'already'}
-		updater.inform_account('change_slist', account, {'type': 'Sorting'})
+		updater.inform_account('change_slist', self.account, {'type': 'Sorting'})
 
-		return {'result': 'sorted', 'desc': {'imei': imei, 'oldindex': oldindex, 'newindex': index}}
+		return {'result': 'sorted', 'desc': {'imei': self.imei, 'oldindex': oldindex, 'newindex': index}}
 
 class Sys_Desc(BaseApi):
-	def parcer(self, acckey=None, **argw):
-		if acckey is None:
-			return {'answer': 'no', 'reason': 'acckey not defined or None'};
-
-		account = DBAccounts.get(db.Key(acckey))
-		if account is None:
-			return {'result': 'account not found'}
-
-		imei = self.request.get('imei', None)
-		if imei is None:
-			return {'result': 'imei not defined'}
-
+	requred = ('account', 'imei')
+	def parcer(self, **argw):
 		desc = self.request.get('desc', None)
 		if desc is None:
-			return {'result': 'desc not defined'}
+			return {'answer': 'no', 'reason': 'desc not defined'}
 
-		system = account.system_by_imei(imei)
+		system = self.account.system_by_imei(self.imei)
 		if system is None:
-			return {'result': 'nosys'}
+			return {'answer': 'no', 'reason': 'nosys'}
 		system.desc = desc
 		system.put()
 
@@ -1313,42 +1074,31 @@ class Sys_Desc(BaseApi):
 		})
 
 		return {'result': 'ok', 'imei': system.imei, 'desc': system.desc}
-		#res = account.AddSystem(imei)
-		#if res == 0:
-		#	return {'result': 'not found'}
-		#elif res == 2:
-		#	return {'result': 'already'}
+
+class Sys_Config(BaseApi):
+	def parcer(self, **argw):
 		return {'result': 'ok'}
 
+"""
 class Global_DelAll(BaseApi):
-	def parcer(self, acckey=None, **argw):
-		#import random
-		#delkey = self.request.get("delkey", None)
-		#if delkey is None:
-		#	return {'delkey': random.randint(0, 10000)}
-		#else:
+	def parcer(self, **argw):
 		geos = DBGeo.all(keys_only=True).fetch(1000)
 		db.delete(geos)
 		return {'answer': 'ok'}
+"""
 
-
-class Logs_Get(webapp.RequestHandler):
-	def get(self):
+class Logs_Get(BaseApi):
+	requred = ('skey')
+	def parcer(self):
 		from datamodel import GPSLogs
 
 		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
 
 		cursor = self.request.get("cursor", None)
 		
-		skey = self.request.get("skey")
-		if skey:
-			system_key = db.Key(skey)
-		else:
-			self.response.out.write(json.dumps(none) + "\r")
-			return
+		logsq = GPSLogs.all().ancestor(self.skey).order('-date').fetch(1000)
 
-		logsq = GPSLogs.all().ancestor(system_key).order('-date').fetch(1000)
-
+		"""
 		logs = []
 		for log in logsq:
 			logs.append({
@@ -1357,45 +1107,37 @@ class Logs_Get(webapp.RequestHandler):
 				'label': log.label,
 				'key': "%s" % log.key()
 			})
+                """
+                # Более короткая и понятная запись. Интересно будет сравнить производительность на очень большом списке
+		logs = [{
+				'time': log.ldate.strftime("%d/%m/%Y %H:%M:%S"),
+				'text': log.text,
+				'label': log.label,
+				'key': "%s" % log.key()
+			} for log in logsq]
 
-		jsonresp = {
+		return {
 			"answer": "ok",
 			"logs": logs,
 		}
 		
-		self.response.out.write(json.dumps(jsonresp) + "\r")
-
-class Chanel_GetToken(webapp.RequestHandler):
-	def get(self):
+class Chanel_GetToken(BaseApi):
+	requred = ('account')
+	def parcer(self):
 		import updater
-
-		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
-
-		akey = self.request.get("akey", None)
-		if akey is None:
-			return {'answer': 'no', 'reason': 'akey not defined or None'};
-
-		account = DBAccounts.get(db.Key(akey))
-		if account is None:
-			return {'result': 'account by akey not found'}
-
 
 		uuid = self.request.get("uuid")
 		if uuid is None:
 			return {'answer': 'no', 'reason': 'uuid not defined or None'};
 
+		token = updater.register(self.account, uuid)
 
-		token = updater.register(account, uuid)
-		#token = channel.create_channel(uuid)
-
-		jsonresp = {
+		return {
 			'answer': 'ok',
-			'akey': akey,
+			'akey': '%s' % self.account.key(),
 			'uuid': uuid,
 			'token': token
 		}
-		self.response.out.write(json.dumps(jsonresp) + "\r")
-
 
 class SystemConfig(webapp.RequestHandler):
 	def get(self):
@@ -1460,12 +1202,13 @@ application = webapp.WSGIApplication(
 	('/api/sys/add*', Sys_Add),
 	('/api/sys/desc*', Sys_Desc),
 	('/api/sys/sort*', Sys_Sort),
+	('/api/sys/config*', Sys_Config),
 
 	('/api/logs/get*', Logs_Get),
 
 	('/api/chanel/gettoken*', Chanel_GetToken),
 
-	('/api/global/delall*', Global_DelAll),
+	#('/api/global/delall*', Global_DelAll),
 
 	('/api/system/config*', SystemConfig),
 

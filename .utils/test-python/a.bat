@@ -1,1 +1,1 @@
-python dist.py
+python class.py
