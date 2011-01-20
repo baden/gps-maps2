@@ -29,12 +29,6 @@
 		$("#date_tabs").tabs();
 		$("#nav_map").button("option", "disabled", true);
 
-		$("#ul_sys li").click(function(){
-			$("#ul_sys li").removeClass('ui-state-highlight');
-			$(this).addClass('ui-state-highlight');
-			config.skey = this.attributes['skey'].value;
-			UpdateDayList();
-		});
 
 		$.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
 		$("#datepicker").datepicker({altField: "#alternate",
@@ -47,17 +41,13 @@
 				UpdateDayList();
 			},
 			onChangeMonthYear: function(year, month, inst) {
-				cur_month = '' + year + ((month<10)?('0'+month):month);
+				config.cur_month = '' + year + ((month<10)?('0'+month):month);
 				UpdateDayList();
 			}
 		});
 		
 		$("#get_a_days").click(function(){
 			UpdateDayList(config.skey);
-		});
-
-		$("#syslist li").click(function(){
-			UpdateDayList(this.attributes['imei'].value);
 		});
 
 		GetLastPositions(config.akey);
@@ -76,20 +66,6 @@
 			
 		});
 		*/
-		$('div#carselect ul li span').click(function(){
-			var skey = $(this).attr('skey');
-			//console.log(lastpos[skey]);
-			map.panTo(lastpos[skey].position);
-		});
-		$('div#carselect ul li').mouseover(function(){
-			var skey = $(this).attr('skey');
-			$('.lastmarker').removeClass('lastup');
-			$('.lastmarker[skey="' + skey + '"]').addClass('lastup');
-
-		});
-		$('div#carselect ul li').mouseout(function(){
-			$('.lastmarker[skey="' + $(this).attr('skey') + '"]').removeClass('lastup');
-		});
 
 	});
 
@@ -103,6 +79,7 @@
   </script>
 
 <body>
+	<div style="position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; overflow: hidden;">
 	<div id="map"></div>
 
 	<div id="controls">
@@ -113,6 +90,28 @@
 	</div>
 
 	<div id="panel">
+		<div class="panel_control" style="">
+			<span class="ui-icon ui-icon-circle-triangle-e">&lt;</span>
+		</div>
+
+		<script>
+			$(document).ready(function(){
+				//var panel_state = true;
+				$(".panel_control").click(function(){
+					var panel = $(this).parent();
+					if(panel.hasClass('stat-hided')){
+						panel.removeClass('stat-hided');
+						$(this).find('span').removeClass('ui-icon-circle-triangle-w').addClass('ui-icon-circle-triangle-e');
+						$('#map').removeClass('stat-hided');
+					} else {
+						panel.addClass('stat-hided');
+						$(this).find('span').removeClass('ui-icon-circle-triangle-e').addClass('ui-icon-circle-triangle-w');
+						$('#map').addClass('stat-hided');
+					}
+				});
+			});
+		</script>
+
 		<div id="groupselect">
 			<select id="group_list" name="group_list" style="width:100%;" title="Группа" onchange="UpdateGroupList();">
 				<option value="*">Все</option>
@@ -133,11 +132,31 @@
 					var s = config.systems[i];
 					list.append(
 						'<li class="ui-widget ui-state-default" imei="'+s.imei+'" skey="'+s.skey+'">'+
-						'	<span class="ui-icon ui-icon-zoomin" skey="'+s.skey+'" title="Центровать последнее положение на карте"></span>'+
+						'	<span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
 						s.desc+
 						'</li>'
 					);
 				}
+
+				list.find('li').click(function(){
+					log(this, $(this), this.attributes['imei'].value);
+					//map_ul_sys
+					$(this).parent().find('li').removeClass('ui-state-highlight');
+					$(this).addClass('ui-state-highlight');
+					config.skey = this.attributes['skey'].value;
+					UpdateDayList();
+				}).mouseover(function(){
+					var skey = $(this).attr('skey');
+					$('.lastmarker').removeClass('lastup');
+					$('.lastmarker[skey="' + skey + '"]').addClass('lastup');
+				}).mouseout(function(){
+					$('.lastmarker[skey="' + $(this).attr('skey') + '"]').removeClass('lastup');
+				}).find('span').click(function(){
+					var skey = $(this).parent().attr('skey');
+					log('span:click', skey, lastpos[skey]);
+					map.panTo(lastpos[skey].position);
+				});
+
 
 				config.updater.add('changedesc', function(msg) {
 					log('MAP: Update descriptions');
@@ -172,7 +191,7 @@
 			</div>
 		</div>
 	</div>
-
+	</div>
 </body>
 
 </html>

@@ -676,9 +676,9 @@ function CreateMapOld()
 
 var lastpos = {};
 
-function GetLastPositions(acckey) {
+function GetLastPositions(akey) {
 	log('Get last positions...');
-	url = "/api/geo/last?acckey=" + acckey;
+	url = "/api/geo/last?akey=" + akey;
 	$.getJSON(url, function (data) {
 		//$("#progress").html("Обрабатываем...");
 		if (data.answer && data.answer == 'ok') {
