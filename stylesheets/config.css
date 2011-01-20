@@ -34,13 +34,50 @@
 	padding: 0;
 }
 
+div#config_params td+td+td+td {
+	text-align: center;
+}
+
+div#config_params td.cfg_changeble {
+	cursor: pointer;
+}
+
+div#config_params td.wait {
+	color: red;
+}
 
 
+div#config_params td.cfg_changeble:hover {
+	background-color: #fec;
+}
+
+div#config_params {
+	/*max-height: 80%;*/
+}
+
+div#config_params_body {
+	/*max-height: 400px;*/
+	overflow: auto;
+}
+
+/*
 div#config_params {
 	position: absolute;
 	top: 10%;
 	left: 10%;
 	right: 10%;
 	bottom: 10%;
-	background-color: green;
+	width: initial;
+	background-color: #fff;
+	border: 1px solid black;
 }
+
+div#config_params_body {
+	position: absolute;
+	top: 16px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	overflow: auto;
+}
+*/

@@ -6,6 +6,11 @@
 		xhr.open('GET', url, true);
 		xhr.send();
 	}
+	function sendPost(url, body) {
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST', url, true);
+		xhr.send(body);
+	}
 
 	function saveconfig(it, val){
 		config.ui[it] = val;
@@ -65,19 +70,98 @@
 					var imei = par.attr('imei');
 					var desc = par.find('desc').html();
 					log('TBD! config', i);
-					div = $('body')
-					.append(
-						'<div id="config_overlay" class="ui-widget-overlay"></div>' +
-						'<div id="config_params" style="">Тут будет окно настройки системы ' + desc +
-						'<div id="config_params_body">Всякая хрень</div>' +
-						'<div id="config_params_close" style="position: absolute; top: -10px; left: 50%; margin-left: -20px;"><span class="ui-icon ui-icon-close"></span></div>' +
-						'</div>'
-					);
 
-					$('#config_params_close').button().click(function(){
-						$('#config_params, #config_overlay').remove();
+					if($('#config_params').length === 0){
+						div = $('body').append(
+							//'<div id="config_overlay" class="ui-widget-overlay"></div>' +
+							'<div id="config_params">' +
+							'<div id="config_params_body">Загрузка данных с сервера...</div>' +
+							//'<div id="config_params_close" style="position: absolute; top: -10px; left: 50%; margin-left: -20px;"><span class="ui-icon ui-icon-close"></span></div>' +
+							'</div>'
+						);
+					} else {
+						$('#config_params_body').html('Загрузка данных с сервера...');
+					}
+					$.getJSON('/api/sys/config?cmd=get&imei='+imei, function (data) {
+						if(data.answer == 'ok'){
+							if(data.config.length === 0){
+								$("#config_params_body").empty().html('Нет параметров. Возможно система еще не сохранила параметры.<br/>Можно послать SMS на номер системы с текстом <strong>saveconfig</strong> для принудительного сохранения параметров.');
+							} else {
+								log('Config_GET:', data);
+								var rows = '<table><thead><tr><th>№</th><th>Имя</th><th>Описание</th><th>Значение</th><th>Заводская установка</th><th>Очередь</th></tr></thead><tbody>';
+								var index = 1;
+								for(var i in data.config){
+									var v = data.config[i];
+									rows += '<tr name="'+v[0]+'">'+
+										'<td>'+index+'</td><td>'+v[0]+'</td><td class="cfg_changeble">' + (v[1].desc || '-') + '</td><td class="cfg_changeble'+(v[1].wait?' wait':'')+'">' + v[1].value;
+									rows += '</td><td>' + v[1].default + '</td><td>' + (v[1].wait?v[1].wait:'') + '</td>'+
+										'</tr>';
+									index += 1;
+								}
+								rows += '</tbody></table>';
+								$("#config_params_body").empty().append(rows);
+								$('#config_params').dialog('option', 'position', 'center');
+
+								var tb = $('#config_params_body table tbody');
+								log('table = ', tb);
+								log('table>tr>td:first = ', tb.find('tr').find('td:first'));
+								tb.find('tr').find('td:first').next().next().click(function(){
+									var name = $(this).parent().attr('name');
+									var pvalue = $(this).html();
+									var nvalue = prompt("Введите описание для '" + name + "'", pvalue);
+									if(nvalue && nvalue != pvalue){
+										log('Change description', name);
+										$(this).html(nvalue);
+										sendGet('/api/param/desc?name=' + name + '&value=' + nvalue);
+									}
+								}).next().click(function(){
+									var name = $(this).parent().attr('name');
+									var pvalue = $(this).html();
+									var nvalue = prompt("Введите значение для '" + name + "'", pvalue);
+									if(nvalue && nvalue != pvalue){
+										log('Change value', name);
+										$(this).next().next().html(nvalue);
+										$(this).addClass('wait');
+										sendGet('/api/sys/config?cmd=set&imei=' + imei + '&name=' + name + '&value=' + nvalue);
+									}
+								});
+							}
+						}
 					});
 
+					/*$('#config_params_close').button().click(function(){
+						$('#config_params, #config_overlay').remove();
+					});*/
+
+					$('div#config_params_body').css('max-height', $(window).height() - 200);
+
+					$('#config_params').dialog({
+						width: '90%',
+						/*height: '60%',*/
+						//maxHeight: $(window).height() - 100,
+						modal: true,
+						autoOpen: true,
+						title: desc,
+						//position: ['left','top'],
+						buttons: {
+							'Отменить задание на изменение параметров': function() {
+								sendGet('/api/sys/config?cmd=cancel&imei=' + imei);
+								$(this).dialog('close');
+							},
+							'Закрыть': function() {
+								$(this).dialog('close');
+							}
+						}
+					});
+
+/*
+<div style="outline-width: 0px; outline-style: initial; outline-color: initial; width: 500px; position: absolute; display: block; z-index: 1002; left: 533px; top: 239px; height: 150px; " class="ui-dialog ui-widget ui-widget-content ui-corner-all  ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-labelledby="ui-dialog-title-config_dialog_sys_desc"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix"><span class="ui-dialog-title" id="ui-dialog-title-config_dialog_sys_desc">Администрирование</span><a href="#" class="ui-dialog-titlebar-close ui-corner-all" role="button"><span class="ui-icon ui-icon-closethick">close</span></a></div><div id="config_dialog_sys_desc" class="ui-dialog-content ui-widget-content" style="width: auto; min-height: 0px; height: 56px; ">
+	<form>
+		<span>Введите описание для системы IMEI:</span><label id="sysdesc_imei">356895035359317</label><br>
+       		<div><textarea id="sys_desc" name="desc" rows="1" style="width:98%;"></textarea></div>
+	</form>
+	</div><div class="ui-resizable-handle ui-resizable-n"></div><div class="ui-resizable-handle ui-resizable-e"></div><div class="ui-resizable-handle ui-resizable-s"></div><div class="ui-resizable-handle ui-resizable-w"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se ui-icon-grip-diagonal-se" style="z-index: 1001; "></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 1002; "></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 1003; "></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 1004; "></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false"><span class="ui-button-text">Применить изменения.</span></button><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false"><span class="ui-button-text">Отменить</span></button></div></div></div>
+*/
 
 				});
 			}
@@ -101,6 +185,41 @@
 		// Закладка "Наблюдаемые системы"
 
 		$("#config_button_sys_add").click(function(){ $("#config_dialog_addsys").dialog('open'); });
+
+		var _addsys=function(){
+			//var imei = document.getElementById('config_addsys_imei').value;
+			var imei = $('#config_dialog_addsys #config_addsys_imei').val();
+			//var phone = document.getElementById('addsys_phone').value;
+			//$.getJSON("/config?cmd=addsys&imei=" + imei + "&phone=" + phone, function (data) {
+			$.getJSON('/api/sys/add?akey='+config.akey+'&imei=' + imei, function (data) {
+				//window.location = "/config";
+				//$(this).dialog('close');
+				if(data.result){
+					var result = data.result;
+					if(result == "not found"){
+						//alert("Система не найдена. возможно система ни разу не выходила на связь с сервером.");
+						$("#dialog_addsys_not_found").dialog('open');
+					} else if(result == "already"){
+						//alert("Вы уже наблюдаете за этой системой");
+						$("#dialog_addsys_already").dialog('open');
+					} else if(result == "added") {
+						UpdateSysList();
+						//window.location = "/config";
+					}
+				}
+			});
+			$('#config_dialog_addsys').dialog('close');
+		}
+
+		$('#config_addsys_imei').keypress(function(ev){
+			if(ev.which == 13){
+				//$("#config_dialog_addsys").dialog('close');
+				_addsys();
+				return false;
+			}
+			return true;
+		});
+
 		$("#config_dialog_addsys").dialog({
 			width: 400,
 			height: 200,
@@ -108,28 +227,7 @@
 			autoOpen: false,
 			buttons: {
 				'Добавить систему.': function() {
-					//var imei = document.getElementById('config_addsys_imei').value;
-					var imei = $('#config_dialog_addsys #config_addsys_imei').val();
-					//var phone = document.getElementById('addsys_phone').value;
-					//$.getJSON("/config?cmd=addsys&imei=" + imei + "&phone=" + phone, function (data) {
-					$.getJSON('/api/sys/add?akey='+config.akey+'&imei=' + imei, function (data) {
-						//window.location = "/config";
-						//$(this).dialog('close');
-						if(data.result){
-							var result = data.result;
-							if(result == "not found"){
-								//alert("Система не найдена. возможно система ни разу не выходила на связь с сервером.");
-								$("#dialog_addsys_not_found").dialog('open');
-							} else if(result == "already"){
-								//alert("Вы уже наблюдаете за этой системой");
-								$("#dialog_addsys_already").dialog('open');
-							} else if(result == "added") {
-								UpdateSysList();
-								//window.location = "/config";
-							}
-						}
-					});
-					$(this).dialog('close');
+					_addsys();
 				},
 				'Отменить': function() {
 					$(this).dialog('close');
@@ -250,6 +348,16 @@
 				//sendGet('http://localhost/addlog?imei='+imei+'&text=%D0%92%D0%BD%D0%B5%D1%88%D0%BD%D0%B5%D0%B5+%D0%BF%D0%B8%D1%82%D0%B0%D0%BD%D0%B8%D0%B5:+%3Cb%3E%D0%BD%D0%BE%D1%80%D0%BC%D0%B0%3C/b%3E');
 				sendGet('/addlog?imei='+imei+'&text='+text);
 			});
+			$("button.dbg_send_cfg").click(function(){
+				var imei = $(this).attr('imei');
+				var text = '';
+				for(var i=0; i<100; i++){
+					text += 'dbg.name.'+i+' INT '+i*10+' 10\n';
+				}
+				//sendGet('http://localhost/addlog?imei='+imei+'&text=%D0%92%D0%BD%D0%B5%D1%88%D0%BD%D0%B5%D0%B5+%D0%BF%D0%B8%D1%82%D0%B0%D0%BD%D0%B8%D0%B5:+%3Cb%3E%D0%BD%D0%BE%D1%80%D0%BC%D0%B0%3C/b%3E');
+				sendPost('/config?cmd=save&imei='+imei, text);
+			});
+			
 		}
 
 

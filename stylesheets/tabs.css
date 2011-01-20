@@ -18,8 +18,10 @@ body {
 	overflow-x: hidden;
 	overflow-y: hidden;
 	font-size: 75%;
-/*	font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";*/
-	font-family: "Yanone Kaffeesatz", "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";
+	/*font-family: "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";*/
+	font-family: "font-file-54189", "Gurkner-Jump", "Tangerine", "Helvetica", "Arial",  "Verdana", "sans-serif";
+
+/*	font-family: "Yanone Kaffeesatz", "Trebuchet MS", "Helvetica", "Arial",  "Verdana", "sans-serif";*/
 
 }
 

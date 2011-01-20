@@ -12,6 +12,8 @@ from google.appengine.api import memcache
 
 #from guppy import hpy
 
+import updater
+
 class MainPage(TemplatedPage):
 	def get(self):
 		#h = hpy()
@@ -45,7 +47,6 @@ class StaticPage(TemplatedPage):
 
 class AddLog(webapp.RequestHandler):
 	def get(self):
-		import updater
 
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 		system = DBSystem.get_or_create(self.request.get('imei', 'unknown'))
@@ -89,193 +90,105 @@ class AddLog(webapp.RequestHandler):
 
 		self.response.out.write('ADDLOG: OK\r\n')
 
-class Config(TemplatedPage):
-	def get(self):
-		cmd = self.request.get('cmd')
-		uimei = self.request.get('imei')
-
-		userdb = getUser(self.request)
-		#logging.debug(userdb.imei)
-
-		if userdb == None:
-			#allusers = datamodel.DBUser.all().fetch(100)
-			#accounts = datamodel.DBAccounts().all().filter('user =', self.user).fetch(1)
-			#allusers = []
-			#for account in self.account.systems:
-			#	allusers.append(db.get(db.Key(account)))
-
-			#path = os.path.join(os.path.dirname(__file__), 'svg', 'cars')
-			#flist = os.listdir('/')
-
-			template_values = {
-				'now': datetime.now(),
-				#'path': path,
-				#'flist': flist,
-			}
-
-			#path = os.path.join(os.path.dirname(__file__), 'templates/config.html')
-			#self.response.out.write(template.render(path, template_values))
-
-			#template_values = {}
-			self.write_template(template_values)
-		else:
-			if cmd == 'last':
-				#self.response.out.write('<html><head><link type="text/css" rel="stylesheet" href="stylesheets/main.css" /></head><body>CONFIG:<br><table>')
-				#self.response.out.write(u"<tr><th>Имя</th><th>Тип</th><th>Значение</th><th>Заводская установка</th></tr>" )
-
-				showall = self.request.get('showall')
-
-				descriptions = datamodel.DBDescription().all() #.fetch(MAX_TRACK_FETCH)
-
-				descs={}
-				fdescs={}
-				for description in descriptions:
-					descs[description.name] = description.value
-					fdescs[description.name] = description
-					pass
-
-				newconfig = datamodel.DBConfig().all().filter('user = ', userdb).fetch(1)
-				#for dbconfig in newconfig:
-				if newconfig:
-					#self.response.out.write("<tr><th>date: %s</th></tr>" % dbconfig.cdate)
-					configs = eval(zlib.decompress(newconfig[0].config))
-					#configs = sortDict(eval(zlib.decompress(newconfig[0].config)))
-
-					#configs = eval(dbconfig.strconfig)
-
-					#try:
-					#	for config, value in configs.items():
-					#		self.response.out.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>" % (config, value[0], value[1], value[2]))
-					#except:
-					#	self.response.out.write("<tr><td>orig:%s</td></tr>" % repr(configs))
-
-					waitconfigs = datamodel.DBNewConfig().all().filter('user = ', userdb).fetch(1)
-					if waitconfigs:
-						waitconfig = eval(zlib.decompress(waitconfigs[0].config))
-					else:
-						waitconfig = {}
-
-					nconfigs = {}
-
-					for config, value in configs.items():
-						#desc = u"Нет описания"
-						desc = u"Нет описания"
-						fdesc = None
-						if config in descs:
-							desc = descs[config]
-							fdesc = fdescs[config]
-						else:
-							if not showall:
-							#if not users.is_current_user_admin():
-								continue
-
-						if config in waitconfig:
-							nconfigs[config] = (configs[config][0], configs[config][1], configs[config][2], waitconfig[config], desc, fdesc)
-						else:
-							nconfigs[config] = (configs[config][0], configs[config][1], configs[config][2], None, desc, fdesc)
-							#configs[config] = (configs[config][0], configs[config][1], configs[config][2], configs[config][1])
-
-					# Для удобства отсортируем словарь в список
-					#sconfigs = sortDict(configs)
-					sconfigs = [(key, nconfigs[key]) for key in sorted(nconfigs.keys())]
-
-					template_values = {
-					    'configs': sconfigs,
-					    'user': userdb,
-					    'imei': uimei
-					}
-
-					#path = os.path.join(os.path.dirname(__file__), 'templates/config-last.html')
-					#self.response.out.write(template.render(path, template_values))
-					self.write_template(template_values, alturl='config-last.html')
-				else:
-					self.response.out.write(u"<html><body>Нет записей</body></html>")
-					#self.response.out.write("</table></body></html>")
-
-			else:
-				template_values = {
-				    'configs': conf_parms,
-				    'user': userdb,
-				    'imei': uimei
-				}
-
-				path = os.path.join(os.path.dirname(__file__), 'templates/params.html')
-				self.response.out.write(template.render(path, template_values))
-
-		#DBNewConfig
-
+class Config(webapp.RequestHandler):
 	def post(self):
-		userdb = getUser(self.request, create=True)
-		if not userdb:
-			self.response.out.write("NO USER")
-			return
+		from datamodel import DBConfig
+		#from zlib import compress
 
-		cmd = self.request.get('cmd')
+		self.response.headers['Content-Type'] = 'application/octet-stream'
+
+		imei = self.request.get('imei', 'unknown')
+		system = DBSystem.get_or_create(imei, phone=self.request.get('phone', None), desc=self.request.get('desc', None))
+
+		cmd = self.request.get('cmd', '')
 		if cmd == 'save':
-			#self.response.headers['Content-Type'] = 'text/plain'	#minimizing data
-			self.response.headers['Content-Type'] = 'application/octet-stream'
-			newconfigs = datamodel.DBConfig().all().filter('user = ', userdb).fetch(1)
-			if newconfigs:
-				newconfig = newconfigs[0]
-				#Подавим объединение конфигураций
-				config = {}
-				#config = eval(zlib.decompress(newconfig.config))
-				##config = eval(newconfig.strconfig)
-			else:
-				newconfig = datamodel.DBConfig()
-				newconfig.user = userdb
-				config = {}
+			newconfig = DBConfig.get_by_imei(imei)
 
-			#logging.info(self.request.body)
+			config = {}
 			for conf in self.request.body.split("\n"):
 				params = conf.strip().split()
-				#logging.info(params)
 				if len(params) == 4:
 					config[params[0]] = (params[1], params[2], params[3])
-				#self.response.out.write("<tr><td>parts:%s</td></tr>" % repr(conf.strip()))
 
-			#newconfig = DBConfig()
-			#newconfig.user = userdb
-			newconfig.config = zlib.compress(repr(config), 9)
+			newconfig.config = config #compress(repr(config), 9)
 			#newconfig.strconfig = repr(config)
 			newconfig.put()
+
+			updater.inform('cfgupd', system.key(), {
+				'skey': str(system.key())
+			})	# Информировать всех пользователей, у которых открыта страница настроек
 
 			self.response.out.write("CONFIG: OK\r\n")
+			return
 
-			pass
-		else:
+		self.response.out.write("CONFIG: ERROR\r\n")
 
-			self.response.out.write("<html><body>\r\n")
+class Params(webapp.RequestHandler):
+	def get(self):
+		from datamodel import DBConfig, DBNewConfig
+		self.response.headers['Content-Type'] = 'application/octet-stream'
 
-			config = self.request.get('userconfig') + ";" + self.request.get('custom')
-			params = config.split(';')
+		imei = self.request.get('imei', 'unknown')
+		system = DBSystem.get_or_create(imei)
 
-			self.response.out.write("Config: %s<br/>" % config)
+		cmd = self.request.get('cmd')
 
-			newconfigs = datamodel.DBNewConfig().all().filter('user = ', userdb).fetch(1)
-			if newconfigs:
-				newconfig = newconfigs[0]
-				config = eval(zlib.decompress(newconfig.config))
-				#config = eval(newconfig.strconfig)
+		if cmd == 'params':
+			newconfig = DBNewConfig.get_by_imei(imei)
+			configs = newconfig.config
+			if configs and (configs != {}):
+				#self.response.out.write("<tr><th>date: %s</th></tr>" % dbconfig.cdate)
+				#configs = eval(zlib.decompress(newconfig[0].config))
+				#configs = eval(dbconfig.strconfig)
+				for config, value in configs.items():
+					#self.response.out.write("<tr><td>%s:%s</td></tr>" % (config, value))
+					self.response.out.write("PARAM %s %s\r\n" % (config, value))
+				self.response.out.write("FINISH\r\n")
 			else:
-				newconfig = datamodel.DBNewConfig()
-				newconfig.user = userdb
-				config = {}
+				self.response.out.write("NODATA\r\n")
 
-			for param in params:
-				item = param.split('=')
-				if len(item) == 2:
-					config[item[0]] = item[1]
+		elif cmd == 'cancel':
+			newconfigs = DBNewConfig().get_by_imei(imei)
+			newconfigs.config = {}
+			newconfigs.put()
+			
+			#for newconfig in newconfigs:
+			#	newconfig.delete()
+			self.response.out.write("DELETED")
 
-			newconfig.config = zlib.compress(repr(config), 9)
-			#newconfig.strconfig = repr(config)
-			newconfig.put()
+		elif cmd == 'confirm':
+			newconfig = DBNewConfig.get_by_imei(imei)
+			newconfigs = newconfig.config
 
-			if len(config) != 0:
-				self.response.out.write("Params: %d" % len(config))
+			if newconfigs and (newconfigs != {}):
+				saveconfig = DBConfig.get_by_imei(imei)
+				config = saveconfig.config
 
-			self.response.out.write("</body></html>")
+				for pconfig, pvalue in newconfigs.items():
+					if pconfig in config:
+						config[pconfig] = (config[pconfig][0], pvalue, config[pconfig][2])
 
+				saveconfig.config = config
+				saveconfig.put()
+
+				newconfig.config = {}
+				newconfig.put()
+
+				self.response.out.write("CONFIRM")
+
+			else:
+				self.response.out.write("NODATA")
+
+		elif cmd == 'check':
+			newconfigs = DBNewConfig.get_by_imei(imei)
+			newconfig = newconfigs.config
+			if newconfig and (newconfig != {}):
+				self.response.out.write('CONFIGUP\r\n')
+			else:
+				self.response.out.write('NODATA\r\n')
+
+		else:
+			self.response.out.write('CMD_ERROR\r\n')
 
 
 application = webapp.WSGIApplication(
@@ -283,6 +196,7 @@ application = webapp.WSGIApplication(
 		('/s/.*', StaticPage),
 		('/addlog', AddLog),	# Событие, не требующее точной привязки ко времени
 		('/config.*', Config),	# Конфигурация системы
+		('/params.*', Params),	# Запрос параметров системы, например localhost/params?cmd=check&imei=353358019726996
 	],
 	debug=True
 )

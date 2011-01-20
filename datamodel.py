@@ -125,13 +125,13 @@ class DBSystem(db.Model):
 			if entity is None:
 				entity = cls(key_name="sys_%s" % imei, imei=imei)
 				update = True
-			if phone:
-				if entry.phone != phone:
-					entry.phone = phone
+			if phone is not None:
+				if entity.phone != phone:
+					entity.phone = phone
 					update = True
-			if desc:
-				if entry.desc != desc:
-					entry.desc = desc
+			if desc is not None:
+				if entity.desc != desc:
+					entity.desc = desc
 					update = True
 			if update:
 				entity.put()
@@ -452,7 +452,77 @@ class GPSLogs(db.Model):
 	text = db.StringProperty(multiline=True)
 	date = db.DateTimeProperty(auto_now_add=True)
 	label = db.IntegerProperty(default=0)		# Метка: 0-обычное сообщение, 1-отладочное сообщение, 2-срочное сообщение и т.д.
+
 	@property
 	def ldate(self):
 		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
 		return fromUTC(self.date)
+
+"""
+	Конфигурация системы
+"""
+
+from zlib import compress, decompress
+'''
+class DBConfig(db.Model):
+	#cdate = db.DateTimeProperty(auto_now_add=True)	# Дата размещения конфигурации
+	config = db.BlobProperty()
+	#strconfig = db.TextProperty()
+
+	@classmethod
+	def get_by_imei(cls, imei):
+		return cls.get_or_insert("dbconfig_%s" % imei)
+		"""
+		def txn():
+			entity = cls.get_by_key_name("dbconfig_%s" % imei)
+			if entity is None:
+				entity = cls(key_name="dbconfig_%s" % imei)
+				#entity.put()	# И сразу сохраним
+				
+			return entity
+
+		return db.run_in_transaction(txn)
+		"""
+'''
+
+class DBConfig(db.Model):
+	#cdate = db.DateTimeProperty(auto_now_add=True)	# Дата размещения конфигурации
+	_config = db.BlobProperty()
+	#strconfig = db.TextProperty()
+
+	@classmethod
+	def get_by_imei(cls, imei):
+		return cls.get_or_insert("%s" % imei)
+
+	def get_config(self):
+		if self._config:
+			try:
+				configs = eval(decompress(self._config))
+			except:
+				configs = {}
+		else:
+			configs = {}
+		return configs
+
+	def set_config(self, value):
+		self._config = compress(repr(value), 9)
+		#self.put()
+
+	def del_config(self):
+		#del self._config
+		self._config = None
+
+	config = property(get_config, set_config, del_config, "I'm the 'config' property.")
+
+class DBNewConfig(DBConfig):
+	pass
+
+
+class DBDescription(db.Model):
+	name = db.StringProperty(multiline=False)	# имя параметра
+	value = db.StringProperty(multiline=False)	# Текстовое описание
+	unit = db.StringProperty(multiline=False)	# Единица измерения
+	coef = db.FloatProperty(default=1.0)		# Коэффициент преобразования для человеческого представления
+	mini = db.IntegerProperty(default=0)		# Минимальное значение для типа INT
+	maxi = db.IntegerProperty(default=32767)	# Максимальное значение для типа INT
+	private = db.BooleanProperty(default=False)

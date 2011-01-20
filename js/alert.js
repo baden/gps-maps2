@@ -103,7 +103,7 @@ warning = function (mtext, howlong) {
 </script>
 */
 
-console.log('Message: define');
+//console.log('Message: define');
 window['message'] = message;
 
 })(window);

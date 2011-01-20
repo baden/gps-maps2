@@ -26,7 +26,18 @@ class BaseApi(object):
 		self.header = 'text/javascript; charset=utf-8'
 
 		self.out = json.dumps(self._parcer(), indent=2) + "\n"
-		
+
+
+	def __init__(self):
+		self._x = None
+
+	def getx(self):
+		return self._x
+	def setx(self, value):
+		self._x = value + 1
+	def delx(self):
+		del self._x
+	custom = property(getx, setx, delx, "I'm the 'x' property.")		
 
 class BaseAccApi(BaseApi):
 	requred = ('a', 'b')
@@ -108,11 +119,35 @@ class Test3(object):
 
 def main():
 
+	from base64 import b64encode as encode
+	from base64 import b64decode as decode
+	import pickle
+
+	orig = u'1234567 Русский'
+
+	print('Orig: %s' % orig)
+
+	pack = encode(orig.encode('utf-8'))
+
+	print('Pack: %s' % pack)
+
+	unpack = decode(pack).decode('utf-8')
+
+	print('UnPack: %s' % unpack)
+
+	t = 'aglncHMtbWFwczJyKQsSCkRCQWNjb3VudHMiGWFjY18xODU4MDQ3NjQyMjAxMzkxMjQxMTgM'
+	print('t=%s' % decode(t))
+
+	print('')
+
 	a = BaseAccApi()
 	a.get()
 
 	print(a.header)
 	print(a.out)
+	print('Property a.custom = ', a.custom)
+	a.custom = 1
+	print('Property a.custom = ', a.custom)
 
 	"""
 	#t = Test1()
