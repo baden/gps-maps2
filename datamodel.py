@@ -76,6 +76,17 @@ class DBAccounts(db.Model):
 			return 1
 		return 2
 
+	def DelSystem(self, imei):
+		system = DBSystem.get_by_key_name("sys_%s" % imei)
+		if system is None:
+			return 0
+
+		if system.key() in self.systems_key:
+			self.systems_key.remove(system.key())
+			self.put()
+			return 1
+		return 2
+
 	@property
 	def single(self):
 		return len(systems_key) == 1
@@ -116,6 +127,10 @@ class DBSystem(db.Model):
 	def ldate(self):
 		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
 		return fromUTC(self.date)
+
+	@classmethod
+	def get_by_imei(cls, imei):
+		return cls.get_by_key_name("sys_%s" % imei)
 	
 	@classmethod
 	def get_or_create(cls, imei, phone=None, desc=None):
@@ -526,3 +541,13 @@ class DBDescription(db.Model):
 	mini = db.IntegerProperty(default=0)		# Минимальное значение для типа INT
 	maxi = db.IntegerProperty(default=32767)	# Максимальное значение для типа INT
 	private = db.BooleanProperty(default=False)
+
+
+class DBFirmware(db.Model):
+	cdate = db.DateTimeProperty(auto_now_add=True)	# Дата размещения прошивки
+	boot = db.BooleanProperty(default=False)	# Устанавливается в True если это образ загрузчика
+	hwid = db.IntegerProperty()			# Версия аппаратуры
+	swid = db.IntegerProperty()			# Версия прошивки
+	data = db.BlobProperty()			# Образ прошивки
+	size = db.IntegerProperty()			# Размер прошивки (опция)
+	desc = db.StringProperty(multiline=True)	# Описание прошивки (опция)

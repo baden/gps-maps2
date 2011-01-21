@@ -13,13 +13,17 @@
 	}
 
 	function saveconfig(it, val){
-		config.ui[it] = val;
+		$('#button_config_restart').button( "option", "disabled", true );
+		if(val) config.ui[it] = val;
 		$.ajax({
 		  url: '/api/system/config?akey=' + config.akey,
 		  dataType: 'json',
 		  data: config.ui,
 		  type: 'POST',
-		  success: function(){log('Saved.');}
+		  success: function(){
+			log('Saved.');
+			$('#button_config_restart').button( "option", "disabled", false );
+			}
 		});
 	}
 
@@ -31,10 +35,11 @@
 					var s = data.info.account.systems[i];
 					$("#config_sys_list").append(
 						'<li class="sli" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
-						'<span class="bico hl mm" title="Выбрать пиктограмму">P</span>' +
-						'<span class="bconf hl mm" title="Настроить систему">C</span>' +
-						'IMEI:' + s.imei + ' <desc>' + s.desc + '</desc>'+
-						'<button class="key bdesc" title="Изменить описание">...</button>' +
+						 '<span class="bico hl mm" title="Выбрать пиктограмму">P</span>' +
+						 '<span class="bconf hl mm" title="Настроить систему">C</span>' +
+						 'IMEI:' + s.imei + ' <desc>' + s.desc + '</desc>'+
+						 '<button class="key bdesc" title="Изменить описание">...</button>' +
+						 '<button class="key bdel" title="Отказаться от слежения за системой">X</button>' +
 						'</li>'
 					);
 				}
@@ -72,7 +77,7 @@
 					log('TBD! config', i);
 
 					if($('#config_params').length === 0){
-						div = $('body').append(
+						var div = $('body').append(
 							//'<div id="config_overlay" class="ui-widget-overlay"></div>' +
 							'<div id="config_params">' +
 							'<div id="config_params_body">Загрузка данных с сервера...</div>' +
@@ -129,6 +134,8 @@
 						}
 					});
 
+
+
 					/*$('#config_params_close').button().click(function(){
 						$('#config_params, #config_overlay').remove();
 					});*/
@@ -164,6 +171,13 @@
 */
 
 				});
+
+				$("#config_sys_list .bdel").button().click(function(){
+					$('#config_del_imei').html($(this).parent().attr('imei'));
+					$('#config_del_desc').html($(this).parent().find('desc').html());
+					$('#config_dialog_delsys').dialog('open');
+				});
+
 			}
 		});
 	}
@@ -186,31 +200,16 @@
 
 		$("#config_button_sys_add").click(function(){ $("#config_dialog_addsys").dialog('open'); });
 
-		var _addsys=function(){
-			//var imei = document.getElementById('config_addsys_imei').value;
-			var imei = $('#config_dialog_addsys #config_addsys_imei').val();
-			//var phone = document.getElementById('addsys_phone').value;
-			//$.getJSON("/config?cmd=addsys&imei=" + imei + "&phone=" + phone, function (data) {
-			$.getJSON('/api/sys/add?akey='+config.akey+'&imei=' + imei, function (data) {
-				//window.location = "/config";
-				//$(this).dialog('close');
-				if(data.result){
-					var result = data.result;
-					if(result == "not found"){
-						//alert("Система не найдена. возможно система ни разу не выходила на связь с сервером.");
-						$("#dialog_addsys_not_found").dialog('open');
-					} else if(result == "already"){
-						//alert("Вы уже наблюдаете за этой системой");
-						$("#dialog_addsys_already").dialog('open');
-					} else if(result == "added") {
-						UpdateSysList();
-						//window.location = "/config";
-					}
-				}
-			});
-			$('#config_dialog_addsys').dialog('close');
-		}
+		$("textarea").keypress(function(ev){
+			if(ev.which == 13) {
+				log('TEXTAREA_13:', $(this).parents('div[role="dialog"]').find('button').first());
+				$(this).parents('div[role="dialog"]').find('button').first().click();
+				return false;
+			}
+			return true;
+		});
 
+		/*
 		$('#config_addsys_imei').keypress(function(ev){
 			if(ev.which == 13){
 				//$("#config_dialog_addsys").dialog('close');
@@ -219,6 +218,7 @@
 			}
 			return true;
 		});
+		*/
 
 		$("#config_dialog_addsys").dialog({
 			width: 400,
@@ -227,7 +227,26 @@
 			autoOpen: false,
 			buttons: {
 				'Добавить систему.': function() {
-					_addsys();
+					var imei = $('#config_dialog_addsys #config_addsys_imei').val();
+					$.getJSON('/api/sys/add?akey='+config.akey+'&imei=' + imei, function (data) {
+						//window.location = "/config";
+						//$(this).dialog('close');
+						if(data.result){
+							var result = data.result;
+							if(result == "not found"){
+								//alert("Система не найдена. возможно система ни разу не выходила на связь с сервером.");
+								$("#dialog_addsys_not_found").dialog('open');
+							} else if(result == "already"){
+								//alert("Вы уже наблюдаете за этой системой");
+								$("#dialog_addsys_already").dialog('open');
+								//$(this).dialog('close');
+							} else if(result == "added") {
+								UpdateSysList();
+								//$(this).dialog('close');
+							}
+						}
+					});
+					$(this).dialog('close');
 				},
 				'Отменить': function() {
 					$(this).dialog('close');
@@ -236,6 +255,8 @@
 		});
 		//$("#dialog-addsys").dialog('open');
 
+
+
 		$("#config_dialog_sys_desc").dialog({
 			width: 500,
 			height: 150,
@@ -243,7 +264,6 @@
 			autoOpen: false,
 			buttons: {
 				'Применить изменения.': function() {
-
 					var dialog = $(this);
 					//log(dialog);
 					//log($(this));
@@ -277,22 +297,24 @@
 
 		$("#dialog_addsys_not_found").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
 		$("#dialog_addsys_already").dialog({modal: true, autoOpen: false, buttons:{Ok: function(){$(this).dialog("close");}}});
+
 		$("#popup-sys").dialog({modal: true, autoOpen: false});
 		$("#popup-sys li").button();
 
-
-		$('#colorpickerHolder').ColorPicker({
-			color: '#0000ff',
-			onShow: function (colpkr) {
-				$(colpkr).fadeIn(100);
-				return false;
-			},
-			onHide: function (colpkr) {
-				$(colpkr).fadeOut(100);
-				return false;
-			},
-			onChange: function (hsb, hex, rgb) {
-				$('#colorpickerHolder div').css('backgroundColor', '#' + hex);
+		$('#config_dialog_delsys').dialog({
+			modal: true,
+			autoOpen: false,
+			buttons:{
+				'Нет': function(){
+					$(this).dialog("close");
+				},
+				'Да, отказаться от слежения': function(){
+					var imei = $('#config_del_imei').html();
+					$.getJSON('/api/sys/del?akey='+config.akey+'&imei=' + imei, function (data) {
+						UpdateSysList();
+					});
+					$(this).dialog("close");
+				}
 			}
 		});
 
@@ -339,6 +361,37 @@
 		});
 
 
+		// Цвет трека
+		config.ui.trackcolor = config.ui.trackcolor || '#F08000';
+		$('#colorpickerHolder div').css('backgroundColor', config.ui.trackcolor);
+		$('#colorpickerHolder').ColorPicker({
+			color: config.ui.trackcolor,
+			//color: '#ff0000',
+			onShow: function (colpkr) {
+				$(colpkr).fadeIn(100);
+				//log('show');
+				return false;
+			},
+			onHide: function (colpkr) {
+				$(colpkr).fadeOut(100);
+				log('hide');
+				saveconfig('trackcolor', null);
+				return false;
+			},
+			onChange: function (hsb, hex, rgb) {
+				config.ui.trackcolor = '#' + hex;
+				$('#colorpickerHolder div').css('backgroundColor', config.ui.trackcolor);
+				//log('change');
+			}
+		});
+
+
+
+		// Перезапуск
+		$('#button_config_restart').click(function(){
+			window.location.href = window.location.href;
+		});
+
 		// Административные и отладочные функции
 
 		if(config.admin){
@@ -360,12 +413,43 @@
 			
 		}
 
+		$('.cfg_iframe').click(function(){
+			log('boo', this);
+			if($(this).find('div').length == 0){
+				$(this).append('<div><iframe src="'+$(this).attr('value')+'" style="width:100%; height: 70%;">'+
+				'Ваш браузер не поддерживает iframe. Сожалеем, но единственным выходом является использование другого браузера. Мы рекомендуем <a href="http://www.google.com/chrome?hl=ru">Google Chrome.</a>'+
+				'</iframe></div>');
+			} else {
+				$(this).find('div').remove();
+			}
+			/*
+			if($('#config_binbackup').length === 0){
+				$('#dbg_binbackup').after(
+				'<div id="config_binbackup" style="width: 100%; height: 300px; border: 1px solid black;"><iframe src="/binbackup" style="width: 100%; height: 100%; display: block;">'+
+				'	Ваш браузер не поддерживает iframe. Сожалеем, но единственным выходом является использование другого браузера. Мы рекомендуем Google Chrome.'+
+				'</iframe></div>'
+				);
+			} else {
+				$('#config_binbackup').remove();
+			}
+			*/
+		});
 
 
 		// Главный аккордион
 		// Нужно добавить проверку что вкладка активна иначе вызвать при активации закладки
-		$(window).resize(function(){$("#config_list").accordion("resize");});
+		$(window).resize(function(){
+			if(config.tab == 4) $("#config_list").accordion("resize");
+		});
 		setTimeout(function(){$("#config_list").accordion("resize")}, 1000);
+
+		config.updater.tabs[4] = function(){
+			log('CONFIG: tab update');
+			$("#config_list").accordion("resize");
+			//$('#map').resize();
+			//google.maps.event.trigger(map, 'resize');
+		}
+
 
 		//$(document).bind('contextmenu', function(e) {return false;});
 	        //$(document).disableSelection();

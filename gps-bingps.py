@@ -15,7 +15,7 @@ from datamodel import DBSystem, DBGeo, PointWorker, DBGPSBin, DBGPSBinBackup
 
 from datetime import date, timedelta, datetime
 
-import utils
+from utils import CRC16
 import updater
 
 SERVER_NAME = os.environ['SERVER_NAME']
@@ -275,7 +275,7 @@ class BinGps(webapp.RequestHandler):
 
 		crc2 = 0
 		for byte in pdata:
-			crc2 = utils.crc(crc2, ord(byte))
+			crc2 = CRC16(crc2, ord(byte))
 
 		if crc!=crc2:
 			_log += '\n==\tWarning! Calculated CRC: 0x%04X but system say CRC: 0x%04X. (Now error ignored.)' % (crc2, crc)

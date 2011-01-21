@@ -1,9 +1,15 @@
 <html>
   <head>
-    <script src="/plugins/closure-library/closure-library/closure/goog/base.js"></script>
-    <!--script src="/js/test/testclosure.js"></script-->
 
-    <script src="/js/test/testclosure-min.js"></script>
+  <link rel="stylesheet" href="/js/test/common.css">
+  <link rel="stylesheet" href="/js/test/button.css">
+  <link rel="stylesheet" href="/js/test/custombutton.css">
+
+    <!--script src="/plugins/closure-library/closure-library/closure/goog/base.js"></script>
+    <script src="/js/test/testclosure.js"></script-->
+
+    <!--script src="/js/test/testclosure-all.js"></script-->
+    <script src="/js/test/testclosure-build.js"></script>
     <script>
 
 
@@ -11,10 +17,13 @@
 
     </script>
   </head>
-  <body onload="sayHi()">
+  <!--body onload="sayHi()"-->
+  <body onload="mapproject.start()">
+
 	<h1>
 		<a id="a1" href="#">A1</a>
 		<a id="a2" href="#">A2</a>
 	</h1>
+	<div id="b1">AA</div>
   </body>
 </html>

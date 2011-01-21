@@ -206,6 +206,7 @@ MyMarker.prototype.setSysKey = function(skey) {
 }
 
 MyMarker.prototype.setPosition = function(point) {
+	log('Marker change position');
 	this.point = point;
 	this.arrdiv.setAttribute("style", "-webkit-transform: rotate(" + point.angle + "deg);z-index:-1;");
 //	console.log('MyMarker.protorype.setPosition');

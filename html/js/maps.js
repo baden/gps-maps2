@@ -571,7 +571,7 @@ function GetLastPositions(akey) {
 				tailPath = new google.maps.Polyline({
 					//path: flightPlanCoordinates,
 					path: tail_path,
-					strokeColor: "#FF0000",
+					strokeColor: config.ui.trackcolor || '#F08000',
 					strokeOpacity: 1.0,
 					strokeWeight: 3
 				});
@@ -597,15 +597,16 @@ function GetLastPositions(akey) {
 	config.updater.add('geo_change', function(msg) {
 		log('MAPS: GEO_Update: ', msg.data);
 		var skey = msg.data.skey;
-		map.panTo(lastpos[skey].position);
+		//map.panTo(lastpos[skey].position);
 		$.getJSON('/api/geo/last?akey=' + akey + '&skey=' + skey, function (data) {
 			log('Update last positions and tail for...', data);
 			var p = data.geo[0];
 			var pos = new google.maps.LatLng(p.data.point.lat, p.data.point.lon);
 			if(lastpos[p.skey]){
+				log('Move makrer ', lastpos[p.skey].marker, ' to ', pos);
 				lastpos[p.skey].position = pos;
 				lastpos[p.skey].marker.setPosition(pos);
-				map.panTo(pos);
+				//map.panTo(pos);
 			}
 		});
 
@@ -652,7 +653,7 @@ function DrawPlyline()
 	flightPath = new google.maps.Polyline({
 		//path: flightPlanCoordinates,
 		//path: showed_path,
-		strokeColor: "#FF0000",
+		strokeColor: config.ui.trackcolor || '#F08000',
 		strokeOpacity: 1.0,
 		strokeWeight: 3
 	});
@@ -717,10 +718,16 @@ function DayList(skey, month){
 		log("::DayList: getJSON parce " + data.years);
 		dbg_data = data;
 		if (data.answer) {
-			log(data);
+			log('DAY_LIST: ', data);
+			config.daylist = config.daylist || {};
+			config.daylist.skey = skey;
+			config.daylist.year = data.year;
+			config.daylist.month = data.month;
+			config.daylist.days = data.days;
 
 			$("#datepicker").datepicker("refresh");
 
+			/*
 			$("#date_select table tbody a").each(function(index){
 				var day = parseInt($(this).text(), 10);
 				//console.log(index + ' : ' + day);
@@ -735,55 +742,7 @@ function DayList(skey, month){
 					parent.empty();
 					parent.append('<span class="ui-state-default" href="#">'+day+'</span>');
 				}
-				//if(index % 5) $(this).css('opacity', '0.2');
-			});
-
-
-			//item += '<a id="lmlnk_'+j+'_'+k+'" href="javascript:SetDay(\''+skey+'\',\''+(i%100)+j+d[k]+'\', \'lmlnk_'+j+'_'+k+'\');">' + d[k] + '</a> ';
-
-			if(0){
-			$("#daylist").accordion( "destroy" );
-			var item = '';
-			var last;
-			for(var i in data.years){
-				var m = data.years[i];
-				item += '<h3><a href="#">' + i + '</a></h3>';
-				//console.log('year:' + i);
-				item += '<div class="list_months">';
-				for(var j in m){
-					//item += '<h3><a href="#">' + j + '/' + i + '</a></h3><div>';
-					item += '<h3><a href="#">' + monthNames[j-1] + '</a></h3><div>';
-					//item += monthNames[j-1];
-					var d = m[j];
-
-					//item += '<ul class="list_days">';
-					for(var k in d){
-						item += '<a id="lmlnk_'+j+'_'+k+'" href="javascript:SetDay(\''+skey+'\',\''+(i%100)+j+d[k]+'\', \'lmlnk_'+j+'_'+k+'\');">' + d[k] + '</a> ';
-						//item += '<a href="javascript:SetDay(\''+skey+'\',\''+(i%100)+j+d[k]+'\', this);">' + d[k] + '</a> ';
-					}
-					//item += '</ul>';
-					item += '</div>';
-
-					//item += '</li>';
-				}
-				item += '</div>';
-				//item += '</li>';
-				//$("#daylist").append('<li><a href="javascript:SetDay(\''+skey +'\',\''+d+'\');">'+d[4]+d[5]+'/'+d[2]+d[3]+'/20'+d[0]+d[1]+'</a></li>');
-				//$("#daylist").append('<li><a href="javascript:SetDay(\''+skey +'\',\''+d+'\');">'+i+'</a></li>');
-				//$("#daylist").append(item);
-				/*$(".list_days").sortable();
-				$(".list_days").disableSelection();
-				$(".list_months").sortable();
-				$(".list_months").disableSelection();*/
-			}
-			$("#daylist").html(item);
-			$("#daylist").accordion({autoHeight: false, navigation: true, active: ':last'});
-			//console.log(data.years);
-			$(".list_months").accordion({autoHeight: false, navigation: true, active: ':last'});
-			//$("button").button();
-			//$("#daylist").css('display', '');
-			$("#daylist").fadeIn();
-			}
+			});*/
 		}
 	});
 	log("::DayList.end");

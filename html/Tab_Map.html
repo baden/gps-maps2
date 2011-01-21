@@ -39,20 +39,34 @@
 			hideIfNoPrevNext: true,
 			onSelect: function(dateText, inst) {
 				SetDay(config.skey, date_to_url(dateText));
-				UpdateDayList();
+				//UpdateDayList();
 			},
 			onChangeMonthYear: function(year, month, inst) {
 				config.cur_month = '' + year + ((month<10)?('0'+month):month);
 				UpdateDayList();
+			},
+			beforeShowDay: function(date){
+
+
+				
+				if(!config.daylist || config.daylist.year != date.getFullYear() || config.daylist.month != (date.getMonth()+1)){
+					//UpdateDayList();
+					//log(' need update');
+					return [false, '', 'Загрузка информации с сервера...'];
+				}
+
+				//log(config.daylist, config.daylist.year, date.getFullYear(), config.daylist.month, date.getMonth()+1, config.daylist.days, date.getDate());
+
+				var da = date.getDate();
+				if(config.daylist.days.indexOf(da) != -1) return [true];
+				else return [false, '', 'В этот день система не выходила на связь'];
+			
+				//return [true, 'date-css', 'Tip'];
 			}
 		});
 		
-		$("#get_a_days").click(function(){
-			UpdateDayList(config.skey);
-		});
-
 		GetLastPositions(config.akey);
-		//UpdateDayList(config.skey);
+		UpdateDayList(config.skey);
 
 		/*
 		$("#map-type").buttonset();
@@ -74,8 +88,6 @@
 		var group = $('#group_list').attr('value');
 		log('Select group:' + group);
 	}
-
-
 
   </script>
 
@@ -158,7 +170,6 @@
 					map.panTo(lastpos[skey].position);
 				});
 
-
 				config.updater.add('changedesc', function(msg) {
 					log('MAP: Update descriptions');
 					//updateLogList();
@@ -166,13 +177,14 @@
 					//console.log(l);
 				});
 
+				config.updater.tabs[0] = function(){
+					log('MAP: tab update');
+					//$('#map').resize();
+					google.maps.event.trigger(map, 'resize');
+				}
 			});
 
 		</script>
-		<!--button id="get_a_days">Обновить список</button-->
-		<!--div id="daylist">
-			<h3>None</h3>
-		</div-->
 		<div id="date_tabs" style="">
 			<ul>
 				<li><a href="#date_select">Сутки</a></li>

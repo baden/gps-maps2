@@ -266,6 +266,8 @@ LastMarker.prototype.onAdd = function() {
 }
 
 LastMarker.prototype.setPosition = function(point) {
+	log('Marker change position', point);
+	this.position = point;
 	this.point = point;
 //	this.arrdiv.setAttribute("style", "-webkit-transform: rotate(" + point.angle + "deg);z-index:-1;");
 //	console.log('MyMarker.protorype.setPosition');

@@ -65,7 +65,7 @@
   <script src="/js/gmap.js"></script>
 
 
-  <script type="text/javascript">
+  <!--script type="text/javascript">
       WebFontConfig = {
         google: { families: [ 'Gurkner-Jump', 'Tangerine', 'Cantarell' ] }
       };
@@ -78,7 +78,7 @@
         var s = document.getElementsByTagName('script')[0];
         s.parentNode.insertBefore(wf, s);
       })();
-    </script>
+    </script-->
 
   <!--[if lt IE 7 ]>
     <script src="js/libs/dd_belatedpng.js"></script>
@@ -107,7 +107,7 @@
   </script>
 
   <script>
-	var config = {};
+	var config = config || {};
 	config.skey = "{{ account.systems.0.key }}";
 	config.akey = "{{ account.key }}";
 	{% if admin %}
@@ -115,30 +115,6 @@
 	{% else %}
 	config.admin = false;
 	{% endif %}
-
-
-	// Система автообновления
-	config.updater = {}
-	config.updater.queue = {};
-
-	config.updater.add = function(msg, foo){
-		config.updater.queue[msg] = config.updater.queue[msg] || [];
-		config.updater.queue[msg].push(foo);
-	}
-
-	config.updater.add('*', function(msg){
-		//console.log("goog.appengine.Channel: onMessage");
-		//console.log(msg);
-		log('goog.appengine.Channel: onMessage:', msg);
-		connected = true;
-		message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
-	});
-
-	//log('Default updater', config.updater);
-	//log(config.updater);
-
-	//$.getJSON('/api/info?akey='+config.akey, function (data) {
-	//}
 
 	config.systems = [];
 	{% for sys in account.systems %}
@@ -150,26 +126,8 @@
 	{% endfor %}
 
 	config.ui = {{ account.config }};
-	//console.log("ConfigUI: ");
-	//console.log(config.ui);
 	//log("ConfigUI: ", config.ui);
 
-	config.updater.add('changedesc', function(msg) {
-		//console.log('Обработчик события для обновления списка config.systems');
-		//console.log(msg);
-		log('Обработчик события для обновления списка config.systems', msg);
-		for(var i in config.systems){
-			if(config.systems[i].skey == msg.data.skey){
-				config.systems[i].desc = msg.data.desc;
-			}
-		}
-		//console.log('CONFIG==');
-		//console.log(config);
-		log('CONFIG==', config);
-	});
-
-	//console.log('CONFIG==');
-	//console.log(config);
 	//log('CONFIG==', config);
 
 	$(document).ready(function() {
@@ -185,40 +143,36 @@
 			cache: true,
 			spinner: 'Retrieving data...',
 			show: function(){
-				/*console.*/log('TAB: show: ', $(this).tabs( "option", "selected" ));
+				var index = $(this).tabs( "option", "selected" );
+				//log('TAB: show: ', index, $(this));
+				config.tab = index;
+				if(config.updater.tabs[index]) config.updater.tabs[index]();
 			},
 			load: function(){
-				/*console.*/log('TAB: tab loaded: ', $(this).tabs( "option", "selected" ));
+				//log('TAB: tab loaded: ', $(this).tabs( "option", "selected" ));
 				$("button").button();
 
 			}
 		});
 
 		$("button#tabreload").click(function(){
-			/*console.*/log('Reload tab...');
-			//var tabs = $('#tabs').tabs;
-			//console.log($tabs);
-			//var index = $tabs.tabs('option', 'selected');
-			//console.log($tabs.tabs("option", "selected"));
+			log('Reload tab...');
 			$tabs.tabs('load', $tabs.tabs('option', 'selected'));
 		});
 
-		var connected = false;
+		//var connected = false;
 	
 		// Установим chanel-соединение
 		// Получим токен для установки соединения
 		var uuid = new Date().getTime();
-		var url = '/api/chanel/gettoken?akey={{ account.key }}&uuid={{ uid }}-'+uuid;
-		$.getJSON(url, function (data) {
+		$.getJSON('/api/chanel/gettoken?akey={{ account.key }}&uuid={{ uid }}-' + uuid, function (data) {
 			if(data.token){
 				var token = data.token;
-				/*console.*/log("Token goted:" + token);
+				//log("Token goted:" + token);
 
 				var onOpened = function() {
-					/*console.*/log('goog.appengine.Channel: onOpened ('+token+')');
-					connected = true;
-					//sendMessage('opened');
-					//updateBoard();
+					//log('goog.appengine.Channel: onOpened ('+token+')');
+					//connected = true;
 				}
 
 				var onMessage = function(m) {
@@ -236,36 +190,21 @@
 						}
 					}
 
-					if(0){
-					for(var i in config.updater){
-						config.updater[i](msg);
-						/*(function(msg){
-							updater[i](msg);
-							//updater[i].call(1);
-							//updater[i].apply(1);
-						})(msg);*/
-					}
-					}
-
-					//newState = JSON.parse(m);
-					//console.log("goog.appengine.Channel message: " + newState.text);
-					//$("#channel_msg").html(newState.text || "error message");
 				}
 
 				var onError = function() {
-					/*console.*/log("goog.appengine.Channel: onError");
+					log("goog.appengine.Channel: onError");
 				}
 
 				var onClose = function() {
-					/*console.*/log("goog.appengine.Channel: onClose");
-					connected = false;
+					log("goog.appengine.Channel: onClose");
+					//connected = false;
 				}
 
-				// Чуть снизим нагрузку для локальной отладки
+				// Чуть снизим нагрузку для локальной отладки (1 опрос в 5 секунд)
 				//if(document.URL.match(/localhost/g1)){
 				if(window.location.hostname == 'localhost'){
-					if(goog.appengine.Socket.POLLING_TIMEOUT_MS)
-						goog.appengine.Socket.POLLING_TIMEOUT_MS = 2000;
+					if(goog.appengine.Socket.POLLING_TIMEOUT_MS) goog.appengine.Socket.POLLING_TIMEOUT_MS = 5000;
 				}
 				var channel = new goog.appengine.Channel(token);
 				var socket = channel.open();
@@ -277,7 +216,9 @@
 		});
 
 		$('#test').click(function(){
-			/*console.*/log('Test');
+			log('Test');
+			//window.location.reload();
+			window.location.href = window.location.href;
 		});
 
 	});
@@ -286,8 +227,8 @@
   <style>
 	div#logout {
 		position: absolute;
-		top: 0px;
-		right: 0px;
+		top: 6px;
+		right: 10px;
 	}
 
 	{% if not admin %}
@@ -314,6 +255,6 @@
 	<div id="logout">
 		<a href="{{ login_url }}">{{ username }}</a>
 		<!--button id="tabreload">Reload</button-->
-		<button id="test">Test</button>
+		<!--button id="test">Test</button-->
 	</div>
 </body>
