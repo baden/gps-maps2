@@ -1012,11 +1012,25 @@ class Sys_Add(BaseApi):
 			return {'answer': 'no', 'result': 'not found'}
 		elif res == 2:
 			return {'answer': 'no', 'result': 'already'}
+
+		updater.inform_account('change_slist', self.account, {'type': 'Adding'})
+
 		return {'answer': 'yes', 'result': 'added'}
+
+class Sys_Del(BaseApi):
+	requred = ('account', 'imei')
+	def parcer(self, **argw):
+		res = self.account.DelSystem(self.imei)
+		if res == 0:
+			return {'answer': 'no', 'result': 'not found'}
+		elif res == 2:
+			return {'answer': 'no', 'result': 'already'}
+		updater.inform_account('change_slist', self.account, {'type': 'Deleting'})
+		return {'answer': 'yes', 'result': 'deleted'}
 
 class Sys_Sort(BaseApi):
 	requred = ('account', 'imei')
-	def parcer(self, account=None, **argw):
+	def parcer(self, **argw):
 		index = self.request.get('index', None)
 		if index is None:
 			return {'result': 'no', 'reason': 'index not defined'}
@@ -1031,7 +1045,7 @@ class Sys_Sort(BaseApi):
 
 		logging.info(
 			'\n=====\n OLD index ' + str(oldindex) +
-			'\nIMEI_1: ' + db.get(account.systems_key[oldindex]).imei +
+			'\nIMEI_1: ' + db.get(self.account.systems_key[oldindex]).imei +
 			#'\nIMEI_2: ' + systems[oldindex].imei +
 			'\nIMEI_S: ' + self.imei
 		)
@@ -1321,6 +1335,7 @@ application = webapp.WSGIApplication(
 	('/api/report/get*', Report_Get),
 
 	('/api/sys/add*', Sys_Add),
+	('/api/sys/del*', Sys_Del),
 	('/api/sys/desc*', Sys_Desc),
 	('/api/sys/sort*', Sys_Sort),
 	('/api/sys/config*', Sys_Config),
@@ -1339,7 +1354,6 @@ application = webapp.WSGIApplication(
 	],
 	debug=True
 )
-
 
 def main():
 	run_wsgi_app(application)

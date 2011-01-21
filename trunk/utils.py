@@ -85,6 +85,6 @@ CRC16_CCITT_table = (
         0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
         )
 
-def crc(crc, data):
+def CRC16(crc, data):
     """ Compute correct enough :grin: CRC16 CCITT for using in BF2142 auth token """
     return (((crc << 8) & 0xff00) ^ CRC16_CCITT_table[((crc >> 8) ^ (0xff & data))])

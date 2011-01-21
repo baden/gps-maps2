@@ -105,3 +105,35 @@ results[1]		Как повезет :)
 	}
 	return 'Ошибка';
 }
+
+
+var config = config || {};
+
+// Система автообновления
+config.updater = {}
+config.updater.queue = {};
+
+config.updater.add = function(msg, foo){
+	config.updater.queue[msg] = config.updater.queue[msg] || [];
+	config.updater.queue[msg].push(foo);
+}
+
+config.updater.add('*', function(msg){
+	//console.log("goog.appengine.Channel: onMessage");
+	//console.log(msg);
+	//log('goog.appengine.Channel: onMessage:', msg);
+	//connected = true;
+	message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
+});
+
+config.updater.tabs = [];
+
+config.updater.add('changedesc', function(msg) {
+	//log('Обработчик события для обновления списка config.systems', msg);
+	for(var i in config.systems){
+		if(config.systems[i].skey == msg.data.skey){
+			config.systems[i].desc = msg.data.desc;
+		}
+	}
+	//log('CONFIG==', config);
+});

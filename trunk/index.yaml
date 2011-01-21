@@ -10,6 +10,17 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: DBGPSBinBackup
+  ancestor: yes
+  properties:
+  - name: cdate
+
+- kind: DBGPSBinBackup
+  ancestor: yes
+  properties:
+  - name: cdate
+    direction: desc
+
 - kind: DBGeo
   ancestor: yes
   properties:

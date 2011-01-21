@@ -1,4 +1,4 @@
-#config_sys_list { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+#config_sys_list { list-style-type: none; margin: 0; padding: 0; }
 #config_sys_list li { margin: 0 3px 3px 3px; padding: 0.1em; padding-left: 4.5em; /*font-size: 1.4em; height: 18px;*/ }
 #config_sys_list li button { display: inline; }
 #config_sys_list li button span {padding: 0; }
@@ -13,6 +13,11 @@
 
 	-webkit-box-shadow:0px 0px 3px #404040;
 	-moz-box-shadow:0px 0px 3px #404040;
+}
+
+#config_sys_list button.bdel {
+	position: absolute;
+	right: 40px;
 }
 
 #config_sys_list2 li{
@@ -81,3 +86,10 @@ div#config_params_body {
 	overflow: auto;
 }
 */
+
+div.cfg_iframe {
+	cursor: pointer;
+	border: 1px solid black;
+	border-top-left-radius: 5px 5px;
+	border-top-right-radius: 5px 5px;
+}

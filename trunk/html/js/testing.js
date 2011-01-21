@@ -9,3 +9,6 @@ function displayNoteTitle(note) {
 var flowerNote = {};
 flowerNote['title'] = "Flowers";
 displayNoteTitle(flowerNote);
+
+
+

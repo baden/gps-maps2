@@ -50,8 +50,7 @@
 				<div id="colorpickerHolder">Цвет трека: <div style="width: 16px; height: 16px; border: 2px solid black; display: inline; position: absolute;"></div></div>
 			</div>
 			<div style="position: absolute; bottom: 2px; left: 50%; margin-left: -100px;">
-				<button>Сохранить</button>
-				<button>Отменить</button>
+				<button id="button_config_restart">Перезапустить</button>
 			</div>
 		</div>
 
@@ -62,6 +61,14 @@
 			<br/>
 			<button class="dbg_send_cfg" imei="356895035359317">Послать конфигурацию системы 356895035359317</button>
 			<button class="dbg_send_cfg" imei="353358019726996">Послать конфигурацию системы 353358019726996</button>
+
+			<br />
+
+			<div class="cfg_iframe" value="/binbackup">Бэкапы бинарных данных</div>
+			<div class="cfg_iframe" value="/firmware">Образы обновления прошивки</div>
+			
+
+
 		</div>
 
 	</div>
@@ -90,6 +97,14 @@
        		<div><textarea id="sys_desc" name="desc" rows="1" style="width:98%;"></textarea></div>
 	</form>
 	</div>
+
+
+	<div id="config_dialog_delsys" title="Внимание!!!">
+	  <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 50px 0;"></span>Вы действительно хотите отказаться от слежения за системой?</p>
+	  <p>IMEI: <span id="config_del_imei">*</span></p>
+	  <p>Описание: <span id="config_del_desc">*</span></p>
+	</div>
+
 	
 	<style>
 		#popup-sys ul {

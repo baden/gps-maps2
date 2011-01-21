@@ -165,11 +165,12 @@ div.list_months div {
 }
 
 
-
+/*
 h3 a {
 	padding-top: 0px !important;
 	padding-bottom: 0px !important;
 }
+*/
 
 
 .ui-accordion-content {
@@ -189,7 +190,7 @@ ul#map_ul_sys {
 	width: 100%;
 }
 
-ul#ul_sys li {
+ul#map_ul_sys li {
 	cursor: pointer;
 	/*width: 100%;*/
 	padding: 2px 2px 2px 2px;
@@ -197,7 +198,7 @@ ul#ul_sys li {
 	/*font-weight: bold;*/
 }
 
-ul#ul_sys li:hover {
+ul#map_ul_sys li:hover {
 	/*background-color: #88f;*/
 	/*opacity: 1;*/
 	color: blue;
