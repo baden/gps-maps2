@@ -92,16 +92,16 @@ class Info(BaseApi):
 			'systems': lsys,
 		}
 
-		sysinfos = []
-		systems = DBSystem.all(keys_only=True).fetch(1000)
-		for rec in systems:
-			sysinfos.append({'imei': rec.name()[4:], 'key': "%s" % rec, })
+		#sysinfos = []
+		#systems = DBSystem.all(keys_only=True).fetch(1000)
+		#for rec in systems:
+		#	sysinfos.append({'imei': rec.name()[4:], 'key': "%s" % rec, })
 
 		return {
 			'answer': 'ok',
 			'info': {
 				'account': accinfos,
-				'systems': sysinfos,
+				#'systems': sysinfos,
 			}
 		}
 		

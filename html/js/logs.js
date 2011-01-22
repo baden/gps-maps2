@@ -29,6 +29,14 @@
 		});
 	}
 
+	function Log_Make_SysList(list){
+		list.empty();
+		for(var i in config.systems){
+			var s = config.systems[i];
+			list.append('<option imei="'+s.imei+'" value="'+s.skey+'">'+s.desc+'</option>');
+		}
+	}
+
 	$(document).ready(function() {
 		log('Загрузка закладки. События.');
 
@@ -36,14 +44,13 @@
 
 		var list = $('#log_syslist');
 
-		list.empty();
-		for(i in config.systems){
-			var s = config.systems[i];
-			list.append('<option imei="'+s.imei+'" value="'+s.skey+'">'+s.desc+'</option>');
-		}
+		Log_Make_SysList(list);
 		config.updater.add('changedesc', function(msg) {
 			//log('LOGS: Update descriptions');
 			$(list).find('option[value="' + msg.data.skey + '"]').html(msg.data.desc);
+		});
+		config.updater.add('changeslist', function(msg) {
+			Log_Make_SysList(list);
 		});
 
 		list.bind('change', function(){
