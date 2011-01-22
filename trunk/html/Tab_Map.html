@@ -137,9 +137,9 @@
 			<ul id="map_ul_sys"></ul>
 		</div>
 		<script>
-			$(document).ready(function(){
-				var list = $('ul#map_ul_sys');
-
+			(function(){
+			function Map_SysList(list){
+				log('Map_SysList systems:', config.systems);
 				list.empty();
 				for(i in config.systems){
 					var s = config.systems[i];
@@ -169,11 +169,25 @@
 					log('span:click', skey, lastpos[skey]);
 					map.panTo(lastpos[skey].position);
 				});
+			}
+
+			$(document).ready(function(){
+				var list = $('ul#map_ul_sys');
+
+				Map_SysList(list);
 
 				config.updater.add('changedesc', function(msg) {
 					log('MAP: Update descriptions');
 					//updateLogList();
 					$(list).find('li[skey="' + msg.data.skey + '"]').html(msg.data.desc);
+					//console.log(l);
+				});
+
+				config.updater.add('changeslist', function(msg) {
+					log('MAP: Update system list');
+					Map_SysList(list);
+					//updateLogList();
+					//$(list).find('li[skey="' + msg.data.skey + '"]').html(msg.data.desc);
 					//console.log(l);
 				});
 
@@ -183,6 +197,8 @@
 					google.maps.event.trigger(map, 'resize');
 				}
 			});
+
+			})();
 
 		</script>
 		<div id="date_tabs" style="">

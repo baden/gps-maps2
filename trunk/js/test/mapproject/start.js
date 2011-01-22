@@ -51,3 +51,11 @@ mapproject.start = function() {
 
 goog.exportSymbol('mapproject.start', mapproject.start);
 //window['mapproject'] = mapproject;
+
+function Foo1(name){
+	//var doc = window['document'];
+	//return doc.getElementByName(name);
+	return [goog.dom.getElement(name), 'Русский текст'];
+}
+window['Foo1'] = Foo1;
+//goog.exportSymbol('Foo1', Foo1);

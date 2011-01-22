@@ -116,6 +116,7 @@
 	config.admin = false;
 	{% endif %}
 
+	
 	config.systems = [];
 	{% for sys in account.systems %}
 	config.systems.push({
@@ -177,7 +178,10 @@
 
 				var onMessage = function(m) {
 					var msg = JSON.parse(m.data);
+					config.updater.process(msg);
+					config.updater.process({msg: '*'});
 
+					/*
 					//if(window.updater) window.updater(msg);
 					if(config.updater.queue[msg.msg]){
 						for(var i in config.updater.queue[msg.msg]){
@@ -189,7 +193,7 @@
 							config.updater.queue['*'][i](msg);
 						}
 					}
-
+					*/
 				}
 
 				var onError = function() {

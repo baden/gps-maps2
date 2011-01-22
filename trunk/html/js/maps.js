@@ -216,7 +216,7 @@ var ParcePath = function(data){
 
 	log("Bound in request: (" + data.bounds.sw[0] + "," + data.bounds.sw[1] + ")-(" + data.bounds.ne[0] + "," + data.bounds.ne[1] + ")" );
 	//map.panToBounds(flightPathBounds);
-	map.panTo(flightPlanCoordinates[0]);
+	map.panTo(flightPlanCoordinates[flightPlanCoordinates.length-1]);
 
 	profile.show();
 	log("Prepare sub bounds...");

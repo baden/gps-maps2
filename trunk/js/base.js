@@ -49,15 +49,9 @@ function td_to_time(d) {
 	minutes = minutes % 60;
 	var seconds = d % 60;
 	var r = '';
-	if(hours==0) r+='00:';
-	else if(hours<10) r+='0'+hours+':';
-	else r+=hours+':';
-	if(minutes==0) r+='00:';
-	else if(minutes<10) r+='0'+minutes+':';
-	else r+=minutes+':';
-	if(seconds==0) r+='00:';
-	else if(seconds<10) r+='0'+seconds+':';
-	else r+=seconds+':';
+	if(hours<10) r+='0'+hours+':'; else r+=hours+':';
+	if(minutes<10) r+='0'+minutes+':'; else r+=minutes+':';
+	if(seconds<10) r+='0'+seconds; else r+=seconds;
 	return r;
 }
 
@@ -118,12 +112,20 @@ config.updater.add = function(msg, foo){
 	config.updater.queue[msg].push(foo);
 }
 
+config.updater.process = function(msg){
+	if(config.updater.queue[msg.msg]){
+		for(var i in config.updater.queue[msg.msg]){
+			config.updater.queue[msg.msg][i](msg);
+		}
+	}
+}
+
 config.updater.add('*', function(msg){
 	//console.log("goog.appengine.Channel: onMessage");
 	//console.log(msg);
 	//log('goog.appengine.Channel: onMessage:', msg);
 	//connected = true;
-	message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
+	if(msg.msg) message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
 });
 
 config.updater.tabs = [];
@@ -136,4 +138,32 @@ config.updater.add('changedesc', function(msg) {
 		}
 	}
 	//log('CONFIG==', config);
+});
+
+function UpdateAccountSystemList() {
+	if(config && config.akey)
+	$.getJSON('/api/info?akey='+config.akey, function (data) {
+		if(data){
+			log('UpdateAccountSystemList data:', data);
+			//var config = config || {};
+			config.systems = [];
+			for(var i in data.info.account.systems){
+				var s = data.info.account.systems[i];
+				config.systems.push({
+					'imei': s.imei,
+					'skey': s.key,
+					'desc': s.desc
+				});
+			}
+
+			config.updater.process({msg: 'changeslist'});
+		}
+	});
+}
+
+UpdateAccountSystemList();
+
+config.updater.add('change_slist', function(msg) {
+	log('BASE: Update system list');
+	UpdateAccountSystemList();
 });

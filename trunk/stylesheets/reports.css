@@ -29,3 +29,11 @@ div#rmap {
 	bottom: 1px;
 	/*background-color: green;*/
 }
+
+.ctl .ui-button-text {
+	padding: 0px 0px 0px 0px !important;
+}
+
+.ctl{
+	margin: 0px 1px 0px 0px;
+}
