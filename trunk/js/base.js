@@ -113,11 +113,25 @@ config.updater.add = function(msg, foo){
 }
 
 config.updater.process = function(msg){
+	/*
 	if(config.updater.queue[msg.msg]){
 		for(var i in config.updater.queue[msg.msg]){
 			config.updater.queue[msg.msg][i](msg);
 		}
 	}
+	*/
+
+	if(config.updater.queue[msg.msg]){
+		for(var i in config.updater.queue[msg.msg]){
+			config.updater.queue[msg.msg][i](msg);
+		}
+	}
+	if(config.updater.queue['*']){
+			for(var i in config.updater.queue['*']){
+				config.updater.queue['*'][i](msg);
+			}
+		}
+
 }
 
 config.updater.add('*', function(msg){
