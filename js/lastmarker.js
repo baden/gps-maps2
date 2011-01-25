@@ -130,11 +130,11 @@ LastMarker.prototype.onAdd = function() {
 	//div.setAttribute("onclock", "function(){console.log('aa');}");
 	//div.innerHTML = '2';
 
-	var title = document.createElement('div');
-	title.setAttribute("class", "lastmarker-title");
-	title.setAttribute("style", "background-color:"+this.color+";");
-	div.appendChild(title);
-	title.innerHTML = '<p>'+Math.round(Math.random()*9)+'</p>';
+	//var title = document.createElement('div');
+	//title.setAttribute("class", "lastmarker-title");
+	//title.setAttribute("style", "background-color:"+this.color+";");
+	//div.appendChild(title);
+	//title.innerHTML = '<p>'+Math.round(Math.random()*9)+'</p>';
 
 	var label = document.createElement('div');
 	label.setAttribute("class", "lastmarker-label");
@@ -158,7 +158,6 @@ LastMarker.prototype.onAdd = function() {
 
 	//console.log($(control).find('button'));
 	$(control).find('button').button();
-
 
 	div.appendChild(label);
 

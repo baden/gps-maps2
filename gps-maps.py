@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
+
+__author__ = "Batrak Denis"
+
 import logging
 
 from google.appengine.ext import db
 #from google.appengine.api import channel
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+
+"""
+import os
+os.environ['DJANGO_SETTINGS_MODULE'] = 'conf.settings'
+
+from django.conf import settings
+settings._target = None
+from django.utils import translation
+"""
 
 from template import TemplatedPage
 from datamodel import DBSystem, GPSLogs
@@ -585,6 +597,7 @@ application = webapp.WSGIApplication(
 )
 
 def main():
+	logging.getLogger().setLevel(logging.DEBUG)
 	run_wsgi_app(application)
 
 if __name__ == "__main__":

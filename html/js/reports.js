@@ -169,7 +169,7 @@
 		$.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
 		/*$( "#datepicker" ).datepicker($.datepicker.regional[ "ru" ], {altField: "#alternate",
 			altFormat: "DD, d MM, yy"});*/
-		$( "#indatepicker" ).datepicker({altField: "#alternate",
+		$('#indatepicker').datepicker({altField: "#alternate",
 			altFormat: "DD, d MM, yy",
 			onSelect: function(dateText, inst) {
 				//console.log(inst);

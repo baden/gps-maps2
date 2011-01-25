@@ -145,7 +145,7 @@
 					var s = config.systems[i];
 					list.append(
 						'<li class="ui-widget ui-state-default" imei="'+s.imei+'" skey="'+s.skey+'">'+
-						'	<span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
+						'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
 						s.desc+
 						'</li>'
 					);
@@ -164,9 +164,15 @@
 					$('.lastmarker[skey="' + skey + '"]').addClass('lastup');
 				}).mouseout(function(){
 					$('.lastmarker[skey="' + $(this).attr('skey') + '"]').removeClass('lastup');
+				}).bind('mousewheel', function(ev){
+					var skey = $(this).attr('skey');
+					log('mousewheel', ev, skey);
+					map.panTo(lastpos[skey].position);
+					if(ev.wheelDelta < 0) map.setZoom(map.getZoom() - 1);
+					else map.setZoom(map.getZoom() + 1);
 				}).find('span').click(function(){
 					var skey = $(this).parent().attr('skey');
-					log('span:click', skey, lastpos[skey]);
+					//log('span:click', skey, lastpos[skey]);
 					map.panTo(lastpos[skey].position);
 				});
 			}
@@ -179,7 +185,14 @@
 				config.updater.add('changedesc', function(msg) {
 					log('MAP: Update descriptions');
 					//updateLogList();
-					$(list).find('li[skey="' + msg.data.skey + '"]').html(msg.data.desc);
+					$(list).find('li[skey="' + msg.data.skey + '"]').html(
+						'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
+						msg.data.desc
+					).find('span').click(function(){
+						var skey = $(this).parent().attr('skey');
+						log('span:click', skey, lastpos[skey]);
+						map.panTo(lastpos[skey].position);
+					});
 					//console.log(l);
 				});
 
