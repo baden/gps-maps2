@@ -139,7 +139,9 @@ config.updater.add('*', function(msg){
 	//console.log(msg);
 	//log('goog.appengine.Channel: onMessage:', msg);
 	//connected = true;
-	if(msg.msg) message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
+	if(config.admin){
+		if(msg.msg) message('Получено сообщени об обновлении:<b>' + msg.msg + '</b>');
+	}
 });
 
 config.updater.tabs = [];
