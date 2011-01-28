@@ -563,6 +563,7 @@ class Firmware(TemplatedPage):
 			self.write_template(template_values)
 
 	def post(self):
+		from datamodel import DBFirmware
 		self.response.headers['Content-Type'] = 'text/plain'
 
 		boot = self.request.get('boot')

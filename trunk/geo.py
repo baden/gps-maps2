@@ -33,7 +33,7 @@ def getGeoLast(systemkey):
 	value = memcache.get("geolast_%s" % str(systemkey))
 	if value is not None:
 		return value
-
+	"""
 	req = DBGeo.all().ancestor(systemkey).order('-date').fetch(1)
 	if req:
 		rec = req[0]
@@ -51,6 +51,26 @@ def getGeoLast(systemkey):
 		memcache.add("geolast_%s" % str(systemkey), value)
 		#logging.info("\n\n=== geolast_%s\n\n" % str(systemkey))
 
+		return value
+	else:
+		return None
+	"""
+
+	req = DBGeo.all().ancestor(systemkey).order('-date').fetch(1)
+	if req:
+		point = req[0].get_last()
+
+		tail = []
+		for it in DBGeo.get_tail_items(systemkey, count=20):
+			tail.append(repr_short(it))
+
+		value = {
+			'point': repr_middle(point),
+			'tail': tail,
+			'tailformat': ["date", "lat", "lon", "course"],
+		}
+		memcache.add("geolast_%s" % str(systemkey), value)
+		#logging.info("\n\n=== geolast_%s\n\n" % str(systemkey))
 		return value
 	else:
 		return None

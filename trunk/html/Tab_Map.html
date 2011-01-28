@@ -3,94 +3,6 @@
   <link type="text/css" href="/stylesheets/map.css" rel="stylesheet" />
   <script src="/html/js/maps.js"></script>
 
-  <script>
-	var params = {
-		changedEl: "select",
-		//visRows: 5,
-		scrollArrows: true
-	}
-
-	function UpdateDayList(){
-		var date = $("#datepicker").datepicker('getDate');
-		if(!config.cur_month) config.cur_month = $.datepicker.formatDate('yymm', date);
-		log('Update for sys ' + config.skey + ' and month ' + config.cur_month);
-
-		DayList(config.skey, config.cur_month);
-	}
-
-	$(document).ready(function() {
-		config.cur_month = null;
-		//$(document).disableSelection();
-		//$('*').not('input').disableSelection();
-		//$("input").enableSelection();
-		//$('div').disableSelection();
-		//$('#int_select').unbind('selectstart');
-		CreateMap();
-
-		$("#date_tabs").tabs();
-		$("#nav_map").button("option", "disabled", true);
-
-
-		$.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
-		$("#datepicker").datepicker({altField: "#alternate",
-			altFormat: "yymmdd",
-			minDate: '-12m +0w',
-			maxDate: '+0m +0w',
-			hideIfNoPrevNext: true,
-			onSelect: function(dateText, inst) {
-				SetDay(config.skey, date_to_url(dateText));
-				//UpdateDayList();
-			},
-			onChangeMonthYear: function(year, month, inst) {
-				config.cur_month = '' + year + ((month<10)?('0'+month):month);
-				UpdateDayList();
-			},
-			beforeShowDay: function(date){
-
-
-				
-				if(!config.daylist || config.daylist.year != date.getFullYear() || config.daylist.month != (date.getMonth()+1)){
-					//UpdateDayList();
-					//log(' need update');
-					return [false, '', 'Загрузка информации с сервера...'];
-				}
-
-				//log(config.daylist, config.daylist.year, date.getFullYear(), config.daylist.month, date.getMonth()+1, config.daylist.days, date.getDate());
-
-				var da = date.getDate();
-				if(config.daylist.days.indexOf(da) != -1) return [true];
-				else return [false, '', 'В этот день система не выходила на связь'];
-			
-				//return [true, 'date-css', 'Tip'];
-			}
-		});
-		
-		GetLastPositions(config.akey);
-		UpdateDayList(config.skey);
-
-		/*
-		$("#map-type").buttonset();
-		$(".btn_map_type").change(function(){
-			console.log($(this).attr("id"));
-			switch($(this).attr("id")){
-				case 'btn_map': {map.setMapTypeId(google.maps.MapTypeId.ROADMAP); break }
-				case 'btn_sat': {map.setMapTypeId(google.maps.MapTypeId.SATELLITE); break }
-				case 'btn_hybr': {map.setMapTypeId(google.maps.MapTypeId.HYBRID); break }
-				case 'btn_terr': {map.setMapTypeId(google.maps.MapTypeId.TERRAIN); break }
-			}
-			
-		});
-		*/
-
-	});
-
-	function UpdateGroupList(){
-		var group = $('#group_list').attr('value');
-		log('Select group:' + group);
-	}
-
-  </script>
-
 <body>
 	<div style="position: absolute; left: 0px; right: 0px; top: 0px; bottom: 0px; overflow: hidden;">
 	<div id="map"></div>
@@ -99,133 +11,28 @@
 		<div id="mark1" style="display: inline;">M1</div>
 		<div id="mark2" style="display: inline;">M2</div>
 		<div id="point_info" style="display: inline;">M2</div>
-
 	</div>
 
 	<div id="panel">
-		<div class="panel_control" style="">
-			<span class="ui-icon ui-icon-circle-triangle-e">&lt;</span>
-		</div>
-
-		<script>
-			$(document).ready(function(){
-				//var panel_state = true;
-				$(".panel_control").click(function(){
-					var panel = $(this).parent();
-					if(panel.hasClass('stat-hided')){
-						panel.removeClass('stat-hided');
-						$(this).find('span').removeClass('ui-icon-circle-triangle-w').addClass('ui-icon-circle-triangle-e');
-						$('#map').removeClass('stat-hided');
-					} else {
-						panel.addClass('stat-hided');
-						$(this).find('span').removeClass('ui-icon-circle-triangle-e').addClass('ui-icon-circle-triangle-w');
-						$('#map').addClass('stat-hided');
-					}
-				});
-			});
-		</script>
+		<div class="panel_control" style=""><span class="ui-icon ui-icon-circle-triangle-e">&lt;</span></div>
 
 		<div id="groupselect">
 			<select id="group_list" name="group_list" style="width:100%;" title="Группа" onchange="UpdateGroupList();">
 				<option value="*">Все</option>
-				<option value="Личные">Личные</option>
-				<option value="Грузовые">Грузовые</option>
+				<!--option value="Личные">Личные</option>
+				<option value="Грузовые">Грузовые</option-->
 			</select>
-
 		</div>
-		<div id="carselect" class="nosel">
-			<ul id="map_ul_sys"></ul>
-		</div>
-		<script>
-			(function(){
-			function Map_SysList(list){
-				log('Map_SysList systems:', config.systems);
-				list.empty();
-				for(i in config.systems){
-					var s = config.systems[i];
-					list.append(
-						'<li class="ui-widget ui-state-default" imei="'+s.imei+'" skey="'+s.skey+'">'+
-						'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
-						s.desc+
-						'</li>'
-					);
-				}
-
-				list.find('li').click(function(){
-					log(this, $(this), this.attributes['imei'].value);
-					//map_ul_sys
-					$(this).parent().find('li').removeClass('ui-state-highlight');
-					$(this).addClass('ui-state-highlight');
-					config.skey = this.attributes['skey'].value;
-					UpdateDayList();
-				}).mouseover(function(){
-					var skey = $(this).attr('skey');
-					$('.lastmarker').removeClass('lastup');
-					$('.lastmarker[skey="' + skey + '"]').addClass('lastup');
-				}).mouseout(function(){
-					$('.lastmarker[skey="' + $(this).attr('skey') + '"]').removeClass('lastup');
-				}).bind('mousewheel', function(ev){
-					var skey = $(this).attr('skey');
-					log('mousewheel', ev, skey);
-					map.panTo(lastpos[skey].position);
-					if(ev.wheelDelta < 0) map.setZoom(map.getZoom() - 1);
-					else map.setZoom(map.getZoom() + 1);
-				}).find('span').click(function(){
-					var skey = $(this).parent().attr('skey');
-					//log('span:click', skey, lastpos[skey]);
-					map.panTo(lastpos[skey].position);
-				});
-			}
-
-			$(document).ready(function(){
-				var list = $('ul#map_ul_sys');
-
-				Map_SysList(list);
-
-				config.updater.add('changedesc', function(msg) {
-					log('MAP: Update descriptions');
-					//updateLogList();
-					$(list).find('li[skey="' + msg.data.skey + '"]').html(
-						'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
-						msg.data.desc
-					).find('span').click(function(){
-						var skey = $(this).parent().attr('skey');
-						log('span:click', skey, lastpos[skey]);
-						map.panTo(lastpos[skey].position);
-					});
-					//console.log(l);
-				});
-
-				config.updater.add('changeslist', function(msg) {
-					log('MAP: Update system list');
-					Map_SysList(list);
-					//updateLogList();
-					//$(list).find('li[skey="' + msg.data.skey + '"]').html(msg.data.desc);
-					//console.log(l);
-				});
-
-				config.updater.tabs[0] = function(){
-					log('MAP: tab update');
-					//$('#map').resize();
-					google.maps.event.trigger(map, 'resize');
-				}
-			});
-
-			})();
-
-		</script>
+		<div id="carselect" class="nosel"><ul id="map_ul_sys"></ul></div>
 		<div id="date_tabs" style="">
-			<ul>
-				<li><a href="#date_select">Сутки</a></li>
-				<li><a href="#int_select">Интервал</a></li>
-			</ul>
+			<ul><li><a href="#date_select">Сутки</a></li><li><a href="#int_select">Интервал</a></li></ul>
 			<div id="date_select" class="nosel">
 				<div id="datepicker"></div>
 			</div>
 			<div id="int_select">
 				<table class="int_select">
-				<tr><td>c:</td><td><input type="text" id="dp1" size="10"/></td><td><input type="text" id="tm1" size="8"/></td></tr>
-				<tr><td>по:</td><td><input type="text" id="dp2" size="10"/></td><td><input type="text" id="tm2" size="8"/></td></tr>
+				  <tr><td>c:</td><td><input type="text" id="dp1" size="8" value="01/01/2011"/></td><td><input type="text" id="tm1" size="6" value="00:00:00"/></td></tr>
+				  <tr><td>по:</td><td><input type="text" id="dp2" size="8" value="01/01/2011"/></td><td><input type="text" id="tm2" size="6" value="23:59:59"/></td></tr>
 				</table>
 				<div style="text-align: center;"><button>Показать</button></div>
 				<p style="text-align: center; color: red;">В разработке!!!</p>

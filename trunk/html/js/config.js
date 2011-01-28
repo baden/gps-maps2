@@ -362,7 +362,7 @@
 
 
 		// Цвет трека
-		config.ui.trackcolor = config.ui.trackcolor || '#F08000';
+		config.ui.trackcolor = config.ui.trackcolor || '#dc00dc';
 		$('#colorpickerHolder div').css('backgroundColor', config.ui.trackcolor);
 		$('#colorpickerHolder').ColorPicker({
 			color: config.ui.trackcolor,
