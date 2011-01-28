@@ -1,8 +1,11 @@
+var map = null;
+
+(function(){
+
 var show_bounds = false;
 
 var geocoder;
 
-var map = null;
 var ruler1 = null;
 var skey = null;
 //var rulers = [];
@@ -21,18 +24,21 @@ var flightPathBounds = null;
 
 var stop_markers = [];
 
+var PROFILE = false;
+
 function Profile(name){
+	if(!PROFILE) return;
 	this.name = name;
 	this.start = new Date();
 	log("Profile: " + name + " start ");
 }
 
 Profile.prototype.show = function(){
+	if(!PROFILE) return;
 	var end = new Date();
 	var time = end.getTime() - this.start.getTime();
 	log("Profile: " + this.name + " - " + time + " ms");
 }
-
 
 var main_bound_rectangle = null;
 var sub_bounds = [];
@@ -356,7 +362,7 @@ var PathRebuild = function(){
 	//	flightPath.setPath(null);
 	//}
 
-	log("Select points for this zoom [" + mapzoom + "]");
+	//log("Select points for this zoom [" + mapzoom + "]");
 
 	// Now we use STUPID optimization methon - simple skip points
 	
@@ -386,7 +392,7 @@ var PathRebuild = function(){
 	//if(flightPath) flightPath.setPath(path);
 	//profile.show();
 
-	log(" - collect new points");
+	//log(" - collect new points");
 	for(var i=0; i<flightPlanCoordinates.length; i++){
 		//if(zooms[i] <= mapzoom)
 		var p = flightPlanCoordinates[i];
@@ -401,7 +407,7 @@ var PathRebuild = function(){
 	}
 	profile.show();
 
-	log(" - assign points to map");
+	//log(" - assign points to map");
 //	if(once){
 	//if(flightPath[fpi]) flightPath[fpi].setPath(showed_path);
 	if(flightPath) flightPath.setPath(showed_path);
@@ -535,7 +541,7 @@ function CreateMap() {
 	//var map = $('#map').gmap('option', 'getMap');
 	map = $($map).gmap('option', 'map');
 	//$(
-	//console.log(map);
+	console.log('CreateMap:', map);
 
 	google.maps.event.addListener(map, 'zoom_changed', function(){
 		//console.log("Map: zoom_changed.");
@@ -548,6 +554,54 @@ function CreateMap() {
 
 var lastpos = {};
 
+function CreateLastMarker(p){
+	//var p = data.geo[i];
+	//console.log('CreateLastMarker ', p);
+
+	var pos = new google.maps.LatLng(p.data.point.lat, p.data.point.lon);
+	var tail_path = [];
+	for(var j in p.data.tail){
+		tail_path.push(new google.maps.LatLng(p.data.tail[j][1], p.data.tail[j][2]));
+		//console.log(p.data.tail[j]);
+	}
+
+	if(lastpos[p.skey]){
+		//log('Move makrer ', lastpos[p.skey].marker, ' to ', pos);
+		lastpos[p.skey].position = pos;
+		lastpos[p.skey].marker.setPosition(p.data.point, pos);
+		lastpos[p.skey].tail.setPath(tail_path);
+		//map.panTo(pos);
+	} else {
+		//log('Create makrer ');
+
+		// Последние несколько точек трека
+		tailPath = new google.maps.Polyline({
+			//path: flightPlanCoordinates,
+			path: tail_path,
+			strokeColor: config.ui.trackcolor || '#dc00dc',
+			strokeOpacity: 1.0,
+			strokeWeight: 3
+		});
+		tailPath.setMap(map);
+
+		var last_pos_marker = new LastMarker({
+			point: p.data.point,
+			position: pos,
+			map: map,
+			//title: p.desc + '\n' + p.data.point.time,
+			desc: p.desc,
+			skey: p.skey
+			//color: 'lime'
+		});
+
+		lastpos[p.skey] = {
+			position: pos,
+			tail: tailPath,
+			marker: last_pos_marker
+		};
+	}
+}
+
 function GetLastPositions(akey) {
 	log('Get last positions...');
 	url = "/api/geo/last?akey=" + akey;
@@ -557,49 +611,19 @@ function GetLastPositions(akey) {
 			log('Show last positions...');
 			//console.log()
 			for(var i in data.geo){
-				var p = data.geo[i];
-				//console.log(' data['+i+']='+p.imei);
-				var pos = new google.maps.LatLng(p.data.point.lat, p.data.point.lon);
-
-				var tail_path = [];
-				for(j in p.data.tail){
-					tail_path.push(new google.maps.LatLng(p.data.tail[j][1], p.data.tail[j][2]));
-					//console.log(p.data.tail[j]);
-				}
-
-				// Последние несколько точек трека
-				tailPath = new google.maps.Polyline({
-					//path: flightPlanCoordinates,
-					path: tail_path,
-					strokeColor: config.ui.trackcolor || '#F08000',
-					strokeOpacity: 1.0,
-					strokeWeight: 3
-				});
-				tailPath.setMap(map);
-
-				var last_pos_marker = new LastMarker({
-					position: pos,
-					map: map,
-					title: p.desc + '\n' + p.data.point.time,
-					car: p.desc,
-					skey: p.skey
-					//color: 'lime'
-				});
-
-				lastpos[p.skey] = {
-					position: pos,
-					tail: tailPath,
-					marker: last_pos_marker
-				};
+				CreateLastMarker(data.geo[i]);
 			}
 		}
 	});
+
 	config.updater.add('geo_change', function(msg) {
 		log('MAPS: GEO_Update: ', msg.data);
 		var skey = msg.data.skey;
 		//map.panTo(lastpos[skey].position);
 		$.getJSON('/api/geo/last?akey=' + akey + '&skey=' + skey, function (data) {
-			log('Update last positions and tail for...', data);
+			//log('Update last positions and tail for...', data);
+			CreateLastMarker(data.geo[0]);
+			/*
 			var p = data.geo[0];
 			var pos = new google.maps.LatLng(p.data.point.lat, p.data.point.lon);
 			if(lastpos[p.skey]){
@@ -608,6 +632,7 @@ function GetLastPositions(akey) {
 				lastpos[p.skey].marker.setPosition(pos);
 				//map.panTo(pos);
 			}
+			*/
 		});
 
 		//$(list).find('option[value="' + msg.data.skey + '"]').html(msg.data.desc);
@@ -653,7 +678,7 @@ function DrawPlyline()
 	flightPath = new google.maps.Polyline({
 		//path: flightPlanCoordinates,
 		//path: showed_path,
-		strokeColor: config.ui.trackcolor || '#F08000',
+		strokeColor: config.ui.trackcolor || '#dc00dc',
 		strokeOpacity: 1.0,
 		strokeWeight: 3
 	});
@@ -747,3 +772,161 @@ function DayList(skey, month){
 	});
 	log("::DayList.end");
 }
+
+
+var params = {
+	changedEl: "select",
+	//visRows: 5,
+	scrollArrows: true
+}
+
+function UpdateDayList(){
+	var date = $("#datepicker").datepicker('getDate');
+	if(!config.cur_month) config.cur_month = $.datepicker.formatDate('yymm', date);
+	log('Update for sys ' + config.skey + ' and month ' + config.cur_month);
+
+	DayList(config.skey, config.cur_month);
+}
+
+$(document).ready(function() {
+	config.cur_month = null;
+	//$(document).disableSelection();
+	//$('*').not('input').disableSelection();
+	//$("input").enableSelection();
+	//$('div').disableSelection();
+	//$('#int_select').unbind('selectstart');
+	CreateMap();
+
+	$("#date_tabs").tabs();
+	$("#nav_map").button("option", "disabled", true);
+
+	$.datepicker.setDefaults( $.datepicker.regional[ "ru" ] );
+	$("#datepicker").datepicker({altField: "#alternate",
+		altFormat: "yymmdd",
+		minDate: '-12m +0w',
+		maxDate: '+0m +0w',
+		hideIfNoPrevNext: true,
+		onSelect: function(dateText, inst) {
+			SetDay(config.skey, date_to_url(dateText));
+			//UpdateDayList();
+		},
+		onChangeMonthYear: function(year, month, inst) {
+			config.cur_month = '' + year + ((month<10)?('0'+month):month);
+			UpdateDayList();
+		},
+		beforeShowDay: function(date){
+			if(!config.daylist || config.daylist.year != date.getFullYear() || config.daylist.month != (date.getMonth()+1)){
+				//UpdateDayList();
+				//log(' need update');
+				return [false, '', 'Загрузка информации с сервера...'];
+			}
+
+			//log(config.daylist, config.daylist.year, date.getFullYear(), config.daylist.month, date.getMonth()+1, config.daylist.days, date.getDate());
+
+			var da = date.getDate();
+			if(config.daylist.days.indexOf(da) != -1) return [true];
+			else return [false, '', 'В этот день система не выходила на связь'];
+			
+			//return [true, 'date-css', 'Tip'];
+		}
+	});
+		
+
+	//var panel_state = true;
+	$(".panel_control").click(function(){
+		var panel = $(this).parent();
+		if(panel.hasClass('stat-hided')){
+			panel.removeClass('stat-hided');
+			$(this).find('span').removeClass('ui-icon-circle-triangle-w').addClass('ui-icon-circle-triangle-e');
+			$('#map').removeClass('stat-hided');
+		} else {
+			panel.addClass('stat-hided');
+			$(this).find('span').removeClass('ui-icon-circle-triangle-e').addClass('ui-icon-circle-triangle-w');
+			$('#map').addClass('stat-hided');
+		}
+	});
+
+	GetLastPositions(config.akey);
+	UpdateDayList(config.skey);
+});
+
+
+function UpdateGroupList(){
+	var group = $('#group_list').attr('value');
+	log('Select group:' + group);
+}
+
+function Map_SysList(list){
+	log('Map_SysList systems:', config.systems);
+	list.empty();
+	for(i in config.systems){
+		var s = config.systems[i];
+		list.append(
+			'<li class="ui-widget ui-state-default" imei="'+s.imei+'" skey="'+s.skey+'">'+
+			'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
+			s.desc+
+			'</li>'
+		);
+	}
+
+	list.find('li').click(function(){
+		log(this, $(this), this.attributes['imei'].value);
+		//map_ul_sys
+		$(this).parent().find('li').removeClass('ui-state-highlight');
+		$(this).addClass('ui-state-highlight');
+		config.skey = this.attributes['skey'].value;
+		UpdateDayList();
+	}).mouseover(function(){
+		var skey = $(this).attr('skey');
+		$('.lastmarker').removeClass('lastup');
+		$('.lastmarker[skey="' + skey + '"]').addClass('lastup');
+	}).mouseout(function(){
+		$('.lastmarker[skey="' + $(this).attr('skey') + '"]').removeClass('lastup');
+	/*}).bind('mousewheel', function(ev){
+		var skey = $(this).attr('skey');
+		log('mousewheel', ev, skey);
+		map.panTo(lastpos[skey].position);
+		if(ev.wheelDelta < 0) map.setZoom(map.getZoom() - 1);
+		else map.setZoom(map.getZoom() + 1);*/
+	}).find('span').click(function(){
+		var skey = $(this).parent().attr('skey');
+		//log('span:click', skey, lastpos[skey]);
+		map.panTo(lastpos[skey].position);
+	});
+}
+
+$(document).ready(function(){
+	var list = $('ul#map_ul_sys');
+
+	Map_SysList(list);
+
+	config.updater.add('changedesc', function(msg) {
+		log('MAP: Update descriptions');
+		//updateLogList();
+		$(list).find('li[skey="' + msg.data.skey + '"]').html(
+			'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
+			msg.data.desc
+		).find('span').click(function(){
+			var skey = $(this).parent().attr('skey');
+			log('span:click', skey, lastpos[skey]);
+			map.panTo(lastpos[skey].position);
+		});
+		//console.log(l);
+	});
+
+	config.updater.add('changeslist', function(msg) {
+		log('MAP: Update system list');
+		Map_SysList(list);
+		//updateLogList();
+		//$(list).find('li[skey="' + msg.data.skey + '"]').html(msg.data.desc);
+		//console.log(l);
+	});
+
+	config.updater.tabs[0] = function(){
+		log('MAP: tab update');
+		//$('#map').resize();
+		google.maps.event.trigger(map, 'resize');
+	}
+});
+
+})();

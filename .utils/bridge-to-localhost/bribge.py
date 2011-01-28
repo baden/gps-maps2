@@ -76,7 +76,7 @@ def senddata(body):
 	print("Waiting answer...\n");
 	#sleep(1)
 	while 1:
-		s.settimeout(10.0);
+		s.settimeout(30.0);
 		try:
 			received = s.recv(1024)
 		except:
@@ -108,7 +108,7 @@ def main():
 	print("Request for new data...")
 
 	conn = httplib.HTTPConnection(GETFROM)
-	conn.request("GET", "/binbackup?cmd=pack&cnt=1000&imei=%s&after=%s&asc=yes" % (IMEI, urllib.quote(aftercdate)))
+	conn.request("GET", "/binbackup?cmd=pack&cnt=1&imei=%s&after=%s&asc=yes" % (IMEI, urllib.quote(aftercdate)))
 	response = conn.getresponse()
 	#print response.status, response.reason
 	data = response.read()

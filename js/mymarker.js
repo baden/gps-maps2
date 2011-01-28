@@ -52,7 +52,7 @@ MyMarker.prototype.Info = function() {
 	//alert('Bo ' + this.point.date);
 	var point = this.point;
 	var skey = this.skey;
-	/*console.*/log("skey = " + skey);
+	log("skey = ", skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
 		'<div style="width: 220px; height: 220px; border: none;"><div class="info-header">' + dt_to_datetime(point.date) + "</div>" +
@@ -69,6 +69,8 @@ MyMarker.prototype.Info = function() {
 		'<div id="moreinfo" title="Ожидайте, идет получение дополнительной информации."><center><img src="/images/loading.gif" /></center></div></div>',
 		position: point,
 	});
+	log(" info_window = ", this.infowindow);
+
 	//self = this;
 		//$('#moreinfo').slideUp().delay(300).fadeIn();
 		//$("#moreinfo").animate({left:'+=200'},2000);
@@ -110,7 +112,7 @@ MyMarker.prototype.Info = function() {
 		});
 
 //	infowindow.open(map, map.getMarker(i));
-	this.infowindow.open(map);
+	this.infowindow.open(this.map);
 }
 
 MyMarker.prototype.onAdd = function() {
@@ -206,7 +208,7 @@ MyMarker.prototype.setSysKey = function(skey) {
 }
 
 MyMarker.prototype.setPosition = function(point) {
-	log('Marker change position');
+//	log('Marker change position');
 	this.point = point;
 	this.arrdiv.setAttribute("style", "-webkit-transform: rotate(" + point.angle + "deg);z-index:-1;");
 //	console.log('MyMarker.protorype.setPosition');

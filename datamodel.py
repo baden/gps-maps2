@@ -397,6 +397,23 @@ class DBGeo(db.Model):
 				else: maxp -= 1
 
 				yield point
+	@classmethod
+	def get_tail_items(cls, system_key, count=1):
+		recs = DBGeo.all().ancestor(system_key).order("-date")
+		prev = None
+		antiloop = 1000
+		for rec in recs:
+			for i in range(rec.count-1, -1, -1):
+				antiloop -= 1
+				if antiloop<=0: return
+
+				item = rec.get_item(i)
+				if prev == (item['lat'], item['lon']): continue
+				prev = (item['lat'], item['lon'])
+				logging.info('Get_Tail_Items: Lat = %f  Lon = %f' % prev)
+				yield item
+				count -= 1
+				if count<=0: return
 
 
 class PointWorker(object):

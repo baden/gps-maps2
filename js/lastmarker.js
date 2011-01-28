@@ -9,25 +9,28 @@
 
 function LastMarker(options)
 {
-        this.map = options.map;
+//	this.infowindow = null;
         this.div = null;
         this.arrdiv = null;
-	this.title = options.title || "";
+
+	this.options = options;
+
+        //this.map = options.map;
+	//this.title = options.title || "";
 	this.position = options.position;
-	this.point = this.position;
-	this.infowindow = null;
-	this.skey = null;
+	this.point = options.point;
 	this.color = options.color || 'green';
-	this.car = options.car || 'Не определено';
+	this.desc = options.desc || 'Не определено';
 	this.skey = options.skey;
 
 	this.setMap(options.map);
 
-	//console.log('last marker at '+ options.position);
+	console.log('last marker at '+ options.position, this.options);
 }
 
 LastMarker.prototype = new google.maps.OverlayView();
 
+/*
 function add_geo_row(label, value) {
 	$('#tbl_info tbody').append('<tr><td>'+label+'</td><td><b>'+value+'</b></td></tr>');
 }
@@ -41,6 +44,7 @@ function more_info(data){
 	add_geo_row('Резервное питание', data.point.vin + 'В');
 	add_geo_row('Тип метки', data.point.fsource);
 }
+*/
 
 /*
 function dt_to_date(dt){
@@ -49,6 +53,7 @@ function dt_to_date(dt){
 */
 
 LastMarker.prototype.Info = function() {
+	if(0){
 	//alert('Bo ' + this.point.date);
 	var point = this.point;
 	var skey = this.skey;
@@ -111,7 +116,15 @@ LastMarker.prototype.Info = function() {
 
 //	infowindow.open(map, map.getMarker(i));
 	this.infowindow.open(map);
+	}
 }
+
+var SVG = {};
+
+// These are SVG-related namespace URLs
+SVG.ns = "http://www.w3.org/2000/svg";
+SVG.xlinkns = "http://www.w3.org/1999/xlink";
+
 
 LastMarker.prototype.onAdd = function() {
 
@@ -122,7 +135,7 @@ LastMarker.prototype.onAdd = function() {
 	div.marker = this;
 
 	div.setAttribute("class", "lastmarker");
-	div.setAttribute("title", this.title);
+	div.setAttribute("title", this.options.desc + '\n' + this.point.time);
 	div.setAttribute("skey", this.skey);
 	//div.addEventListener('mouseover', function(e){
 	//	console.log('aa');
@@ -138,101 +151,108 @@ LastMarker.prototype.onAdd = function() {
 
 	var label = document.createElement('div');
 	label.setAttribute("class", "lastmarker-label");
-	label.innerHTML = this.car;
+	//label.innerHTML = this.car;
+	label.innerHTML = this.options.desc;
 
+/*
 	var control = document.createElement('div');
 	control.setAttribute("class", "lastmarker-control");
 	var panel = ''
 	panel += '<table><tbody>';
-	panel += '<tr><td>Время</td><td>-</td></tr>';
-	panel += '<tr><td>Скорость</td><td>-</td></tr>';
-	panel += '<tr><td>Питание</td><td>-</td></tr>';
-	panel += '<tr><td>Спутники</td><td>-</td></tr>';
+	panel += '<tr><td>Время</td><td>'+this.point.time+'</td></tr>';
+	panel += '<tr><td>Скорость</td><td>'+this.point.speed+'</td></tr>';
+	panel += '<tr><td>Осн.питание</td><td>'+this.point.vout+'</td></tr>';
+	panel += '<tr><td>Рез.питание</td><td>'+this.point.vin+'</td></tr>';
+	panel += '<tr><td>Спутники</td><td>'+this.point.sats+'</td></tr>';
 	panel += '<tr><td>Топливо</td><td>-</td></tr>';
-	panel += '<tr><td>Рефрижератор</td><td>-</td></tr>';
+	//panel += '<tr><td>Рефрижератор</td><td>-</td></tr>';
 	panel += '</tbody></table>';
 	panel += '<button title="Послать сигнал системе.">Вызов</button>';
 //	panel += '<button title="Послать сигнал системе." class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-primary" name="btn_menu" id="nav_logs" href="/s/Logs" role="button" aria-disabled="false"><span class="ui-button-icon-primary ui-icon ui-icon-alert"></span><span class="ui-button-text">Сигнал</span></button>'
 	control.innerHTML = panel;
 	label.appendChild(control);
+	$(control).find('button').button();
+	//this.control = control;
+*/
+
+	var control = document.createElement('div');
+	control.setAttribute("class", "lastmarker-control");
+	label.appendChild(control);
+
 
 	//console.log($(control).find('button'));
-	$(control).find('button').button();
 
 	div.appendChild(label);
+
+	//var direction = document.createElement('svg');
+	var svg = document.createElementNS(SVG.ns, "svg:svg");
+	svg.setAttribute("style", 'margin: -8px -8px -8px -8px');
+	svg.setAttribute("width", '32px');
+	svg.setAttribute("height", '32px');
+	// Set the coordinates used by drawings in the canvas
+	//svg.setAttribute("viewBox", '0px 0px 32px 32px');
+	// Define the XLink namespace that SVG uses
+	svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", SVG.xlinkns);
+
+	var g = document.createElementNS(SVG.ns, "g");
+	g.setAttributeNS(null, 'transform', 'translate(16,16)');
+
+	shape = document.createElementNS(SVG.ns, "polyline");
+	shape.setAttributeNS(null, "points", "-8,-4 0,-15 8,-4");
+	shape.setAttributeNS(null, "fill", "none");
+	shape.setAttributeNS(null, "stroke", "black");
+	shape.setAttributeNS(null, "stroke-width", "2px");
+	shape.setAttributeNS(null, 'transform', 'rotate('+this.point.course+')');
+
+	this.shape = shape;
+
+    	g.appendChild(shape);
+	svg.appendChild(g);
+	div.appendChild(svg);
+
 
 //	div.setAttribute("class", (this.result.speed < 1.0)?"mymarker-stop":"mymarker-move");
 
 	div.addEventListener('click', function(e){
+		log('lastmarker: click', e);
 		//this.marker.Info();
 	}, false);
 
-/*
+	var me = this;
+	//this.hint = false;
+
+	log('lastmarker: onadd', this);
 	div.addEventListener('mouseover', function(e){
-		//this.marker.Info();
-		//console.log('aaa');
-		var minind = 10000;
-		var maxind = -10000;
-		var log = 'before: ';
-		$('.lastmarker').each(function(){
-			var ind = $(this).css('z-index');
-			//console.log(ind);
-			if(ind == 'none' || ind == 'auto') ind = 0; else ind = parseInt(ind, 10);
-			log += ' ' + ind;
-			minind = Math.min(minind, ind);
-			maxind = Math.max(maxind, ind);
-			$(this).css('z-index', '' + (ind-1));
-		});
-		$(this).css('z-index', ''+(maxind+1));
-		console.log(log);
-		log = 'after: ';
-		$('.lastmarker').each(function(){
-			var ind = $(this).css('z-index');
-			//console.log(ind);
-			if(ind == 'none' || ind == 'auto') ind = 0; else ind = parseInt(ind, 10);
-			log += ' ' + (ind-minind+1);
-			$(this).css('z-index', '' + (ind-minind+1));
-		});
-
-		console.log(log);
-	}, false);
-*/
-
-
-	if(0){
-	div.addEventListener('mouseover', function(e){
-		arrdiv = document.getElementById("arrowdiv");
-		if(arrdiv == null){
-			arrdiv = document.createElement('div');
-			arrdiv.setAttribute("id", "arrowdiv");
-			arrdiv.setAttribute("class", "arrowdiv");
-			panes.overlayMouseTarget.appendChild(arrdiv);
-		}
-		arrdiv.setAttribute("style", "-webkit-transform: rotate(" + this.marker.angle + "deg);z-index:-1;");
-
-		var overlayProjection = this.marker.getProjection();
-
-		// Retrieve the southwest and northeast coordinates of this overlay
-		// in latlngs and convert them to pixels coordinates.
-		// We'll use these coordinates to resize the DIV.
-		//var divpx = overlayProjection.fromLatLngToDivPixel(this.marker.div.point);
-
-		arrdiv.style.left = parseInt(this.marker.div.style.left, 10) - 13 + 'px';
-		arrdiv.style.top = parseInt(this.marker.div.style.top, 10) - 13 + 'px';
-
-		/*this.marker.arrdiv.style.display = "block";*/
-
-		//this.marker.div.style['background-image'] = 'url(images/marker-select.png)'
-		//this.marker.div.style.width = 16;
-		//this.marker.div.style.height = 16;
+		//if(!me.hint){
+		//me.hint = true;
+		//log('lastmarker: mouseover', e, this);
+		var panel = ''
+		panel += '<table><tbody>';
+		panel += '<tr><td>Время</td><td>' + me.point.time+'</td></tr>';
+		panel += '<tr><td>Скорость</td><td>' + me.point.speed+'</td></tr>';
+		panel += '<tr><td>Осн.питание</td><td>' + me.point.vout+'</td></tr>';
+		panel += '<tr><td>Рез.питание</td><td>' + me.point.vin+'</td></tr>';
+		panel += '<tr><td>Спутники</td><td>' + me.point.sats+'</td></tr>';
+		panel += '<tr><td>Топливо</td><td>-</td></tr>';
+		//panel += '<tr><td>Рефрижератор</td><td>-</td></tr>';
+		panel += '</tbody></table>';
+		//panel += '<button title="Послать сигнал системе.">Вызов</button>';
+	//	panel += '<button title="Послать сигнал системе." class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-primary" name="btn_menu" id="nav_logs" href="/s/Logs" role="button" aria-disabled="false"><span class="ui-button-icon-primary ui-icon ui-icon-alert"></span><span class="ui-button-text">Сигнал</span></button>'
+		control.innerHTML = panel;
+		//this.label.appendChild(control);
+		//this.control = control;
+		//$(control).find('button').button();
+		//}
 	}, false);
 
 	div.addEventListener('mouseout', function(e){
-		arrdiv = document.getElementById("arrowdiv");
-		if(arrdiv) arrdiv.style.display = "none";
-		/*if(this.marker.i % 8) this.marker.arrdiv.style.display = "none";*/
+		//log('lastmarker: mouseout', e, this);
+		//control.innerHTML = '';
+		//me.hint = false;
+		//if(this.control){
+		//	this.label.removeChild(this.control);
+		//}
 	}, false);
-	}
 
 	if(0){
 	var arrdiv = document.createElement('div');
@@ -243,7 +263,8 @@ LastMarker.prototype.onAdd = function() {
 	}
 
 	this.div = div;
-//	this.label = label;
+	this.label = label;
+	this.control = null;
 //	this.arrdiv = arrdiv;
 	//this.arrdiv = arrdiv;
 
@@ -261,12 +282,11 @@ LastMarker.prototype.onAdd = function() {
 //	panes.overlayImage.appendChild(label);
 
 	//$(div).mouseover(function(){console.log('aaa');});
-
 }
 
-LastMarker.prototype.setPosition = function(point) {
-	log('Marker change position', point);
-	this.position = point;
+LastMarker.prototype.setPosition = function(point, position) {
+//	log('Marker change position', point);
+	this.position = position;
 	this.point = point;
 //	this.arrdiv.setAttribute("style", "-webkit-transform: rotate(" + point.angle + "deg);z-index:-1;");
 //	console.log('MyMarker.protorype.setPosition');
@@ -306,16 +326,14 @@ LastMarker.prototype.draw = function() {
 		var div = this.div;
 		div.style.left = divpx.x - 8 + 'px';
 		div.style.top = divpx.y - 8 + 'px';
+
+		if(this.shape){
+			this.shape.setAttributeNS(null, 'transform', 'rotate('+this.point.course+')');
+		}
+		//log('div g transformation', );
 	}
-/*
-	if(this.arrdiv){
-		var arrdiv = this.arrdiv;
-		arrdiv.style.left = divpx.x - 16 + 'px';
-		arrdiv.style.top = divpx.y - 16 + 'px';
-	}
-*/
-//	console.log('LastMarker.protorype.draw.');
 }
-	window.LastMarker = LastMarker;
+
+window['LastMarker'] = LastMarker;	// Экспорт глобального имени
 
 })();

@@ -9,14 +9,14 @@ import re
 
 from glob import glob
 
-HOST = "127.0.0.1"
-#HOST = "gps-maps2.appspot.com"
+#HOST = "127.0.0.1"
+HOST = "gps-maps.appspot.com"
 PORT = 80 #80
 
 #HOST = "212.110.139.65"
 #PORT = 8015
 
-HOSTNAME = "gps-maps2.appspot.com"
+HOSTNAME = "gps-maps.appspot.com"
 
 
 #SYS = 1
@@ -36,13 +36,13 @@ def senddatav2(f, imei):
 	send+= "Content-type: application/octet-stream\r\n"
 	send+= "Content-Length: %d\r\n" % len(body)
 	send+= "\r\n"
-	#send+= body
+	send+= body
 
-	print(send)
-	print("{BODY}\n")
+	#print(send)
+	#print("{BODY}\n")
 
 	s.send(send)
-	s.send(body)
+	#s.send(body)
 	print("Wait answer...\n");
 	while 1:
 		s.settimeout(20.0);

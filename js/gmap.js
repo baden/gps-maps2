@@ -90,16 +90,16 @@ $.extend(GMap.prototype, {
 	},
 
 	_destroyGMap: function(target) {
-		/*console.*/log('GMAP: destroy');
+		//log('GMAP: destroy');
 		var $target = $(target);
 		var inst = $.data(target, PROP_NAME);
 		if (!$target.hasClass(this.markerClassName)) {
-			/*console.*/log('not a map');
+			log('GMAP error: not a map');
 			return;
 		}
 		var nodeName = target.nodeName.toLowerCase();
 		$.removeData(target, PROP_NAME);
-		/*console.*/log($target);
+		//log($target);
 		$target.removeClass(this.markerClassName).empty();
 	},
 
@@ -113,7 +113,7 @@ $.extend(GMap.prototype, {
 	},
 
 	_get: function(inst, name) {
-		/*console.*/log('GMAP: get', inst);
+		//log('GMAP: get', inst);
 		return inst.settings[name] !== undefined ?
 			inst.settings[name] : this._defaults[name];
 	},
@@ -131,7 +131,7 @@ $.extend(GMap.prototype, {
 
 		//this._dialogInst
 		//var nodeName = '';
-		/*console.*/log('GMap:attach map to ' + nodeName + '(' + id + ') with settings:' + settings);
+		//log('GMap:attach map to ' + nodeName + '(' + id + ') with settings:' + settings);
 
 		var mapdiv = document.createElement('div');
 		mapdiv.id = this._mainDivId + '_m';
@@ -154,7 +154,7 @@ $.extend(GMap.prototype, {
 		//console.log(settings);
 		divSpan.addClass(this.markerClassName);
 
-		/*console.*/log('inst.settings = ', inst.settings);
+		//log('inst.settings = ', inst.settings);
 		//console.log();
 
 		var mapOptions = {
@@ -166,7 +166,7 @@ $.extend(GMap.prototype, {
 			zoom: inst.settings.zoom
 		}
 		//instsettings.map = new google.maps.Map(document.getElementById(this._mainDivId), mapOptions);
-		/*console.*/log('mapdiv == ', mapdiv);
+		//log('mapdiv == ', mapdiv);
 		var map = new google.maps.Map(mapdiv, mapOptions);
 		inst.settings.map = map;
 
@@ -187,7 +187,7 @@ $.extend(GMap.prototype, {
 
 		$(controldiv).buttonset();
 		$(controldiv).find('input').change(function(){
-			/*console.*/log($(this).attr("value"));
+			//log($(this).attr("value"));
 			switch($(this).attr("value")){
 				case '0': {map.setMapTypeId(google.maps.MapTypeId.ROADMAP); break }
 				case '1': {map.setMapTypeId(google.maps.MapTypeId.SATELLITE); break }
@@ -230,7 +230,7 @@ $.fn.gmap = function(options){
 //	console.log('GMap:create');
 	var otherArgs = Array.prototype.slice.call(arguments, 1);
 	if (options == 'option' && arguments.length == 2 && typeof arguments[1] == 'string'){
-		/*console.*/log('arguments==', arguments);
+		//log('arguments==', arguments);
 		return $.gmap['_' + options + 'GMap'].apply($.gmap, [this[0]].concat(otherArgs));
 	}
 
@@ -250,7 +250,7 @@ $.fn.gmap = function(options){
 $.gmap = new GMap(); // singleton instance
 $.gmap.initialized = false;
 //$.gmap.uuid = new Date().getTime();
-$.gmap.version = "0.0.1";
+$.gmap.version = "0.0.2";
 
 // Workaround for #4055
 // Add another global to avoid noConflict issues with inline event handlers

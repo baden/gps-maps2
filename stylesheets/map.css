@@ -310,7 +310,7 @@ div.lastmarker:hover div.lastmarker-label {
 	box-shadow: 2px 2px 6px #000;
 	/*-webkit-box-shadow: 0px 0px 30px #0f0;
 	-moz-box-shadow: 0px 0px 30px #0f0;*/
-	min-width: 100px;
+	min-width: 170px;
 	height: auto !important;
 	min-height: 100px;
 	z-index: 10001;

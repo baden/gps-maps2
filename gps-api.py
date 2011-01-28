@@ -421,7 +421,7 @@ class Geo_GetO(webapp.RequestHandler):
 		b_lat_r = -90.0
 		b_lon_r = -180.0
 
-		maxp = 5000
+		maxp = 10000		# На данный момент ограничение 10тыс точек
 		ind = 0 
 
 		stop_start = None
@@ -619,7 +619,7 @@ class Geo_Get(BaseApi):
 
 		stop_start = None
 
-		maxp = 5000
+		maxp = 10000
 		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, maxp):
 			d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
 			plat = point['lat']
@@ -928,7 +928,7 @@ class Report_Get(BaseApi):
 		sum_length = 0	# Пройденая дистанция
 		sum_tmove = 0	# Общее время в пути
 
-		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, 1000):
+		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, 10000):
 			if move_start is None:
 				move_start = point
 
