@@ -1,0 +1,12 @@
+CACHE MANIFEST
+
+# version 16
+
+CACHE:
+#/js/base.js
+#/js/gmap.js
+#/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/cupertino/jquery.ui.all.css
+
+
+NETWORK:
+/

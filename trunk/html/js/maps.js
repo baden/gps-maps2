@@ -1,6 +1,7 @@
-var map = null;
 
 (function(){
+
+var map = null;
 
 var show_bounds = false;
 

@@ -10,6 +10,8 @@ from datetime import date, timedelta, datetime
 from datamodel import DBAccounts
 
 SERVER_NAME = os.environ['SERVER_NAME']
+VERSION = '0'
+if 'CURRENT_VERSION_ID' in os.environ:	VERSION = os.environ['CURRENT_VERSION_ID']
 
 class TemplatedPage(webapp.RequestHandler):
 	def __init__(self):
@@ -36,6 +38,9 @@ class TemplatedPage(webapp.RequestHandler):
 			values['server_name'] = SERVER_NAME
 			values['uid'] = self.user.user_id()
 			values['account'] = self.account
+
+			values['environ'] = os.environ
+			values['version'] = VERSION
 
 			if alturl:
 				path = os.path.join(os.path.dirname(__file__), 'templates', alturl)

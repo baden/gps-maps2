@@ -71,7 +71,46 @@ function ln_to_km(l) {
 
 }
 
+/*
+	Выделение компонентов адреса
+*/
 function geocode_to_addr(results) {
+	var comp = {
+		street_address: '',
+		route: '',
+		locality: '',
+		sublocality: '',
+		administrative_area_level_2: '',
+		administrative_area_level_1: '',
+		country: ''
+	};
+	// 'country' - страна
+	// 'administrative_area_level_1' - область
+	// 'administrative_area_level_2' - район (?)
+	// 'sublocality' - район (?)
+	// 'locality' - населенный пункт
+	// 'street_address' - Дом
+	// 'route' - трасса или улица при отсутствии street_address
+
+	for(var i in results){
+		for(var j in results[i].address_components){
+			var c = results[i].address_components[j];
+			comp[c.types[0]] = c.long_name;
+		}
+	}
+
+	return '' +
+		comp.country + ', ' +
+		comp.administrative_area_level_1 + ', ' +
+		((comp.locality == '')?(((comp.sublocality != '')?comp.sublocality:comp.administrative_area_level_2) + ' район, '):'') +
+		((comp.locality != '')?(comp.locality+', '):'') +
+		comp.route +
+		((comp.street_address != '')?(', ' + comp.street_address):'');
+}
+
+
+function geocode_to_addr2(results) {
+
 	for(var i in results){
 		var r = results[i];
 //		console.log(r.types);

@@ -23,7 +23,7 @@
 
 			} else {
 				if(recur) {
-					adrlist[i].cb = setTimeout(function(){getGeocode(adrlist, i, recur-1)}, 3000);
+					adrlist[i].cb = setTimeout(function(){getGeocode(adrlist, i, recur-1)}, 5000);
 				} else {
 					log('Error geocoding at ' + i + ' with ');
 				}
@@ -74,8 +74,8 @@
 					tbody.append( "<tr>" +
 						"<td>" + dt_to_date(start) + "</td>" + 
 						"<td>" +
-						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-cancel" title="Убрать из отчета информацию о движении"></span></button>' +
-						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-locked" title="Оставить в отчете только информацию о движении"></span></button>' +
+						'	<!--button class="ctl" style="float: left;"><span class="ui-icon ui-icon-cancel" title="Убрать из отчета информацию о движении"></span></button>' +
+						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-locked" title="Оставить в отчете только информацию о движении"></span></button-->' +
 						'	<button class="ctl" style="float: left;"><span class="ui-icon ui-icon-zoomin" title="Показать этот путь на карте" onclick="showMap(' + rec.start.pos + ',\'Стоянка ' + td_to_hms(rec.duration) + ' с ' + dt_to_time(rec.start.time) + ' по ' + dt_to_time(rec.stop.time) + '\');"></span></button>' +
 						tp + "</td>" + 
 						'<td>' + dt_to_time(rec.start.time) + ' - ' + dt_to_time(rec.stop.time) + "</td>" +
@@ -218,10 +218,12 @@
 		});
 
 		//$('#log_syslist').bind('change', function(){
+		/*
 		list.bind('change', function(){
 			config.skey = $(this).attr('value');
-			UpdateLog();
+			//Report_Make_SysList(list);
 		});
+		*/
 
 
 	});
