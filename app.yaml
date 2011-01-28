@@ -46,6 +46,11 @@ handlers:
   static_files: static/robots.txt
   upload: static/robots.txt
 
+#- url: /gps-maps.manifest
+#  static_files: static/gps-maps.manifest
+#  upload: static/gps-maps.manifest
+#  mime_type: text/cache-manifest
+
 - url: /static
   static_dir: static
 #  static_files: static/\1
