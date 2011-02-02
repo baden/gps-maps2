@@ -9,7 +9,7 @@ echo .
 echo .
 echo .
 
-%PY_PATH% bridge.py 359587015371480 Львов-2
+%PY_PATH% bridge.py 359587015371480 Львов-09
 %PY_PATH% bridge.py 353358017117115 GPS-8
 %PY_PATH% bridge.py 359587015328522 Володя-11
 %PY_PATH% bridge.py 359587017100622 GPS-7

@@ -37,3 +37,8 @@ div#rmap {
 .ctl{
 	margin: 0px 1px 0px 0px;
 }
+
+
+#report_dlg_byint .ui-datepicker, #report_dlg_byday .ui-datepicker {
+	width: auto;
+}

@@ -192,8 +192,44 @@ config.updater.add('changedesc', function(msg) {
 			config.systems[i].desc = msg.data.desc;
 		}
 	}
+	if(msg.data.skey in config.sysbykey){
+		config.sysbykey[msg.data.skey].desc = msg.data.desc;
+	}
 	//log('CONFIG==', config);
 });
+
+config.syslist = function(options){
+	var list = $('#'+options.id);
+
+	function Make_SysList(){
+		list.empty();
+		for(var i in config.systems){
+			var s = config.systems[i];
+			//list.append('<option imei="'+s.imei+'" value="'+s.skey+'"'+(config.skey==s.skey?' selected':'')+'>'+s.desc+'</option>');
+			list.append('<option imei="'+s.imei+'" value="'+s.skey+'">'+s.desc+'</option>');
+		}
+	}
+
+	Make_SysList();
+
+	$(list).bind({
+		/*click: function(ev){
+			Make_SysList();
+			log('click');
+			},*/
+		change: options.change
+	});
+
+	config.updater.add('changeslist', function(msg) {
+		log('config.syslist: Update system list');
+		Make_SysList();
+	});
+
+	config.updater.add('changedesc', function(msg) {
+		$(list).children('option[value="'+msg.data.skey+'"]').html(msg.data.desc);
+	});
+
+}
 
 function UpdateAccountSystemList() {
 	if(config && config.akey)
@@ -202,6 +238,7 @@ function UpdateAccountSystemList() {
 			log('UpdateAccountSystemList data:', data);
 			//var config = config || {};
 			config.systems = [];
+			config.sysbykey = {};
 			for(var i in data.info.account.systems){
 				var s = data.info.account.systems[i];
 				config.systems.push({
@@ -209,6 +246,7 @@ function UpdateAccountSystemList() {
 					'skey': s.key,
 					'desc': s.desc
 				});
+				config.sysbykey[s.key] = {imei: s.imei, desc: s.desc};
 			}
 
 			config.updater.process({msg: 'changeslist'});

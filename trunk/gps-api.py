@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 
 API_VERSION = 1.0
 SERVER_NAME = os.environ['SERVER_NAME']
+MAXPOINTS = 100000
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -45,10 +46,9 @@ class BaseApi(webapp.RequestHandler):
 
 		if 'skey' in self.requred:
 			skey = self.request.get("skey", None)
+			logging.info(skey)
 			if skey is None:
-				{'answer': 'no', 'reason': 'skey not defined or None'}
-				return
-
+				return {'answer': 'no', 'reason': 'skey not defined or None'}
 			try:
 				self.skey = db.Key(skey)
 			except db.datastore_errors.BadKeyError, e:
@@ -598,6 +598,9 @@ class Geo_Get(BaseApi):
 
 		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
 
+		options = self.request.get('options', '').split(',')
+		logging.info('options=%s' % repr(options))
+
 		points = []
 		l_lat = []	# Список индексов (lat, index)
 		l_lon = []	# Список индексов (lon, index)
@@ -618,12 +621,27 @@ class Geo_Get(BaseApi):
 		ind = 0 
 
 		stop_start = None
+		prev_point = None
 
-		maxp = 10000
+		maxp = MAXPOINTS
 		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, maxp):
 			d = max(MS, max(abs(plat - point['lat']), abs(plon - point['lon'])))
 			plat = point['lat']
 			plon = point['lon']
+
+			if prev_point:
+				dist = geo.distance(point, prev_point)
+				dt = point['time'] - prev_point['time']
+				dt = dt.days * 24 * 3600 + dt.seconds
+				cspeed = (dist * 3600 / dt) if dt>0 else 0
+				if cspeed > 300:			# Надеюсь таким образом избавиться от глюков
+					continue
+			else:
+				dist = 0
+				dt = 0
+				cspeed = 0
+
+			prev_point = point
 				
 			points.append([
 				#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
@@ -633,6 +651,7 @@ class Geo_Get(BaseApi):
 				int(point['course']),
 				#20,
 				int(round(log(DS/d, 2), 0)),
+				#{'dist': dist, 'speed': point['speed'], 'dt': dt, 'speed2': cspeed},
 			])
 			l_lat.append((plat, ind))
 			#l_lon.append((plon, ind))
@@ -681,47 +700,49 @@ class Geo_Get(BaseApi):
 		# Zoom для первой и последней точки наивысший (отображать всегда)
 		plen = len(points) 
 		if plen>0:
-			points[0][-1] = 0
-			points[-1][-1] = 0
+			points[0][4] = 0
+			points[-1][4] = 0
 
 		# Вычислим subbounds (TBD)
-		
+
+	
 		# Разобьем на 8 частей по lat
 		l_lat.sort()
 		#l_lon.sort()
 		subbounds = []
-		sbs_lat = int(sqrt(plen) / 24) + 1
-		sbs_lon = int(sqrt(plen) / 24) + 1
-		for i in range(sbs_lat):
-			l_lon = []
-			i1 = plen * i // sbs_lat
-			i2 = plen * (i+1) // sbs_lat
-			#logging.info('i1 = %s' % str(i1))
-			#logging.info('i2 = %s' % str(i2))
-			for i3 in xrange(i1, i2):
-				l_lon.append((points[l_lat[i3][1]][2], l_lat[i3][1]))
-			l_lon.sort()
-			for j in range(sbs_lon):
-				sbl = []
-				j1 = len(l_lon) * j // sbs_lon
-				j2 = len(l_lon) * (j+1) // sbs_lon
-				#logging.info(' j1 = %s' % str(j1))
-				#logging.info(' j2 = %s' % str(j2))
-				nmin_lat = 180
-				nmax_lat = -180
-				for j3 in xrange(j1, j2):
-					nmin_lat = min(nmin_lat, points[l_lon[j3][1]][1])
-					nmax_lat = max(nmax_lat, points[l_lon[j3][1]][1])
-					sbl.append(l_lon[j3][1])
-				if(len(sbl)):
-					subbounds.append({
-						#'sw': (l_lat[i1][0], l_lon[j1][0]),
-						#'ne': (l_lat[i2-1][0], l_lon[j2-1][0]),
-						'sw': (nmin_lat, l_lon[j1][0]),
-						'ne': (nmax_lat, l_lon[j2-1][0]),
-						'i': sbl,
-					})
-				
+
+		if 'nosubbounds' not in options:
+			sbs_lat = int(sqrt(plen) / 24) + 1
+			sbs_lon = int(sqrt(plen) / 24) + 1
+			for i in range(sbs_lat):
+				l_lon = []
+				i1 = plen * i // sbs_lat
+				i2 = plen * (i+1) // sbs_lat
+				#logging.info('i1 = %s' % str(i1))
+				#logging.info('i2 = %s' % str(i2))
+				for i3 in xrange(i1, i2):
+					l_lon.append((points[l_lat[i3][1]][2], l_lat[i3][1]))
+				l_lon.sort()
+				for j in range(sbs_lon):
+					sbl = []
+					j1 = len(l_lon) * j // sbs_lon
+					j2 = len(l_lon) * (j+1) // sbs_lon
+					#logging.info(' j1 = %s' % str(j1))
+					#logging.info(' j2 = %s' % str(j2))
+					nmin_lat = 180
+					nmax_lat = -180
+					for j3 in xrange(j1, j2):
+						nmin_lat = min(nmin_lat, points[l_lon[j3][1]][1])
+						nmax_lat = max(nmax_lat, points[l_lon[j3][1]][1])
+						sbl.append(l_lon[j3][1])
+					if(len(sbl)):
+						subbounds.append({
+							#'sw': (l_lat[i1][0], l_lon[j1][0]),
+							#'ne': (l_lat[i2-1][0], l_lon[j2-1][0]),
+							'sw': (nmin_lat, l_lon[j1][0]),
+							'ne': (nmax_lat, l_lon[j2-1][0]),
+							'i': sbl,
+						})
 		#subbounds.append(((b_lat_l, b_lon_l), ((b_lat_l+b_lat_r)/2, (b_lon_l+b_lon_r)/2)))
 
 		return {
@@ -909,6 +930,39 @@ class Geo_Last(BaseApi):
 			#'len': dlen,
 		}
 
+class Geo_Count(BaseApi):
+	requred = ('skey')
+	def parcer(self):
+		count = DBGeo.get_items_count(self.skey)
+		return {'answer': 'ok',
+			'count': count,
+		}
+
+class Geo_Report(BaseApi):
+	requred = ('skey')
+	def parcer(self):
+		points = []
+
+		#after = self.request.get('after', 'today')
+		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+
+		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, MAXPOINTS):
+			points.append((
+				local.fromUTC(point['time']).strftime("%H:%M:%S"),
+				point['lat'], point['lon'],
+				point['sats'],
+				point['vout'],
+				point['vin'],
+				point['speed'],
+				0, 0, 0
+			));
+
+		return {'answer': 'ok',
+			'format': ('datetime', 'lat', 'lon', 'sats', 'vout', 'vin', 'speed'),
+			'points': points[::-1]		# Выдадим в обратной последовательности
+		}
+
 class Report_Get(BaseApi):
 	requred = ('skey')
 	def parcer(self):
@@ -927,8 +981,9 @@ class Report_Get(BaseApi):
 		length = 0
 		sum_length = 0	# Пройденая дистанция
 		sum_tmove = 0	# Общее время в пути
+		events = {}
 
-		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, 10000):
+		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, MAXPOINTS):
 			if move_start is None:
 				move_start = point
 
@@ -940,7 +995,8 @@ class Report_Get(BaseApi):
 						stop_start = point
 
 					dura = (stop_start['time'] - move_start['time'])
-					sum_tmove += dura.days * 24 * 3600 + dura.seconds
+					dura = dura.days * 24 * 3600 + dura.seconds
+					sum_tmove += dura
 					report.append({
 						'type': 'move',
 						'start': {
@@ -951,17 +1007,20 @@ class Report_Get(BaseApi):
 							'time': local.fromUTC(stop_start['time']).strftime("%y%m%d%H%M%S"),
 							'pos': (stop_start['lat'], stop_start['lon']),
 						},
-						'duration': dura.days * 24 * 3600 + dura.seconds,
-						'durationtxt': str(dura),
+						'duration': dura,
+						#'durationtxt': str(dura),
 						'length': "%.3f" % length,
 						'startpos': (point['lat'], point['lon']),
-						'speed': point['speed'],
-						'fsource': point['fsource']
+						'speed': (length * 3600 / dura) if dura!=0 else 0,
+						'fsource': point['fsource'],
+						'events': events,
 					})
+					events = {}
 
 			elif point['fsource'] == 6:
 				if stop_start is not None:
 					dura = (point['time'] - stop_start['time'])
+					dura = dura.days * 24 * 3600 + dura.seconds
 					report.append({
 						'type': 'stop',
 						'start': {
@@ -972,13 +1031,15 @@ class Report_Get(BaseApi):
 							'time': local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
 							'pos': (point['lat'], point['lon']),
 						},
-						'duration': dura.days * 24 * 3600 + dura.seconds,
-						'durationtxt': str(dura),
+						'duration': dura,
+						#'durationtxt': str(dura),
 						'length': 0,
 						'startpos': (point['lat'], point['lon']),
-						'speed': point['speed'],
-						'fsource': point['fsource']
+						'speed': 0,
+						'fsource': point['fsource'],
+						'events': events,
 					})
+					events = {}
 					state = 1	# Начало движения
 					length = 0	# Пока не проехали нисколько
 					move_start = point
@@ -986,6 +1047,15 @@ class Report_Get(BaseApi):
 
 			if prev_point:
 				d = geo.distance(point, prev_point)
+				td = point['time'] - prev_point['time']
+				td = td.days * 24 * 3600 + td.seconds
+				if td > 0:
+					sp = d * 3600 / td
+					if sp > 300:	# Максимальная скорость 300 км/ч
+						#d = 0
+						if 'path_break' not in events:
+							events['path_break'] = local.fromUTC(point['time']).strftime("%y%m%d%H%M%S")
+						continue
 			else:
 				d = 0
 			length += d
@@ -998,8 +1068,9 @@ class Report_Get(BaseApi):
 			'dtfrom': str(local.fromUTC(dtfrom)),
 			'dtto': str(local.fromUTC(dtto)),
 			'summary': {
-				'length': "%.3f" % sum_length,
+				'length': sum_length, #"%.3f" % sum_length,
 				'movetime': sum_tmove,
+				'speed': (sum_length * 3600 / sum_tmove) if (sum_tmove!=0) else 0
 			},
 			'report': report,
 		}
@@ -1331,6 +1402,8 @@ application = webapp.WSGIApplication(
 	('/api/geo/dates*', Geo_Dates),
 	('/api/geo/info*', Geo_Info),
 	('/api/geo/last*', Geo_Last),
+	('/api/geo/count*', Geo_Count),
+	('/api/geo/report*', Geo_Report),
 
 	('/api/report/get*', Report_Get),
 

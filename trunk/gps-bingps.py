@@ -155,6 +155,18 @@ def SaveGPSPointFromBin(pdata, result):
 	gpspoint.fsource = fsource
 	"""
 
+	"""
+	from local import fromUTC
+
+	point = {
+		'time': '%s' % fromUTC(datestamp).strftime("%d/%m/%Y %H:%M:%S"),
+		'lat': '%.4f' % latitude,
+		'lon': '%.4f' % longitude,
+	}
+	LogError()
+	logging.info('POINT: %s' % repr(point))
+	"""
+
 	return {
 		'time': datestamp,
 		'lat': latitude,
@@ -181,42 +193,38 @@ class BinGpsParse(webapp.RequestHandler):
 		if result:
 			dataid = result.dataid
 			pdata = result.data
+			plen = len(pdata)
 			_log += '\n==\tDATA ID: %d' % dataid
-			_log += '\n==\tDATA LENGHT: %d' % len(pdata)
+			_log += '\n==\tDATA LENGHT: %d' % plen
 
 			#_log += '\nParsing...'
 
-			#_log += 'spliting...'
-			parts = pdata.split('\xFF')
-			#_log += '%d patrs...' % len(parts)
-                        			
-			#odata_s = None
-			#odata_f = None
-			if len(parts[0]) == 0:
-				#_log += 'pat[0] is == 0 - its ok...'
-				del parts[0]
-
-			if len(parts) > 0:
-				if len(parts[-1]) != 31:
-					_log += 'pat[-1] is cutted - its NOT OK!!!...'
-					del parts[-1]
-
-			#_log += '%d patrs now...' % len(parts)
-
 			worker = PointWorker(result.parent().key())
-			
-			position = 0
+
+			offset = 0
 			points = 0
-			for part in parts:
-				if len(part) == 31:
-					_log += '*'
-					worker.Add_point(SaveGPSPointFromBin(part, result))
-					#if point:
-					#	points.append(point)
-					points += 1
+			lasttime = None
+
+			while offset < plen:
+				if pdata[offset] != '\xFF':
+					offset += 1
+					continue
+
+				p_id = ord(pdata[offset+1])		# Идентификатор пакета
+				p_len = ord(pdata[offset+2])	# Длина пакета в байтах
+
+				if p_id == 0xF2:
+					point = SaveGPSPointFromBin(pdata[offset+1:offset+1+32], result)
+					if point:
+						if (lasttime is not None) and (point['time'] < lasttime):
+							_log += '\n Time must always grow or repeat - ignored'
+						else:
+							lasttime = point['time']
+							worker.Add_point(point)
+							points += 1
 				else:
-					_log += '\npart %d is corrupted' % position
-				position = position+1
+					_log += '\n Unknown id=%02X' % p_id
+				offset += p_len
 
 			worker.Flush()
 
@@ -234,7 +242,7 @@ class BinGpsParse(webapp.RequestHandler):
 			result.delete()
 
 			#_log += '\nData deleted.\n'
-			_log += 'Ok\n'
+			_log += '\nOk\n'
 			
 			self.response.out.write('BINGPS/PARSE: OK\r\n')
 			
@@ -249,6 +257,7 @@ class BinGps(webapp.RequestHandler):
 		self.response.out.write('OK\r\n')
 
 	def post(self):
+		from datamodel import DBNewConfig
 		_log = "\n== BINGPS ["
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 		imei = self.request.get('imei')
@@ -313,6 +322,12 @@ class BinGps(webapp.RequestHandler):
 		#newconfigs = utils.CheckUpdates(userdb)
 		#if newconfigs:
 		#	self.response.out.write('CONFIGUP\r\n')
+
+		newconfigs = DBNewConfig.get_by_imei(imei)
+		newconfig = newconfigs.config
+		if newconfig and (newconfig != {}):
+			self.response.out.write('CONFIGUP\r\n')
+
 
 		self.response.out.write('BINGPS: OK\r\n')
 

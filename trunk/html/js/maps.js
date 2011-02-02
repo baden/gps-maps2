@@ -47,19 +47,20 @@ var sub_bound_rectangles = [];
 var sub_bound_indexes = [];
 var search_bound_rectangle = null;
 
+/*
 function LoadPoints1(){
 	path = '/debug/msg?uid={{ account.user.user_id }}';
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', path, true);
 	xhr.send();
 }
+*/
 
 var GetPath = function(skey_, from, to){
 	skey = skey_;
 	ruler1.setSysKey(skey);
 	log("::GetPath.start");
-	url = "/api/geo/get?skey="+skey+"&from="+from+"&to="+to;
-	$.getJSON(url, function (data) {
+	$.getJSON('/api/geo/get?skey=' + skey + '&from=' + from + '&to=' + to, function (data) {
 		//$("#progress").html("Обрабатываем...");
 		log("getJSON parce");
 		if (data.answer && data.points.length > 0) {
@@ -159,21 +160,26 @@ function t_to_hms(d){
 }
 */
 
+/*
 var Image_Stop = new google.maps.MarkerImage(
 	'/images/marker-stop.png',
 	new google.maps.Size(16, 20),
 	new google.maps.Point(0, 0),
 	new google.maps.Point(7, 19)
-)
+);
 
 var Image_Halt = new google.maps.MarkerImage(
 	'/images/marker-halt.png',
 	new google.maps.Size(16, 20),
 	new google.maps.Point(0, 0),
 	new google.maps.Point(7, 19)
-)
+);
+*/
 
 var stop_infowindow;
+
+var marker_start = null;
+var marker_finish = null;
 
 var ParcePath = function(data){
 	var profile = new Profile("GetPath");
@@ -289,10 +295,10 @@ var ParcePath = function(data){
 
 		if(dt > 5*60) {
 			tp = 'стоянка ';
-			icon = Image_Stop;
+			icon = $.gmap.images['stop'];
 		} else {
 			tp = 'остановка ';
-			icon = Image_Halt;
+			icon = $.gmap.images['halt'];
 		}
 		var marker = new google.maps.Marker({
 		        	position: new google.maps.LatLng(data.stops[i].p[0], data.stops[i].p[1]),
@@ -346,6 +352,41 @@ var ParcePath = function(data){
 
 	}
 	log('Stop markers: ', data.stops.length);
+
+	if(data.points.length > 0){
+		//var l = new google.maps.LatLng(data.points[i][1], data.points[i][2], false);
+
+		// Маркеры начала и конца
+		if(marker_start){
+			marker_start.setMap(null);
+		}
+		if(marker_finish){
+			marker_finish.setMap(null);
+		}
+		marker_start = new google.maps.Marker({
+			position: new google.maps.LatLng(data.points[0][1], data.points[0][2]),
+			map: map,
+			title: 'Старт: ' + dt_to_datetime(data.points[0][0]),
+				//tp + td_to_hms(dt) +
+				//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
+				//'\n' + dstop + '...' + dstart,
+			icon: $.gmap.images['start'],
+	       		draggable: false
+			//zIndex: -1000
+		});
+		marker_finish = new google.maps.Marker({
+			position: new google.maps.LatLng(data.points[data.points.length-1][1], data.points[data.points.length-1][2]),
+				map: map,
+			title: 'Финиш: ' + dt_to_datetime(data.points[data.points.length-1][0]),
+				//tp + td_to_hms(dt) +
+				//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
+				//'\n' + dstop + '...' + dstart,
+			icon: $.gmap.images['finish'],
+	       		draggable: false
+			//zIndex: -1000
+		});
+	}
+
 	profile.show();
 
 	DrawPlyline();
@@ -570,13 +611,17 @@ function CreateLastMarker(p){
 		//log('Move makrer ', lastpos[p.skey].marker, ' to ', pos);
 		lastpos[p.skey].position = pos;
 		lastpos[p.skey].marker.setPosition(p.data.point, pos);
+
+		if(0){
 		lastpos[p.skey].tail.setPath(tail_path);
+		}
 		//map.panTo(pos);
 	} else {
 		//log('Create makrer ');
 
 		// Последние несколько точек трека
-		tailPath = new google.maps.Polyline({
+		if(0){
+		var tailPath = new google.maps.Polyline({
 			//path: flightPlanCoordinates,
 			path: tail_path,
 			strokeColor: config.ui.trackcolor || '#dc00dc',
@@ -584,6 +629,7 @@ function CreateLastMarker(p){
 			strokeWeight: 3
 		});
 		tailPath.setMap(map);
+		}
 
 		var last_pos_marker = new LastMarker({
 			point: p.data.point,
@@ -597,7 +643,7 @@ function CreateLastMarker(p){
 
 		lastpos[p.skey] = {
 			position: pos,
-			tail: tailPath,
+			//tail: tailPath,
 			marker: last_pos_marker
 		};
 	}

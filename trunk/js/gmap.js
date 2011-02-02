@@ -161,6 +161,7 @@ $.extend(GMap.prototype, {
 			center: inst.settings.pos || new google.maps.LatLng(48.5000, 34.599),
 			mapTypeId: inst.settings.maptype || google.maps.MapTypeId.ROADMAP,
 			mapTypeControl: false,
+			scaleControl: true,
 			disableDoubleClickZoom: true,
 			draggableCursor: "default",
 			zoom: inst.settings.zoom
@@ -170,6 +171,7 @@ $.extend(GMap.prototype, {
 		var map = new google.maps.Map(mapdiv, mapOptions);
 		inst.settings.map = map;
 
+		/*
 		if(inst.settings.marker == 'center'){
 			var marker = new google.maps.Marker({
 		        	position: inst.settings.pos,
@@ -184,6 +186,7 @@ $.extend(GMap.prototype, {
 				//zIndex: -1000
 			});
 		}
+		*/
 
 		$(controldiv).buttonset();
 		$(controldiv).find('input').change(function(){
@@ -251,6 +254,35 @@ $.gmap = new GMap(); // singleton instance
 $.gmap.initialized = false;
 //$.gmap.uuid = new Date().getTime();
 $.gmap.version = "0.0.2";
+
+$.gmap.images = {};
+$.gmap.images['start'] = new google.maps.MarkerImage(
+	'/images/marker-start.png?v=1',
+	new google.maps.Size(24, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(11, 19)
+);
+
+$.gmap.images['finish'] = new google.maps.MarkerImage(
+	'/images/marker-finish.png?v=1',
+	new google.maps.Size(28, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(14, 19)
+);
+
+$.gmap.images['stop'] = new google.maps.MarkerImage(
+	'/images/marker-stop.png?v=1',
+	new google.maps.Size(16, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(7, 19)
+);
+
+$.gmap.images['halt'] = new google.maps.MarkerImage(
+	'/images/marker-halt.png?v=1',
+	new google.maps.Size(16, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(7, 19)
+);
 
 // Workaround for #4055
 // Add another global to avoid noConflict issues with inline event handlers

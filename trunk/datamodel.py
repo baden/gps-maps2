@@ -415,6 +415,16 @@ class DBGeo(db.Model):
 				count -= 1
 				if count<=0: return
 
+	# Подсчитывает общее количество точек в базе
+	@classmethod
+	def get_items_count(cls, system_key, maxp = 1000):
+		recs = DBGeo.all().ancestor(system_key).order("-date")
+		count = 0
+		rcount = 0
+		for rec in recs:
+			count += rec.count
+			rcount += 1
+		return {'points': count, 'records': rcount}
 
 class PointWorker(object):
 	def __init__(self, skey):

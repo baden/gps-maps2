@@ -202,7 +202,7 @@ class Params(webapp.RequestHandler):
 
 class BinBackup(TemplatedPage):
 
-	def fix_bin(pdata):
+	def fix_bin(self, pdata):
 		from utils import CRC16
 		if ((len(pdata)-2) & 31) != 0:
 			while (len(pdata) & 31)!=0:
@@ -233,13 +233,13 @@ class BinBackup(TemplatedPage):
 			if cmd == 'getbin':
 				self.response.headers['Content-Type'] = 'application/octet-stream'
 				bindata = db.get(db.Key(ukey))
-				pdata = fix_bin(bindata.data)
+				pdata = self.fix_bin(bindata.data)
 
 				self.response.out.write(pdata)
 				return
 			elif cmd == 'fixcrc':
 				bindata = db.get(db.Key(ukey))
-				pdata = fix_bin(bindata.data)
+				pdata = self.fix_bin(bindata.data)
 				if pdata != bindata.data:
 					bindata.data = pdata
 					bindata.put()

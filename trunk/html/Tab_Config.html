@@ -8,7 +8,7 @@
   <script src="/js/loader.js"></script>
   <script>
 	//loader.requre("/plugins/colorpicker/js/colorpicker.js");
-	loader.requre("/html/js/config.js");
+	loader.require("/html/js/config.js");
   </script>
 
 </head>
@@ -53,6 +53,7 @@
 					<option value="vader">vader</option>
 				</select><br/>
 				<div id="colorpickerHolder">Цвет трека: <div style="width: 16px; height: 16px; border: 2px solid black; display: inline; position: absolute;"></div></div>
+				<div id="taillen">Длина "хвоста": <button>0</button></div>
 			</div>
 			<div style="position: absolute; bottom: 2px; left: 0;">
 				Для применения настроек требуется перезапустить приложение: <button id="button_config_restart">Перезапустить</button>
@@ -68,6 +69,14 @@
 			<button class="dbg_send_cfg" imei="353358019726996">Послать конфигурацию системы 353358019726996</button>
 
 			<br />
+
+			<a href="http://localhost/_ah/admin/datastore" target="_blank">Админка на локалхосте</a>
+			<a href="http://localhost:8080/_ah/admin/datastore" target="_blank">(порт 8080)</a>
+			<a href="https://appengine.google.com/dashboard?&app_id=gps-maps" target="_blank">Админка в онлайн</a>
+			<a href="http://code.google.com/p/gps-maps/" target="_blank">Страница проекта</a>
+
+			<br />
+
 
 			<div class="cfg_iframe" value="/binbackup">Бэкапы бинарных данных</div>
 			<div class="cfg_iframe" value="/firmware">Образы обновления прошивки</div>

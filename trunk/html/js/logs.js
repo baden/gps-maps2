@@ -2,9 +2,9 @@
 // Private
 (function($){
 	function log_line(d) {
-		var row = '<td>'+d.time+'</td><td>'+d.text+'<td>'+d.label+'</td></td>';
+		var row = '<td>'+d.time+'</td><td>'+d.text+'<!--td>'+d.label+'</td-->';
 		if(config.admin){
-			row += '<td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td>'
+			row += '<!--td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td-->'
 		}
 		return row;
 	}
@@ -42,6 +42,16 @@
 
 		UpdateLog();
 
+		config.syslist({
+			id: 'log_syslist',
+			change: function(){
+				log('LOG syslist change');
+				config.skey = $(this).attr('value');
+				UpdateLog();
+			}
+		});
+
+		/*
 		var list = $('#log_syslist');
 
 		Log_Make_SysList(list);
@@ -57,6 +67,7 @@
 			config.skey = $(this).attr('value');
 			UpdateLog();
 		});
+		*/
 
 		config.updater.add('addlog', function(msg) {
 			if(msg.data.skey == config.skey){
