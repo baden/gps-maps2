@@ -117,38 +117,41 @@ div.map-control .ui-button-text-only, div.map-control .ui-button-text{
 	padding: 1px 8px 1px 8px;
 }
 
-
-table {
-	/*width: 98%;
-	margin-left: 1%;*/
+table.tview {
+    border: 1px solid #ccc;
 }
 
-table {
-    /*background: #FFF0FF;*/
+table.tview th {
+	vertical-align: middle;
+	border-left: 1px solid #ccc;
 }
 
-table, th, td {
-    /*border: 2px solid black;
-    border-collapse: collapse;*/
-}
 
-td,th {
+table.tview td, table.tview th {
 	padding-left: 10px;
 	padding-right: 10px;
 }
 
-td {
+/*
+table.tview tr:nth-child(even) {
+    background: #FEF;
 }
 
-th {
-    /*background: #CFF0FF;*/
+table.tview tr:nth-child(odd) {
+    background: #ccc;
+}
+*/
+
+
+table.tview tr:hover td {
+	background-color: #fff;
+	color: black;
+	/*border: 1px solid #f00;*/
+	box-shadow: 2px 2px 6px #999;
+	-moz-box-shadow: 2px 2px 6px #999;
+	-webkit-box-shadow: 2px 2px 6px #999;
 }
 
-tr:nth-child(even) {
-    background: #F0E8F8;
-    /*border: 2px solid black;
-    border-collapse: collapse;*/
-}
 
 .ui-dialog, #ui-datepicker-div {
 	box-shadow: 2px 2px 6px #808080;
@@ -161,4 +164,21 @@ tr:nth-child(even) {
 	/*padding-top: 0.1em !important;
 	padding-bottom: 0.1em !important;*/
 	padding: 2px 8px 2px 8px;
+}
+
+.ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text {
+	padding: 2px 24px 2px 8px;
+}
+
+.ui-button-text-icon-primary .ui-button-text, .ui-button-text-icons .ui-button-text {
+	padding: 2px 8px 2px 24px;
+}
+
+.noblock {
+	display: inline;
+}
+
+h3 {
+	font-size: 120%;
+	padding: 20px 5px 6px 5px;
 }

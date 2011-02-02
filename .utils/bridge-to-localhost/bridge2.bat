@@ -2,7 +2,18 @@
 
 rem killall bribge.py >/dev/null 2>&1
 
-#echo Lvov-2
+rem 356895035359317 Omega-Caravan AE1829BE
+python ./bribge.py 356895035359317 >nul 2>nul
+
+exit
+
+rem 353358019726996 Отладочная система
+python ./bribge.py 353358019726996 >nul 2>nul
+
+
+#echo Lvov-09
+python ./bribge.py 359587015371480 >nul 2>nul
+
 
 rem #echo GPS3 Злагода-3
 python ./bribge.py 353358016204856 >nul 2>nul

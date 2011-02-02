@@ -25,7 +25,7 @@ function LastMarker(options)
 
 	this.setMap(options.map);
 
-	console.log('last marker at '+ options.position, this.options);
+//	console.log('last marker at '+ options.position, this.options);
 }
 
 LastMarker.prototype = new google.maps.OverlayView();
@@ -221,7 +221,7 @@ LastMarker.prototype.onAdd = function() {
 	var me = this;
 	//this.hint = false;
 
-	log('lastmarker: onadd', this);
+	//log('lastmarker: onadd', this);
 	div.addEventListener('mouseover', function(e){
 		//if(!me.hint){
 		//me.hint = true;

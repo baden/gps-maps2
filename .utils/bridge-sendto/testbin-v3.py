@@ -9,15 +9,14 @@ import re
 
 from glob import glob
 
-#HOST = "127.0.0.1"
-HOST = "gps-maps.appspot.com"
+HOST = "127.0.0.1"
+#HOST = "gps-maps.appspot.com"
 PORT = 80 #80
 
 #HOST = "212.110.139.65"
 #PORT = 8015
 
-HOSTNAME = "gps-maps.appspot.com"
-
+HOSTNAME = "gps-maps2.appspot.com"
 
 #SYS = 1
 #IMAGE = "../bridge-get/*.bin"

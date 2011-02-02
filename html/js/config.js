@@ -34,7 +34,8 @@
 				for(var i in data.info.account.systems){
 					var s = data.info.account.systems[i];
 					$("#config_sys_list").append(
-						'<li class="sli" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
+						//'<li class="sli" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
+						'<li class="ui-widget ui-widget-content ui-widget-header" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
 						 '<span class="bico hl mm" title="Выбрать пиктограмму">P</span>' +
 						 '<span class="bconf hl mm" title="Настроить систему">C</span>' +
 						 'IMEI:' + s.imei + ' <desc>' + s.desc + '</desc>'+
@@ -93,31 +94,45 @@
 								$("#config_params_body").empty().html('Нет параметров. Возможно система еще не сохранила параметры.<br/>Можно послать SMS на номер системы с текстом <strong>saveconfig</strong> для принудительного сохранения параметров.');
 							} else {
 								log('Config_GET:', data);
-								var rows = '<table><thead><tr><th>№</th><th>Имя</th><th>Описание</th><th>Значение</th><th>Заводская установка</th><th>Очередь</th></tr></thead><tbody>';
+								var rows = '<table class="tview"><thead><tr><th>№</th><th>Имя</th><th>Описание<span id="config_params_show_all" title="Показать все" class="cursor_pointer">...</span></th><th>Значение</th><th>Заводская установка</th><th>Очередь</th></tr></thead><tbody>';
 								var index = 1;
 								for(var i in data.config){
 									var v = data.config[i];
-									rows += '<tr name="'+v[0]+'">'+
-										'<td>'+index+'</td><td>'+v[0]+'</td><td class="cfg_changeble">' + (v[1].desc || '-') + '</td><td class="cfg_changeble'+(v[1].wait?' wait':'')+'">' + v[1].value;
-									rows += '</td><td>' + v[1].default + '</td><td>' + (v[1].wait?v[1].wait:'') + '</td>'+
+									rows += '<tr name="'+v[0]+'"'+ (v[1].desc?'':' class="config_hide"') +'>';
+									rows +=	'<td>'+index+'</td>';
+									rows += '<td>'+v[0]+'</td>';
+									if(config.admin){
+										rows += '<td class="cfg_changeble">' + (v[1].desc || '-') + '</td>';
+									} else {
+										rows += '<td>' + (v[1].desc || '-') + '</td>';
+									}
+									rows += '<td class="cfg_changeble'+(v[1].wait?' wait':'')+'">' + v[1].value + '</td>';
+									rows += '<td>' + v[1].default + '</td><td>' + (v[1].wait?v[1].wait:'') + '</td>'+
 										'</tr>';
 									index += 1;
 								}
 								rows += '</tbody></table>';
 								$("#config_params_body").empty().append(rows);
 								$('#config_params').dialog('option', 'position', 'center');
+								$('#config_params_show_all').click(function(){
+									//log('boo');
+									$('.config_hide').removeClass('config_hide');
+									$('#config_params').dialog('option', 'position', 'center');
+								});
 
 								var tb = $('#config_params_body table tbody');
 								log('table = ', tb);
 								log('table>tr>td:first = ', tb.find('tr').find('td:first'));
 								tb.find('tr').find('td:first').next().next().click(function(){
-									var name = $(this).parent().attr('name');
+									if(config.admin){
+                                                                        var name = $(this).parent().attr('name');
 									var pvalue = $(this).html();
 									var nvalue = prompt("Введите описание для '" + name + "'", pvalue);
 									if(nvalue && nvalue != pvalue){
 										log('Change description', name);
 										$(this).html(nvalue);
 										sendGet('/api/param/desc?name=' + name + '&value=' + nvalue);
+									}
 									}
 								}).next().click(function(){
 									var name = $(this).parent().attr('name');
@@ -171,6 +186,11 @@
 */
 
 				});
+
+				$('#config_sys_list .bico').button().click(function(){
+					alert('В разработке');
+				});
+
 
 				$("#config_sys_list .bdel").button().click(function(){
 					$('#config_del_imei').html($(this).parent().attr('imei'));
