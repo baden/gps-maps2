@@ -374,6 +374,17 @@ var ParcePath = function(data){
 	       		draggable: false
 			//zIndex: -1000
 		});
+
+		//today = new Date();
+		/*today.setHours(0);
+		today.setMinutes(0);
+		today.setSeconds(0);
+		today.setMilliseconds(0);*/
+
+		//today = new Date().getFullYear();
+		log('selected day:', $("#datepicker").datepicker('getDate').toDateString() == new Date().toDateString());
+
+		if($("#datepicker").datepicker('getDate').toDateString() != new Date().toDateString()){
 		marker_finish = new google.maps.Marker({
 			position: new google.maps.LatLng(data.points[data.points.length-1][1], data.points[data.points.length-1][2]),
 				map: map,
@@ -385,6 +396,7 @@ var ParcePath = function(data){
 	       		draggable: false
 			//zIndex: -1000
 		});
+		}
 	}
 
 	profile.show();

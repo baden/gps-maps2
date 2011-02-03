@@ -39,8 +39,8 @@
 	position: absolute;
 	top: 30px;
 	right: 20px;
-	width: 400px;
-	height: 300px;
+	width: 700px;
+	height: 400px;
 	border: 1px solid #000;
 	overflow: hidden;
    }
@@ -57,7 +57,7 @@
    }
 
    div.geos_vis {
-	width: 400px; height: 300px;
+	width: 700px; height: 400px;
    }
    .ui-progressbar-value { background-image: url(images/pbar-ani.gif); }
 
@@ -70,6 +70,16 @@
 	width: 64px;
 	padding: 2px 2px 2px 2px;
    }
+	div#geos_previev_hide{
+		position:absolute; top:2px; right:2px; width:16px; height:16px; z-index:100;
+		cursor: pointer;
+	}
+	div#geos_previev_hide:hover {
+		box-shadow: 1px 1px 6px #999;
+		-moz-box-shadow: 1px 1px 6px #999;
+		-webkit-box-shadow: 1px 1px 6px #999;
+	}
+
 
   </style>
 
@@ -88,18 +98,19 @@
 	<div id="geos_body">
 		<table class="ui-widget ui-widget-content tview">
 			<thead>
-				<tr class="ui-widget-header"><th rowspan=2>Время</th><th rowspan=2>Широта</th><th rowspan=2>Долгота</th><th rowspan=2>Спутники<span class="ui-icon ui-icon-calculator showchart" value="sats"></span></th><th rowspan=2>Скорость<span class="ui-icon ui-icon-calculator showchart" value="speed"></span></th><th colspan=2>Питание</th></tr>
-				<tr class="ui-widget-header"><th>основное<span class="ui-icon ui-icon-calculator showchart" value="vout"></span></th><th>резервное<span class="ui-icon ui-icon-calculator showchart" value="vin"></span></th></tr>
+				<tr class="ui-widget-header"><th rowspan=2>Время</th><th rowspan=2>Широта</th><th rowspan=2>Долгота</th><th rowspan=2>Спутники<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="sats"></span></th><th rowspan=2>Скорость<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="speed"></span></th><th colspan=2>Питание</th></tr>
+				<tr class="ui-widget-header"><th>основное<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="vout"></span></th><th>резервное<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="vin"></span></th></tr>
 			</thead>
 			<tbody>
 			</tbody>
 		</table>
 	</div>
-	<div id="geos_previev">
+	<div id="geos_previev" style="display: none;">
 		 <div class="geos_vis" id="geos_vis_vout" style="display: none;"></div>
 		 <div class="geos_vis" id="geos_vis_vin" style="display: none;"></div>
 		 <div class="geos_vis" id="geos_vis_speed" style="display: none;"></div>
 		 <div class="geos_vis" id="geos_vis_sats" style="display: none;"></div>
+		 <div id="geos_previev_hide" class="ui-icon ui-icon-close" onclick="javascript:$('#geos_previev').hide('fast');"></div>
 	</div>
 
 </body>
