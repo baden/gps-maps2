@@ -62,19 +62,20 @@ $(document).ready(function() {
 
 				var phm = '';
 				var vcnt = 0;
+				var p;
 
 				var _slice=5, _tail='';
-				if(data.points.length > 5000){
+				/*if(data.points.length > 10000){
 					_slice = 3;
 					_tail = '00';
-				} else if(data.points.length > 280){
+				} else */if(data.points.length > 200){
 					_slice = 4;
 					_tail = '0';
 				} 
 
-				function add_data(name, row, digits){
+				function add_data(name, digits){
 					var value = parseFloat((vdata[name].vsum/vcnt).toFixed(digits));
-					vdata[name].data.addRow([row+_tail, value]);
+					vdata[name].data.addRow([p[0].slice(0,_slice)+_tail, value]);
 					vdata[name].vsum = 0;
 					vdata[name].vmin = Math.min(vdata[name].vmin, value);
 					vdata[name].vmax = Math.max(vdata[name].vmax, value);
@@ -88,9 +89,9 @@ $(document).ready(function() {
 					//	progress.progressbar({value: i*100/data.points.length});
 					//}
 
-					var p = data.points[i];
+					p = data.points[i];
 					var row = '<tr>';
-					row += td([p[0], p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(2), p[5].toFixed(1)]);
+					row += td([p[0], p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2)]);
 					row += '</tr>';
 					tbody.append(row);
 
@@ -103,34 +104,35 @@ $(document).ready(function() {
 					if(phm != p[0].slice(0,_slice)){
 						phm = p[0].slice(0,_slice);
 
-						add_data('vout', p[0].slice(0,_slice), 2);
-						add_data('vin', p[0].slice(0,_slice), 3);
-						add_data('speed', p[0].slice(0,_slice), 2);
-						add_data('sats', p[0].slice(0,_slice), 2);
+						add_data('vout', 2);
+						add_data('vin', 3);
+						add_data('speed', 2);
+						add_data('sats', 2);
 
 						vcnt = 0;
 					}
 					//vdata.addRow([p[0].toString(), 1.2]);
 				}
-				if(vcnt){
-						add_data('vout', p[0].slice(0,_slice), 1);
-						add_data('vin', p[0].slice(0,_slice), 2);
-						add_data('speed', p[0].slice(0,_slice), 1);
-						add_data('sats', p[0].slice(0,_slice), 1);
-				}
+				/*if(vcnt){
+						add_data('vout', 2);
+						add_data('vin', 3);
+						add_data('speed', 2);
+						add_data('sats', 2);
+				}*/
 
 				// Create and draw the visualization.
 				function draw_data(name, title){
-					vdata[name].data.sort([{column: 0}]);
+					//vdata[name].data.sort([{column: 0}]);
 					$('#geos_vis_' + name).empty();
 					if(vdata[name].data.getNumberOfRows()>0){
+						//var delta = (vdata[name].vmax - vdata[name].vmin) / 1.0;
 						var chart = new google.visualization.LineChart(document.getElementById('geos_vis_' + name));
 						chart.draw(vdata[name].data, {
 							curveType: "function",
 							title: title,
-							width: 400, height: 300,
-							vAxis: {minValue: vdata[name].vmin, maxValue: vdata[name].vmax},
-							chartArea:{left:40,top:20,width:350,height:230},
+							width: 700, height: 400,
+							vAxis: {minValue: vdata[name].vmin /*- delta*/, maxValue: vdata[name].vmax /*+ delta*/},
+							chartArea:{left:40,top:20,width:650,height:330},
 		                  			legend: 'none',
 							hAxis: {slantedTextAngle: 90}
 		                		});
@@ -146,10 +148,13 @@ $(document).ready(function() {
 	}
 
 	$('span.showchart').click(function(){
-		var type = $(this).attr('value');
-		log('showchart', type);
-		$('.geos_vis').hide();
-		$('#geos_vis_' + type).show();
+		var name = $(this).attr('value');
+		log('showchart', name);
+		//if(vdata[name].data.getNumberOfRows()>0){
+			$('.geos_vis').hide();
+			$('#geos_vis_' + name).show();
+			$('#geos_previev').show('fast');
+		//}
 	});
 
 	config.updater.add('geo_change', function(msg) {

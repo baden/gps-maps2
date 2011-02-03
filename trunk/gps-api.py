@@ -960,7 +960,8 @@ class Geo_Report(BaseApi):
 
 		return {'answer': 'ok',
 			'format': ('datetime', 'lat', 'lon', 'sats', 'vout', 'vin', 'speed'),
-			'points': points[::-1]		# Выдадим в обратной последовательности
+			#'points': points[::-1]		# Выдадим в обратной последовательности
+			'points': points
 		}
 
 class Report_Get(BaseApi):
