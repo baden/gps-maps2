@@ -38,7 +38,7 @@
 						'<li class="ui-widget ui-widget-content ui-widget-header" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
 						 '<span class="bico hl mm" title="Выбрать пиктограмму">P</span>' +
 						 '<span class="bconf hl mm" title="Настроить систему">C</span>' +
-						 'IMEI:' + s.imei + ' <desc>' + s.desc + '</desc>'+
+						 '<span class="spanbrd" title="IMEI">' + s.imei + '</span><span class="spanbrd" title="Телефон">' + (s.phone!='None'?(s.phone):'не определен') + '</span> <desc>' + s.desc + '</desc>' +
 						 '<button class="key bdesc" title="Изменить описание">...</button>' +
 						 '<button class="key bdel" title="Отказаться от слежения за системой">X</button>' +
 						'</li>'

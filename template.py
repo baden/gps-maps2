@@ -11,7 +11,7 @@ from datamodel import DBAccounts
 
 SERVER_NAME = os.environ['SERVER_NAME']
 VERSION = '0'
-if 'CURRENT_VERSION_ID' in os.environ:	VERSION = os.environ['CURRENT_VERSION_ID']
+if 'CURRENT_VERSION_ID' in os.environ: VERSION = os.environ['CURRENT_VERSION_ID'] + '/1'
 
 class TemplatedPage(webapp.RequestHandler):
 	def __init__(self):
