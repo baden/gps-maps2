@@ -1,0 +1,24 @@
+{
+  "name": "GPS-MAPS monitoring system",
+  "description": "GPS monitoring system. For navicom devices.",
+  "version": "0.4",
+  "app": {
+    "urls": [
+      "*://gps-maps.appspot.com/"
+    ],
+    "launch": {
+      "web_url": "http://gps-maps.appspot.com/"
+    }
+  },
+  "icons": {
+    "128": "icon128.png",
+    "24": "icon24.png",
+    "32": "icon32.png",
+    "48": "icon48.png"
+  },
+  "permissions": [
+    "unlimited_storage",
+    "notifications",
+    "http://*.google.com/"
+  ]
+}
