@@ -474,7 +474,11 @@ var PathRebuild = function(){
 
 	//console.log
 
-	$("#mark1").html("Points: " + showed_path.length + "/" + flightPlanCoordinates.length);
+	if(config.admin){
+		$("#mark1").html('Точек в треке: ' + showed_path.length + '/' + flightPlanCoordinates.length);
+	} else {
+		$("#mark1").html('Точек в треке: ' + flightPlanCoordinates.length);
+	}
 	//profile.show();
 }
 
@@ -577,7 +581,9 @@ var UpdateMarker = function (moev){
 	var end = new Date();
 	var time = end.getTime() - start.getTime();
 	//console.log("time: " + time);
-	$("#mark2").html("in s/bounds: " + total_points + " time: " + time);
+	if(config.admin){
+		$("#mark2").html("in s/bounds: " + total_points + " time: " + time);
+	}
 }
 
 var once_map_style = true;
@@ -935,6 +941,7 @@ function Map_SysList(list){
 		$(this).addClass('ui-state-highlight');
 		config.skey = this.attributes['skey'].value;
 		UpdateDayList();
+		map.panTo(lastpos[config.skey].position);	// Тест
 	}).mouseover(function(){
 		var skey = $(this).attr('skey');
 		$('.lastmarker').removeClass('lastup');
@@ -948,9 +955,9 @@ function Map_SysList(list){
 		if(ev.wheelDelta < 0) map.setZoom(map.getZoom() - 1);
 		else map.setZoom(map.getZoom() + 1);*/
 	}).find('span').click(function(){
-		var skey = $(this).parent().attr('skey');
+		//var skey = $(this).parent().attr('skey');
 		//log('span:click', skey, lastpos[skey]);
-		map.panTo(lastpos[skey].position);
+		//map.panTo(lastpos[skey].position);
 	});
 }
 
@@ -986,6 +993,18 @@ $(document).ready(function(){
 		//$('#map').resize();
 		google.maps.event.trigger(map, 'resize');
 	}
+
+	$('#map_btn_cleartrack').click(function(){
+		//if(showed_path.length != 0){
+		log('clear path:', flightPath);
+		if(flightPath) flightPath.setPath([]);
+		// Маркеры начала и конца
+		if(marker_start) marker_start.setMap(null);
+		if(marker_finish) marker_finish.setMap(null);
+		flightPlanCoordinates = [];
+		showed_path = [];
+	});
+
 });
 
 })();

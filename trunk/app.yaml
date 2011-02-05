@@ -1,4 +1,4 @@
-application: gps-maps2
+application: gps-maps
 version: 1
 runtime: python
 api_version: 1

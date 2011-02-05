@@ -81,6 +81,22 @@ div#date_tabs {
 	height: 180px;
 }
 
+div#map_div_cleartrack {
+	position: absolute;
+	bottom: 160px;
+	right: 3px;
+	z-index: 200;
+}
+	div#map_div_cleartrack button {
+		padding:0;
+		margin:0;
+		font-size:75%;
+	}
+		div#map_div_cleartrack button span {
+			padding:2px 4px 2px 4px;
+			margin:0;
+		}
+
 div#controls {
 	position: absolute;
 	/*top: -10px;*/
