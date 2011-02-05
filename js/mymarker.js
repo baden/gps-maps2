@@ -55,7 +55,7 @@ MyMarker.prototype.Info = function() {
 	log("skey = ", skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
-		'<div style="width: 220px; height: 220px; border: none;"><div class="info-header">' + dt_to_datetime(point.date) + "</div>" +
+		'<div style="width: 220px; height: 160px; border: none;"><div class="info-header">' + dt_to_datetime(point.date) + "</div>" +
 		/*'Скорость: <b>' + point.speed.toFixed(1) + " км/ч" +*/
 		'<table id="tbl_info" width="100%">' +
 		'<tr><td>Направление:</td><td><b>' + point.angle.toFixed(0) + "°</b></td></tr>" +
