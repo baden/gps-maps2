@@ -37,6 +37,7 @@
 						//'<li class="sli" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
 						'<li class="ui-widget ui-widget-content ui-widget-header" imei="'+s.imei+'"><span class="ui-icon ui-icon-arrowthick-2-n-s mm msp"></span>' +
 						 '<span class="bico hl mm" title="Выбрать пиктограмму">P</span>' +
+						 (config.admin?'<span class="bpurge hl mm" title="Удалить GPS данные!">D</span>':'') +
 						 '<span class="bconf hl mm" title="Настроить систему">C</span>' +
 						 '<span class="spanbrd" title="IMEI">' + s.imei + '</span><span class="spanbrd" title="Телефон">' + (s.phone!='None'?(s.phone):'не определен') + '</span> <desc>' + s.desc + '</desc>' +
 						 '<button class="key bdesc" title="Изменить описание">...</button>' +
@@ -150,7 +151,6 @@
 					});
 
 
-
 					/*$('#config_params_close').button().click(function(){
 						$('#config_params, #config_overlay').remove();
 					});*/
@@ -184,6 +184,61 @@
 	</form>
 	</div><div class="ui-resizable-handle ui-resizable-n"></div><div class="ui-resizable-handle ui-resizable-e"></div><div class="ui-resizable-handle ui-resizable-s"></div><div class="ui-resizable-handle ui-resizable-w"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se ui-icon-grip-diagonal-se" style="z-index: 1001; "></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 1002; "></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 1003; "></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 1004; "></div><div class="ui-dialog-buttonpane ui-widget-content ui-helper-clearfix"><div class="ui-dialog-buttonset"><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false"><span class="ui-button-text">Применить изменения.</span></button><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" role="button" aria-disabled="false"><span class="ui-button-text">Отменить</span></button></div></div></div>
 */
+
+				});
+
+				if(config.admin) $('#config_sys_list .bpurge').button().css('color', 'red').click(function(){
+					//alert('В разработке');
+					var imei = $(this).parent().attr('imei');
+					log('Удаление GPS данных для системы', this, imei);
+					if($('#config_purgegps').length === 0){
+						$('body').append(
+							//'<div id="config_overlay" class="ui-widget-overlay"></div>' +
+							'<div id="config_purgegps">' +
+							'Удаление GPS данных для системы<br/><strong><label></label></strong><br/><br/>' +
+							'<span style="color: red">Внимание!</span> Данные старее выбранной даты будут удалены.' +
+							'<input type="text" id="config_purgegps_alternate" disabled=sidabled size="30"/>' +
+							'<div id="config_purgegps"></div>' +
+							//'<button></button><br/>' +
+							'</div>'
+						);
+						var div = $('#config_purgegps');
+						//div.children('label').first().html(imei+':'+$(this).parent().children('desc').html());
+						$('#config_purgegps').datepicker({
+							altField: "#config_purgegps_alternate",
+							altFormat: "dd.mm.yy DD",
+						});
+						//div.children('button').button().click(function(){
+						//});
+					}
+					$('#config_purgegps label').first().html(imei+':'+$(this).parent().children('desc').html());
+					//div.children('strong').children('label').first().html(imei+':'+$(this).parent().children('desc').html());
+					$('#config_purgegps').dialog({
+						autoOpen: true,
+						title: 'Удаление GPS данных',
+						modal: true,
+						minHeight: 390,
+						buttons: {
+							'Отмена': function() {
+								//sendGet('/api/sys/config?cmd=cancel&imei=' + imei);
+								$(this).dialog('close');
+							},
+							'Выполнить!': function() {
+
+								var dateto = $.datepicker.formatDate('ymmdd000000', $('#config_purgegps').datepicker('getDate'));
+								log('Удаление GPS данных для системы', imei, ' до даты ', dateto);
+								$.getJSON('/api/geo/del?imei='+imei+'&to='+dateto, function (data) {
+									if(data.answer == 'ok'){
+										alert('Удаление данных поставлено в очередь. Это может потребовать некоторого времени.');
+									} else {
+										alert('Ошибка:\r\n'+data.result);
+									}
+								});
+
+								$(this).dialog('close');
+							}
+						}
+					});
 
 				});
 

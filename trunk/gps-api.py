@@ -11,6 +11,9 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+from google.appengine.api.labs import taskqueue
+from google.appengine.api import urlfetch
+
 #from template import TemplatedPage
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
 import local
@@ -368,9 +371,48 @@ class DebugGeo(webapp.RequestHandler):
 
 		self.response.out.write("OK")
 
-class Geo_Del(webapp.RequestHandler):
-	def post(self):
-		self.response.out.write(u"Не реализовано")
+class Geo_Del(BaseApi):
+	requred = ('imei')
+	def parcer(self, **argw):
+
+		logging.info('API: /api/geo/del');
+
+		system = DBSystem.get_by_imei(self.imei)
+		if system is None:
+			logging.info('API: /api/geo/del: no sys');
+			return {
+				'answer': 'error',
+				'result': 'system not found (IMEI:%s)' % self.imei,
+			}
+
+		if self.request.get('task', '') == 'yes':
+			logging.info('API: /api/geo/del: call task');
+			dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+			qu = DBGeo.all(keys_only=True).filter('date <', dtto).order('date').ancestor(system).fetch(200)
+			db.delete(qu)
+
+			logging.info('API: /api/geo/del: delete %d records' % len(qu));
+
+			#return {'answer': 'ok', 'result': 'End Task'}
+
+			if len(qu) < 200:
+				logging.info('API: /api/geo/del: finish task');
+				return {
+					'answer': 'ok',
+					'result': 'continue task for delete',
+					'dateto': str(dtto),
+					'count': len(qu)
+				}
+
+		logging.info('API: /api/geo/del: create task');
+		url = "/api/geo/del?task=yes&imei=%s&to=%s" % (self.imei, self.request.get('to',''))
+		countdown=0
+		taskqueue.add(url = url, method="GET", countdown=countdown)
+
+		return {
+			'answer': 'ok',
+			'result': 'add task for delete',
+		}
 
 class Geo_GetO(webapp.RequestHandler):
 	def get(self):
