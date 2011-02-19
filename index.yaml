@@ -32,6 +32,18 @@ indexes:
   - name: date
     direction: desc
 
+- kind: DBGeo
+  ancestor: yes
+  properties:
+  - name: date<
+  - name: date
+
+- kind: DBSystem
+  ancestor: yes
+  properties:
+  - name: date<
+  - name: date
+
 - kind: GPSLogs
   ancestor: yes
   properties:
