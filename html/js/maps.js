@@ -618,6 +618,8 @@ function CreateLastMarker(p){
 	//var p = data.geo[i];
 	//console.log('CreateLastMarker ', p);
 
+	if(p.data == null) return;
+
 	var pos = new google.maps.LatLng(p.data.point.lat, p.data.point.lon);
 	var tail_path = [];
 	for(var j in p.data.tail){
@@ -941,7 +943,7 @@ function Map_SysList(list){
 		$(this).addClass('ui-state-highlight');
 		config.skey = this.attributes['skey'].value;
 		UpdateDayList();
-		map.panTo(lastpos[config.skey].position);	// Тест
+		if(lastpos[config.skey]) map.panTo(lastpos[config.skey].position);
 	}).mouseover(function(){
 		var skey = $(this).attr('skey');
 		$('.lastmarker').removeClass('lastup');
