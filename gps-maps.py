@@ -47,41 +47,99 @@ class MainPage(TemplatedPage):
 class StaticPage(TemplatedPage):
 	def get(self):
 		template_values = {}
-		#token = channel.create_channel(self.user.user_id())
-		#template_values["token"] = token
-
-		#memcache.set("token_%s" % self.user.user_id(), token)
-		#logging.info("SET Memcache key for token: token_%s = %s" % (self.user.user_id(), token))
-		#memcache.set("token_last", token)
-		#memcache.set("token_last_cid", self.user.user_id())
-
 		self.write_template(template_values, alturl=self.request.path[3:] + ".html")
 
 class AddLog(webapp.RequestHandler):
 	def get(self):
 		from datamodel import DBNewConfig
+		from datetime import datetime
 
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 
 		imei = self.request.get('imei', 'unknown')
 		system = DBSystem.get_or_create(imei)
 
-		text = self.request.get('text', 'No text')
-		label = 0
-		if text[0:3] == '(1)':
-			label = 1
-			text = text[3:]
-		if text[0:3] == '(2)':
-			label = 2
-			text = text[3:]
-		if text[0:3] == '(3)':
-			label = 3
-			text = text[3:]
+		text = self.request.get('text', None)
+		label = int(self.request.get('label', '0'))
+		mtype = self.request.get('mtype', None)
+		slat = self.request.get('lat', '0000.0000E')
+		slon = self.request.get('lon', '00000.0000N')
+
+		lat = float(slat[:2]) + float(slat[2:9]) / 60.0
+		lon = float(slon[:3]) + float(slon[3:10]) / 60.0
+
+		if slat[-1] == 'S':
+			lat = -lat
+	
+		if slon[-1] == 'W':
+			lon = -lon
+
+		data = {
+			'lat': lat,
+			'lon': lon
+		}
+
+		if mtype == 'alarm':
+			if text is None: text = u'Нажата тревожная кнопка.'
+
+		gpslog = GPSLogs(parent = system, text = text, label = label, mtype = mtype, pos = db.GeoPt(lat, lon))
+		gpslog.put()
+
+		updater.inform('addlog', system.key(), {
+			'skey': str(system.key()),
+			#'time': gpslog.date.strftime("%d/%m/%Y %H:%M:%S"),
+			'time': datetime.utcnow().strftime("%y%m%d%H%M%S"),
+			'text': text,
+			'label': label,
+			'mtype': mtype,
+			'key': "%s" % gpslog.key(),
+			'data': data,
+		})	# Информировать всех пользователей, у которых открыта страница Отчеты
 
 		newconfigs = DBNewConfig.get_by_imei(imei)
 		newconfig = newconfigs.config
 		if newconfig and (newconfig != {}):
 			self.response.out.write('CONFIGUP\r\n')
+
+		self.response.out.write('ADDLOG: OK\r\n')
+"""
+class Alert(webapp.RequestHandler):
+	def get(self):
+		from datamodel import DBNewConfig
+		from datetime import datetime
+
+		imei = self.request.get('imei', 'unknown')
+		system = DBSystem.get_or_create(imei)
+
+		mtype = self.request.get('type', 'none')
+
+		if mtype == 'alarm':
+			label = 4
+			text = u'Нажата тревожная кнопка.'
+			data = {
+				'lat': self.request.get('lat', '0.0'),
+				'lon': self.request.get('lon', '0.0')
+			}
+		else:
+			label = 0
+			text = u'Неизвестное тревожное сообщение.'
+			data = {}
+
+		#newconfigs = DBNewConfig.get_by_imei(imei)
+		#newconfig = newconfigs.config
+		#if newconfig and (newconfig != {}):
+		#	self.response.out.write('CONFIGUP\r\n')
+
+		updater.inform('alert', system.key(), {
+			'skey': str(system.key()),
+			#'time': gpslog.date.strftime("%d/%m/%Y %H:%M:%S"),
+			'time': datetime.utcnow().strftime("%y%m%d%H%M%S"),
+			'type': mtype,
+			'text': text,
+			'label': label,
+			'data': data,
+			#'key': "%s" % gpslog.key()
+		})	# Информировать оператора
 
 		gpslog = GPSLogs(parent = system, text = text, label = label)
 		gpslog.put()
@@ -89,15 +147,9 @@ class AddLog(webapp.RequestHandler):
 		#memcache.set("lastlogkey_%s" % system.key(), "%s" % gpslog.key())
 		#logging.info("SET Memcache key: lastlogkey_%s = %s" % (system.key(), gpslog.key()))
 
-		updater.inform('addlog', system.key(), {
-			'skey': str(system.key()),
-			'time': gpslog.ldate.strftime("%d/%m/%Y %H:%M:%S"),
-			'text': text,
-			'label': label,
-			'key': "%s" % gpslog.key()
-		})	# Информировать всех пользователей, у которых открыта страница Отчеты
 
-		self.response.out.write('ADDLOG: OK\r\n')
+		self.response.out.write('ALERT: OK\r\n')
+"""
 
 class Config(webapp.RequestHandler):
 	def post(self):
@@ -218,7 +270,7 @@ class BinBackup(TemplatedPage):
 	def get(self):
 		from utils import CRC16
 		from datamodel import DBGPSBinBackup, DBSystem, DBGPSBin
-		from local import fromUTC
+		#from local import fromUTC
 		from datetime import date, datetime, timedelta
 
 		imei = self.request.get('imei')
@@ -270,7 +322,7 @@ class BinBackup(TemplatedPage):
 				self.redirect("/binbackup?imei=%s" % imei)
 				return
 			elif cmd == 'delold':
-				dbbindata = DBGPSBinBackup.all(keys_only=True).filter("cdate <=", datetime.now()-timedelta(days=30)).order('cdate').fetch(500)
+				dbbindata = DBGPSBinBackup.all(keys_only=True).filter("cdate <=", datetime.utcnow()-timedelta(days=30)).order('cdate').fetch(500)
 				if dbbindata:
 					db.delete(dbbindata)
 				self.redirect("/binbackup")
@@ -404,7 +456,7 @@ class BinBackup(TemplatedPage):
 				else:
 					bindata.postbug = False
 
-				bindata.sdate = fromUTC(bindata.cdate)	#.strftime("%d/%m/%Y %H:%M:%S")
+				bindata.sdate = bindata.cdate	#.strftime("%d/%m/%Y %H:%M:%S")
 			total += 2
 			allusers = None
 
@@ -425,10 +477,10 @@ class BinBackup(TemplatedPage):
 			allusers = DBSystem.all().fetch(500)
 			qoldest = DBGPSBinBackup.all().order('cdate').fetch(1)
 			if qoldest:
-				oldest = fromUTC(qoldest[0].cdate)
+				oldest = qoldest[0].cdate
 			else:
 				oldest = u"нет записей"
-			coldest = DBGPSBinBackup.all(keys_only=True).filter("cdate <=", datetime.now()-timedelta(days=30)).order('cdate').count()
+			coldest = DBGPSBinBackup.all(keys_only=True).filter("cdate <=", datetime.utcnow()-timedelta(days=30)).order('cdate').count()
 
 		#template_values = {}
 		#template_values['imei'] = uimei
@@ -588,7 +640,8 @@ class Firmware(TemplatedPage):
 application = webapp.WSGIApplication(
 	[('/', MainPage),
 		('/s/.*', StaticPage),
-		('/addlog', AddLog),	# Событие, не требующее точной привязки ко времени
+		('/addlog.*', AddLog),	# События
+		#('/alert.*', Alert),	# Событие, требующее вримания оператора
 		('/config.*', Config),	# Конфигурация системы
 		('/params.*', Params),	# Запрос параметров системы, например localhost/params?cmd=check&imei=353358019726996
 		('/binbackup.*', BinBackup),

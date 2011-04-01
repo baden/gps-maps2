@@ -19,19 +19,55 @@ window.log = function(){
   };
 })(document);
 
+function f2d(n) {
+  if (n < 10) {
+    return '0' + n;
+  }
+  return String(n);
+};
 
-
-function dt_to_datetime(dt) {
-	return dt[4]+dt[5] + '/' + dt[2]+dt[3] + '/20' + dt[0]+dt[1] + ' ' + dt[6]+dt[7] + ':' + dt[8]+dt[9] + ':' + dt[10]+dt[11];
+function dt_to_Date(dt) {
+	var date = new Date(Date.UTC(
+		parseInt('20'+dt[0]+dt[1], 10),
+		parseInt(dt[2]+dt[3], 10)-1,
+		parseInt(dt[4]+dt[5], 10),
+		parseInt(dt[6]+dt[7], 10),
+		parseInt(dt[8]+dt[9], 10),
+		parseInt(dt[10]+dt[11], 10)
+	));
+	return date;
 }
 
 function dt_to_date(dt) {
-	return dt[4]+dt[5] + '/' + dt[2]+dt[3] + '/20' + dt[0]+dt[1];
+	var date = dt_to_Date(dt);
+	return f2d(date.getDate()) + '/' + f2d(date.getMonth()+1) + '/' + date.getFullYear();
 }
 
 function dt_to_time(dt) {
-	return dt[6]+dt[7] + ':' + dt[8]+dt[9] + ':' + dt[10]+dt[11];
+	var date = dt_to_Date(dt);
+	return date.toLocaleTimeString();
 }
+
+
+function dt_to_datetime(dt) {
+	return dt_to_date(dt) + ' ' + dt_to_time(dt);
+/*
+	//log('dt_to_datetime dt:', dt);
+	var date = new Date(Date.UTC(
+		parseInt('20'+dt[0]+dt[1], 10),
+		parseInt(dt[2]+dt[3], 10)-1,
+		parseInt(dt[4]+dt[5], 10),
+		parseInt(dt[6]+dt[7], 10),
+		parseInt(dt[8]+dt[9], 10),
+		parseInt(dt[10]+dt[11], 10)
+	));
+	//log('dt_to_datetime dt:', dt, 'date: ', date);
+		
+	return f2d(date.getDate()) + '/' + f2d(date.getMonth()+1) + '/' + date.getFullYear() + ' ' + date.toLocaleTimeString();
+	//return dt[4]+dt[5] + '/' + dt[2]+dt[3] + '/20' + dt[0]+dt[1] + ' ' + dt[6]+dt[7] + ':' + dt[8]+dt[9] + ':' + dt[10]+dt[11];
+*/
+}
+
 
 function td_to_hms(d) {
 	var minutes = (d - (d % 60)) / 60;
@@ -55,10 +91,30 @@ function td_to_time(d) {
 	return r;
 }
 
-function date_to_url(ymd) {
-	return ymd.slice(8,10) + ymd.slice(3,5) + ymd.slice(0,2);
+//function date_to_url(ymd) {
+//	return ymd.slice(8,10) + ymd.slice(3,5) + ymd.slice(0,2);
+//}
+
+function Date_to_daystart(d) {
+	var date = new Date(d);
+	date.setHours(0);
+	date.setMinutes(0);
+	date.setSeconds(0);
+	return date;
 }
 
+function Date_to_daystop(d) {
+	var date = new Date(d);
+	date.setHours(23);
+	date.setMinutes(59);
+	date.setSeconds(59);
+	return date;
+}
+
+function Date_to_url(d) {
+	return f2d(d.getUTCFullYear()-2000) + f2d(d.getUTCMonth()+1) + f2d(d.getUTCDate()) + 
+		f2d(d.getUTCHours()) + f2d(d.getUTCMinutes()) + f2d(d.getUTCSeconds());
+}
 
 function ln_to_km(l) {
 //	var k = parseInt(l, 10);
@@ -259,4 +315,168 @@ UpdateAccountSystemList();
 config.updater.add('change_slist', function(msg) {
 	log('BASE: Update system list');
 	UpdateAccountSystemList();
+});
+
+
+var alertcnt = 0;
+var geocoder;
+if('google' in window) geocoder = new google.maps.Geocoder();
+//var sound;
+
+config.updater.add('addlog', function(msg) {
+
+	log('BASE: Alert message', msg);
+	//UpdateAccountSystemList();
+	if(msg.data['mtype'] != 'alarm') return;
+
+	var messageBox = document.createElement('div');
+	//messageBox.id = 'alarmmap_' + String(new Date().getTime());
+	messageBox.className = 'alertmsg';
+	messageBox.innerHTML = 'Система: <b>' + config.sysbykey[msg.data.skey].desc + '</b>';
+
+	if (document.body.firstChild) document.body.insertBefore(messageBox, document.body.firstChild);
+	else document.body.appendChild(messageBox);
+
+	/*var sound = document.createElement('audio');
+	//sound.attributes.add('source', 'sound/alarm.ogg');
+	//sound.src = 'sound/alarm.ogg';
+	sound.innerHTML = '<source src="sound/alarm.ogg"><source src="sound/alarm.mp3">';
+	log('sound', sound);
+	//sound.control
+	messageBox.appendChild(sound);
+*/
+	/*
+	if(!sound) sound = document.getElementById('sound_alarm');
+	//sound.play();
+
+	sound.pause();
+        sound.currentTime = 0;
+        sound.play();
+
+	log('sound', sound);
+	*/
+	var sound = new Audio();
+	sound.src = 'sound/alarm.' + (sound.canPlayType('audio/ogg') ? 'ogg' : sound.canPlayType('audio/mp3') ? 'mp3' : 'wav');
+	sound.play();
+	console.dir(sound);
+
+	var addres = document.createElement('div');
+	messageBox.appendChild(addres);
+
+	var dmap = document.createElement('div');
+	dmap.id = 'alarmmap_' + String(new Date().getTime());
+	dmap.className = 'alertmap';
+	messageBox.appendChild(dmap);
+
+	if('google' in window){
+		var position = new google.maps.LatLng(msg.data.data.lat, msg.data.data.lon);
+		var $map = $(dmap).gmap({
+			pos: position,
+			zoom: 15,
+			marker: 'center',
+			//markertitme: 'aaa'
+		});
+
+		//var map = $('#map').gmap('option', 'getMap');
+		var map = $($map).gmap('option', 'map');
+
+		var marker_stop = new google.maps.Marker({
+			position: position,
+			map: map,
+			title: 'Стoянка: ',// +
+			//	'\n' + dt_to_datetime(data.points[0][0]) + '...' + dt_to_datetime(data.points[data.points.length-1][0]),
+			icon: $.gmap.images['alarm'],//Image_Stop,
+	       		draggable: false
+			//zIndex: -1000
+		});
+		log('map is', map, 'marker is', marker_stop);
+	} else {
+		dmap.innerHTML = 'Сервер Google недоступен. Отображение карты невозможно.';
+	}
+
+	//$(
+	//log('CreateMap:', map);
+	if(geocoder) geocoder.geocode({'latLng': position}, function(results, status) {
+	      if (status == google.maps.GeocoderStatus.OK) {
+		var address = geocode_to_addr(results);
+
+	  	//console.log(results);
+	
+		addres.innerHTML = 'Адрес: <b>' + address + '</b>';
+		addres.title = 'Нажмите чтобы центровать на миникарте.';
+		addres.style.cursor = 'pointer';
+		$(addres).bind('click', function(event){
+			map.panTo(position);
+			//log('click');
+		});
+
+	      } else {
+	        //alert("Geocoder failed due to: " + status);
+	      }
+	});
+
+
+	//$(messageBox).dialog('open');
+	alertcnt++;
+
+	//var buttons = {};
+	//if(config.map){
+	//	buttons = 
+	//}
+
+	$(messageBox).dialog({
+		title: '<span class="ui-icon ui-icon-alert" style="display:inline-block;"></span> <span style="color:red;">Внимание! Нажата тревожная кнопка.</span>',
+		//hide: 'slide',
+		//show: 'drop',
+		//stack: false,
+		resizable: false,
+		modal: false,
+		autoOpen: true,
+		width: 630,
+		height: 400,
+		buttons:{
+			'Центровать на большой карте': function(){
+				$(this).dialog("close");
+
+				//var handler = function() {
+				//	log('The quick brown fox jumps over the lazy dog.');
+				//};
+
+				if($('#tabs').tabs( "option", "selected" ) != 0){
+					$('#tabs').bind('tabsshow', function(event, ui) {
+						log('binded tab show');
+						config.map.panTo(position);
+						config.map.setZoom(15);
+						$('#tabs').unbind(event);
+					});
+					$('#tabs').tabs('select', 0);		// TBD! Если карта не открывалась еще то нужна задержка.
+				} else {
+					config.map.panTo(position);
+					config.map.setZoom(15);
+				}
+			},
+			'Закрыть': function(){
+				$(this).dialog("close");
+			}
+		},
+		open: function(event, ui) {
+			var position = $(this).dialog( "option", "position" );
+			log('position', position);
+			//position.offset = {left: alertcnt * 10, top: alertcnt * 10};
+			position.offset = '' + (alertcnt * 16) + ' ' + (alertcnt * 16);
+			//position.offset.;
+			$(this).dialog( "option", "position", position );
+			//$(this).animate({
+			//	backgroundColor: "#aa0000"
+			//}, 200);
+			//$(this).parent().effect('pulsate');
+			//$(this).effect('pulsate');
+			$(this).parent().css('border', '3px solid red');
+			$(this).parent().children().first().children().first().effect('pulsate');
+		},
+		close: function(event, ui) {
+			alertcnt--;
+			if(alertcnt<0) alertcnt = 0;
+		}
+	});
 });

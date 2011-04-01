@@ -16,7 +16,7 @@ from google.appengine.api import urlfetch
 
 #from template import TemplatedPage
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
-import local
+#import local
 import geo
 import updater
 
@@ -83,7 +83,7 @@ class Info(BaseApi):
 				"imei": sys.imei,
 				"phone": sys.phone,
 				"desc": sys.desc,
-				"premium": sys.premium >= datetime.now(),
+				"premium": sys.premium >= datetime.utcnow(),
 			})
 		accinfos = {
 			'key': "%s" % self.account.key(),
@@ -232,7 +232,7 @@ class GetGeo(webapp.RequestHandler):
 					self.response.out.write(',\n ')
 				self.response.out.write('{"id": %d, "cell": ["%s", %f, %f, %d, %f, %f, %f, %f, %d, "%s"]}' % (
 					isid,
-					local.fromUTC(r['time']).strftime("%Y-%m-%d %H:%M:%S"),	# dt
+					r['time'].strftime("%Y-%m-%d %H:%M:%S"),	# dt
 					#ptime.strftime("%Y-%m-%d"),	# dt
 					r['lat'],
 					r['lon'],
@@ -387,7 +387,7 @@ class Geo_Del(BaseApi):
 
 		if self.request.get('task', '') == 'yes':
 			logging.info('API: /api/geo/del: call task');
-			dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+			dtto = datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S")
 			qu = DBGeo.all(keys_only=True).filter('date <', dtto).order('date').ancestor(system).fetch(200)
 			db.delete(qu)
 
@@ -437,10 +437,10 @@ class Geo_GetO(webapp.RequestHandler):
 		system_key = db.Key(skey)
 
 		#pfrom = self.request.get("from")
-		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+		dtfrom = datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S")
 		dhfrom = datetime(dtfrom.year, dtfrom.month, dtfrom.day, dtfrom.hour & ~7, 0, 0)
 
-		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+		dtto = datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S")
 		dhto = datetime(dtto.year, dtto.month, dtto.day, dtto.hour & ~7, 0, 0)
 
 		pto = self.request.get("to")
@@ -492,7 +492,7 @@ class Geo_GetO(webapp.RequestHandler):
 				
 				points.append([
 					#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
-					local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
+					point['time'].strftime("%y%m%d%H%M%S"),
 					plat, #point['lat'],
 					plon, #point['lon'],
 					int(point['course']),
@@ -636,9 +636,9 @@ class Geo_Get(BaseApi):
 
 
 		#pfrom = self.request.get("from")
-		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+		dtfrom = datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S")
 
-		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+		dtto = datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S")
 
 		options = self.request.get('options', '').split(',')
 		logging.info('options=%s' % repr(options))
@@ -686,8 +686,8 @@ class Geo_Get(BaseApi):
 			prev_point = point
 				
 			points.append([
-				#local.toUTC(point['time']).strftime("%d/%m/%Y %H:%M:%S"),
-				local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
+				#point['time']).strftime("%d/%m/%Y %H:%M:%S",
+				point['time'].strftime("%y%m%d%H%M%S"),
 				plat, #point['lat'],
 				plon, #point['lon'],
 				int(point['course']),
@@ -831,7 +831,7 @@ class Geo_Info(webapp.RequestHandler):
 			return
 
 		system_key = db.Key(skey)
-		dtpoint = local.toUTC(datetime.strptime(self.request.get("point"), "%y%m%d%H%M%S"))
+		dtpoint = datetime.strptime(self.request.get("point"), "%y%m%d%H%M%S")
 		#pointr = DBGeo.get_by_date(system_key, dtpoint)
 		#point = None
 		#if pointr:
@@ -908,7 +908,7 @@ class Geo_Dates(webapp.RequestHandler):
 			d = dt[6:8]
 			"""
 
-			dt = local.fromUTC(rec.get_first()['time']).strftime("%Y%m%d")
+			dt = rec.get_first()['time'].strftime("%Y%m%d")
 			#logging.info(dt)
 			y = int(dt[0:4])
 			m = int(dt[4:6])
@@ -918,7 +918,7 @@ class Geo_Dates(webapp.RequestHandler):
 				if d not in days:
 					insort(days, d)
 
-			dt = local.fromUTC(rec.get_last()['time']).strftime("%Y%m%d")
+			dt = rec.get_last()['time'].strftime("%Y%m%d")
 			#logging.info(dt)
 			y = int(dt[0:4])
 			m = int(dt[4:6])
@@ -986,12 +986,12 @@ class Geo_Report(BaseApi):
 		points = []
 
 		#after = self.request.get('after', 'today')
-		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
-		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+		dtfrom = datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S")
+		dtto = datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S")
 
 		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, MAXPOINTS):
 			points.append((
-				local.fromUTC(point['time']).strftime("%H:%M:%S"),
+				point['time'].strftime("%y%m%d%H%M%S"),
 				point['lat'], point['lon'],
 				point['sats'],
 				point['vout'],
@@ -1012,9 +1012,9 @@ class Report_Get(BaseApi):
 		from math import log, sqrt
 
 		#pfrom = self.request.get("from")
-		dtfrom = local.toUTC(datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S"))
+		dtfrom = datetime.strptime(self.request.get("from"), "%y%m%d%H%M%S")
 
-		dtto = local.toUTC(datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S"))
+		dtto = datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S")
 
 		report = []
 		stop_start = None
@@ -1024,11 +1024,14 @@ class Report_Get(BaseApi):
 		length = 0
 		sum_length = 0	# Пройденая дистанция
 		sum_tmove = 0	# Общее время в пути
+		sum_stop = 0	# Общее время простоя
+		max_speed = 0	# Максимальная скорость
 		events = {}
 
 		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, MAXPOINTS):
 			if move_start is None:
 				move_start = point
+			max_speed = max(max_speed, point['speed'])
 
 			if point['fsource'] in (2, 3, 7):
 				if stop_start is None:
@@ -1043,11 +1046,11 @@ class Report_Get(BaseApi):
 					report.append({
 						'type': 'move',
 						'start': {
-							'time': local.fromUTC(move_start['time']).strftime("%y%m%d%H%M%S"),
+							'time': move_start['time'].strftime("%y%m%d%H%M%S"),
 							'pos': (move_start['lat'], move_start['lon']),
 						},
 						'stop': {
-							'time': local.fromUTC(stop_start['time']).strftime("%y%m%d%H%M%S"),
+							'time': stop_start['time'].strftime("%y%m%d%H%M%S"),
 							'pos': (stop_start['lat'], stop_start['lon']),
 						},
 						'duration': dura,
@@ -1064,14 +1067,15 @@ class Report_Get(BaseApi):
 				if stop_start is not None:
 					dura = (point['time'] - stop_start['time'])
 					dura = dura.days * 24 * 3600 + dura.seconds
+					sum_stop += dura
 					report.append({
 						'type': 'stop',
 						'start': {
-							'time': local.fromUTC(stop_start['time']).strftime("%y%m%d%H%M%S"),
+							'time': stop_start['time'].strftime("%y%m%d%H%M%S"),
 							'pos': (stop_start['lat'], stop_start['lon']),
 						},
 						'stop': {
-							'time': local.fromUTC(point['time']).strftime("%y%m%d%H%M%S"),
+							'time': point['time'].strftime("%y%m%d%H%M%S"),
 							'pos': (point['lat'], point['lon']),
 						},
 						'duration': dura,
@@ -1097,7 +1101,7 @@ class Report_Get(BaseApi):
 					if sp > 300:	# Максимальная скорость 300 км/ч
 						#d = 0
 						if 'path_break' not in events:
-							events['path_break'] = local.fromUTC(point['time']).strftime("%y%m%d%H%M%S")
+							events['path_break'] = point['time'].strftime("%y%m%d%H%M%S")
 						continue
 			else:
 				d = 0
@@ -1108,12 +1112,14 @@ class Report_Get(BaseApi):
 
 		return {
 			'answer': 'ok',
-			'dtfrom': str(local.fromUTC(dtfrom)),
-			'dtto': str(local.fromUTC(dtto)),
+			'dtfrom': str(dtfrom),
+			'dtto': str(dtto),
 			'summary': {
 				'length': sum_length, #"%.3f" % sum_length,
 				'movetime': sum_tmove,
-				'speed': (sum_length * 3600 / sum_tmove) if (sum_tmove!=0) else 0
+				'stoptime': sum_stop,
+				'speed': (sum_length * 3600 / sum_tmove) if (sum_tmove!=0) else 0,
+				'maxspeed': max_speed
 			},
 			'report': report,
 		}
@@ -1359,7 +1365,7 @@ class Logs_Get(BaseApi):
                 """
                 # Более короткая и понятная запись. Интересно будет сравнить производительность на очень большом списке
 		logs = [{
-				'time': log.ldate.strftime("%d/%m/%Y %H:%M:%S"),
+				'time': log.date.strftime("%y%m%d%H%M%S"),
 				'text': log.text,
 				'label': log.label,
 				'key': "%s" % log.key()

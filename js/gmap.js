@@ -284,6 +284,20 @@ $.gmap.images['halt'] = new google.maps.MarkerImage(
 	new google.maps.Point(7, 19)
 );
 
+$.gmap.images['alarm'] = new google.maps.MarkerImage(
+	'/images/marker-alarm.png?v=3',
+	new google.maps.Size(16, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(7, 19)
+);
+
+$.gmap.images['center'] = new google.maps.MarkerImage(
+	'/images/marker-center.png?v=1',
+	new google.maps.Size(32, 32),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(15, 15)
+);
+
 // Workaround for #4055
 // Add another global to avoid noConflict issues with inline event handlers
 //window['DP_jQuery_' + dpuuid] = $;

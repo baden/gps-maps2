@@ -9,6 +9,7 @@ function getGeocode(adrlist, i, recur) {
 	//log('geoget at ' + i);
 	if(adrlist[i].stop) log('stop: ' + i);
 
+	if(geocoder) {
 	geocoder.geocode({'latLng': new google.maps.LatLng(adrlist[i].pos[0], adrlist[i].pos[1]) }, function(results, status) {
 		if(adrlist[i].stop) {log('stop2: ' + i); return;}
 		if (status == google.maps.GeocoderStatus.OK) {
@@ -30,13 +31,16 @@ function getGeocode(adrlist, i, recur) {
 			}
 		}
 	});
+	} else {
+		delete adrlist[i];
+	}
 }
 
 function genReport(skey, start, stop, title) {
 	//$(".control").hide();
 	for(var i in adrlist) { clearInterval(adrlist[i].cb); adrlist[i].stop = true; }
 
-	$('#report_header').html('Отчет для системы ' + config.sysbykey[skey].desc + ' за <span style="border: 1px solid black; padding: 0 4px 0 4px">' + title + '</span>');
+	$('#report_header').html('Отчет для системы ' + config.sysbykey[skey].desc + ' за ' + title + '');
 
 	$( "#report tbody" ).empty();
 
@@ -47,9 +51,11 @@ function genReport(skey, start, stop, title) {
 			//ParcePath(data);
 			log("Show report...");
 
-			$("#report_total_dist").html(ln_to_km(data.summary.length));
-			$("#report_total_movetime").html(td_to_hms(data.summary.movetime));
-			$("#report_total_avspeed").html(data.summary.speed.toFixed(1) + ' км/ч');
+			$('#report_total_dist').html(ln_to_km(data.summary.length));
+			$('#report_total_movetime').html(td_to_hms(data.summary.movetime));
+			$('#report_total_avspeed').html(data.summary.speed.toFixed(1) + ' км/ч');
+			$('#report_total_stoptime').html(td_to_hms(data.summary.stoptime));
+			$('#report_total_maxspeed').html(data.summary.maxspeed.toFixed(1) + ' км/ч');
 
 			var tbody = $( "#report tbody" );
 			//console.log(tbody);
@@ -136,29 +142,6 @@ function genReport(skey, start, stop, title) {
 function purgeReport() {
 	$('#report tbody').empty();
 }
-
-/*
-var Image_Start = new google.maps.MarkerImage(
-	'/images/marker-start.png?v=1',
-	new google.maps.Size(24, 20),
-	new google.maps.Point(0, 0),
-	new google.maps.Point(11, 19)
-);
-
-var Image_Finish = new google.maps.MarkerImage(
-	'/images/marker-finish.png?v=1',
-	new google.maps.Size(28, 20),
-	new google.maps.Point(0, 0),
-	new google.maps.Point(14, 19)
-);
-
-var Image_Stop = new google.maps.MarkerImage(
-	'/images/marker-stop.png',
-	new google.maps.Size(16, 20),
-	new google.maps.Point(0, 0),
-	new google.maps.Point(7, 19)
-);
-*/
 
 function showMap2(from, to, type) {
 	var map_div = $('#map_preview');
@@ -333,7 +316,7 @@ function Report_Make_SysList(list){
 
 $(document).ready(function() {
 
-	geocoder = new google.maps.Geocoder();
+	if('google' in window) geocoder = new google.maps.Geocoder();
 	$("#nav_reports").button("option", "disabled", true);
 
 	$("#button_report_type_div").buttonset();
@@ -438,7 +421,7 @@ if(0){
 				var stop = $.datepicker.formatDate('ymmdd235959', dt);
 				config.skey = $('#report_dlg_byday_syslist').val();
 
-				genReport(config.skey, start, stop, $.datepicker.formatDate('DD, d MM, yy', dt));
+				genReport(config.skey, start, stop, $.datepicker.formatDate('dd/mm/yy', dt));
 
 				/*
 				var start = date_to_url(dateText) + '000000'; //inst.currentYear, inst.currentMonth, inst.currentDay, '000000');
@@ -523,8 +506,8 @@ if(0){
 
 
 				genReport(config.skey, start, stop,
-					' интервал с ' + $.datepicker.formatDate('DD, d MM, yy ', dt_from) + $('#report_dlg_byint_time_from').val() +
-					' по ' + $.datepicker.formatDate('DD, d MM, yy ', dt_to) + $('#report_dlg_byint_time_to').val()
+					' интервал с ' + $.datepicker.formatDate('dd/mm/yy ', dt_from) + $('#report_dlg_byint_time_from').val() +
+					' по ' + $.datepicker.formatDate('dd/mm/yy ', dt_to) + $('#report_dlg_byint_time_to').val()
 				);
 
 				/*

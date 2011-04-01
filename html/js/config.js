@@ -417,7 +417,7 @@
 
 			},
 		});
-		$("#config_sys_list").disableSelection();
+		//$("#config_sys_list").disableSelection();
 
 
 		// Выбор темы оформления
@@ -431,7 +431,7 @@
 			saveconfig('theme', themename);
 
 			var hl = $('head #themecss');
-			hl.attr('href', '/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/'+themename+'/jquery.ui.all.css');
+			hl.attr('href', '/plugins/jquery-ui-themes-1.8.9/jquery-ui-themes-1.8.9/themes/'+themename+'/jquery.ui.all.css');
 			//log(hl);
 		});
 
