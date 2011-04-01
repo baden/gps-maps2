@@ -23,13 +23,18 @@ $(document).ready(function() {
 
 		var date;
 		if(type){
-			date = $.datepicker.formatDate('ymmdd', new Date());
+			//date = $.datepicker.formatDate('ymmdd', new Date());
+			date = new Date();
 		} else {
-			date = $.datepicker.formatDate('ymmdd', $('#geos_datepicker').datepicker('getDate'));
-			if(date == '') return;
+			//date = $.datepicker.formatDate('ymmdd', $('#geos_datepicker').datepicker('getDate'));
+			date = $('#geos_datepicker').datepicker('getDate');
+			if(!date) return;
+			log('date', date);
+			//if(date == '') return;
 		}
 
-		$.getJSON('/api/geo/report', {skey: skey, from: date+'000000', to: date+'235959'}, function (data) {
+//		$.getJSON('/api/geo/report', {skey: skey, from: date+'000000', to: date+'235959'}, function (data) {
+		$.getJSON('/api/geo/report', {skey: skey, from: Date_to_url(Date_to_daystart(date)), to: Date_to_url(Date_to_daystop(date))}, function (data) {
 			if (data.answer && data.answer == 'ok') {
 
 				var vdata = {
@@ -75,7 +80,7 @@ $(document).ready(function() {
 
 				function add_data(name, digits){
 					var value = parseFloat((vdata[name].vsum/vcnt).toFixed(digits));
-					vdata[name].data.addRow([p[0].slice(0,_slice)+_tail, value]);
+					vdata[name].data.addRow([dt_to_time(p[0]).slice(0,_slice)+_tail, value]);
 					vdata[name].vsum = 0;
 					vdata[name].vmin = Math.min(vdata[name].vmin, value);
 					vdata[name].vmax = Math.max(vdata[name].vmax, value);
@@ -91,9 +96,11 @@ $(document).ready(function() {
 
 					p = data.points[i];
 					var row = '<tr>';
-					row += td([p[0], p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2)]);
+//					row += td([p[0], p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2)]);
+					row += td([dt_to_time(p[0]), p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2)]);
 					row += '</tr>';
-					tbody.append(row);
+					//tbody.append(row);
+					tbody.prepend(row);
 
 					vdata.vout.vsum += p[4];
 					vdata.vin.vsum += p[5];
@@ -101,8 +108,8 @@ $(document).ready(function() {
 					vdata.sats.vsum += p[3];
 					vcnt += 1;
 
-					if(phm != p[0].slice(0,_slice)){
-						phm = p[0].slice(0,_slice);
+					if(phm != dt_to_time(p[0]).slice(0,_slice)){
+						phm = dt_to_time(p[0]).slice(0,_slice);
 
 						add_data('vout', 2);
 						add_data('vin', 3);

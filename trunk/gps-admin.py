@@ -36,7 +36,7 @@ SERVER_NAME = os.environ['SERVER_NAME']
 
 class AdminFlushOld(webapp.RequestHandler):
 	def get(self):
-		#db.delete(datamodel.DBGPSPoint.all(keys_only=True).filter("date <", datetime.now() - OLDDATA).order('date').fetch(100))
+		#db.delete(datamodel.DBGPSPoint.all(keys_only=True).filter("date <", datetime.utcnow() - OLDDATA).order('date').fetch(100))
 		#self.redirect('/admin.data')
 		pass
 
@@ -47,7 +47,7 @@ class AdminFlushOld2(webapp.RequestHandler):
 		old = timedelta(days=int(self.request.get("old", "30")))
 		logging.info('Old=%s' % repr(old))
 
-		db.delete(DBGPSBinBackup.all(keys_only=True).filter("cdate <=", datetime.now() - old).order('cdate').fetch(500))
+		db.delete(DBGPSBinBackup.all(keys_only=True).filter("cdate <=", datetime.utcnow() - old).order('cdate').fetch(500))
 		#self.redirect('/admin.data')
 
 application = webapp.WSGIApplication(

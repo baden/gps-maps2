@@ -137,14 +137,14 @@ function dt_to_Date(d){
 	console.log('d=' + d + ' h:' + h + '  new Date =', dat);
 	return dat;
 */
-	return new Date(
+	return new Date(Date.UTC(
 			parseInt('20' + d[0]+d[1], 10),	// год
 			parseInt(d[2]+d[3], 10) - 1,	// месяц
 			parseInt(d[4]+d[5], 10),	// день
 			parseInt(d[6]+d[7], 10),	// часы
 			parseInt(d[8]+d[9], 10),	// минуты
 			parseInt(d[10]+d[11], 10)	// секунды
-	);
+	));
 
 }
 
@@ -229,7 +229,14 @@ var ParcePath = function(data){
 
 	log("Bound in request: (" + data.bounds.sw[0] + "," + data.bounds.sw[1] + ")-(" + data.bounds.ne[0] + "," + data.bounds.ne[1] + ")" );
 	//map.panToBounds(flightPathBounds);
-	map.panTo(flightPlanCoordinates[flightPlanCoordinates.length-1]);
+//	map.panTo(flightPlanCoordinates[flightPlanCoordinates.length-1]);
+
+	map.fitBounds(flightPathBounds);
+/*		new google.maps.LatLngBounds(
+		new google.maps.LatLng(data.bounds.sw[0], data.bounds.sw[1]),
+		new google.maps.LatLng(data.bounds.ne[0], data.bounds.ne[1])
+	));
+*/
 
 	profile.show();
 	log("Prepare sub bounds...");
@@ -600,6 +607,7 @@ function CreateMap() {
 
 	//var map = $('#map').gmap('option', 'getMap');
 	map = $($map).gmap('option', 'map');
+	config.map = map;
 	//$(
 	console.log('CreateMap:', map);
 
@@ -784,11 +792,11 @@ var ClearPath = function(skey){
 
 var prev_sender=null;
 
-function SetDay(skey, date){
-	var from = date+'000000';
-	var to = date+'235959';
-	log("::SetDay.start date=" + date + " from:" + from + " to:" + to);
-	GetPath(skey, from, to);
+function SetDay(skey, start, stop){
+	//var from = date+'000000';
+	//var to = date+'235959';
+	log("::SetDay.start from:", start, " to:", stop);
+	GetPath(skey, Date_to_url(start), Date_to_url(stop));
 	//console.log(sender + '-' + prev_sender);
 	//if(prev_sender) $('#'+prev_sender).css('background-color','');
 	//if(prev_sender) $('#'+prev_sender).css({'background-color': '', '-webkit-box-shadow': ''});
@@ -874,7 +882,14 @@ $(document).ready(function() {
 		maxDate: '+0m +0w',
 		hideIfNoPrevNext: true,
 		onSelect: function(dateText, inst) {
-			SetDay(config.skey, date_to_url(dateText));
+			log('DateText:', dateText);
+			var start = $(this).datepicker('getDate');
+			var stop = new Date(start);
+			stop.setHours(23);
+			stop.setMinutes(59);
+			stop.setSeconds(59);
+			log('start:', start, 'stop:', stop);
+			SetDay(config.skey, start, stop);
 			//UpdateDayList();
 		},
 		onChangeMonthYear: function(year, month, inst) {

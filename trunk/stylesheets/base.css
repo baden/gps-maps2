@@ -1,6 +1,6 @@
 
 /*@import url("/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/humanity/jquery.ui.all.css");*/
-@import url("/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/cupertino/jquery.ui.all.css");
+@import url("/plugins/jquery-ui-themes-1.8.9/jquery-ui-themes-1.8.9/themes/cupertino/jquery.ui.all.css");
 /*@import url("/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/flick/jquery.ui.all.css");*/
 /*@import url("/plugins/jquery-ui-themes-1.8.7/jquery-ui-themes-1.8.7/themes/redmond/jquery.ui.all.css");*/
 
@@ -82,3 +82,4 @@ tr:nth-child(even) {
 	padding-top: 0.1em !important;
 	padding-bottom: 0.1em !important;
 }
+

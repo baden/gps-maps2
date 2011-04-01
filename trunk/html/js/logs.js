@@ -2,7 +2,7 @@
 // Private
 (function($){
 	function log_line(d) {
-		var row = '<td>'+d.time+'</td><td>'+d.text+'<!--td>'+d.label+'</td-->';
+		var row = '<td>'+dt_to_datetime(d.time)+'</td><td>'+d.text+'<!--td>'+d.label+'</td-->';
 		if(config.admin){
 			row += '<!--td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td-->'
 		}

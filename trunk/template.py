@@ -32,7 +32,7 @@ class TemplatedPage(webapp.RequestHandler):
 			#url = users.create_logout_url(self.request.uri)
 			login_url = users.create_login_url(self.request.uri)
 			values['login_url'] = login_url
-			values['now'] = datetime.now()
+			values['now'] = datetime.utcnow()
 			values['username'] = self.user.nickname()
 			values['admin'] = users.is_current_user_admin()
 			values['server_name'] = SERVER_NAME

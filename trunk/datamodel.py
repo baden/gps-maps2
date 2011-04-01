@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from google.appengine.ext import db
-from local import fromUTC
+#from local import fromUTC
 
 from datetime import datetime, timedelta
 import struct
@@ -123,10 +123,9 @@ class DBSystem(db.Model):
 	premium = db.DateTimeProperty(auto_now_add=True)			# Дата окончания премиум-подписки (абон-плата).
 										# Без премиум-подписки функционал ограничен.
 										# история ограничена 14 днями, и т.д.
-	@property
-	def ldate(self):
-		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
-		return fromUTC(self.date)
+	#@property
+	#def ldate(self):
+	#	return self.date
 
 	@classmethod
 	def get_by_imei(cls, imei):
@@ -493,12 +492,14 @@ class DBGPSBinBackup(db.Model):
 class GPSLogs(db.Model):
 	text = db.StringProperty(multiline=True)
 	date = db.DateTimeProperty(auto_now_add=True)
-	label = db.IntegerProperty(default=0)		# Метка: 0-обычное сообщение, 1-отладочное сообщение, 2-срочное сообщение и т.д.
+	mtype = db.StringProperty(default=None)	# Тип сообщения: none-обычное сообщение, debug-отладочное сообщение, alarm-срочное сообщение и т.д.
+	label = db.IntegerProperty(default=0)		# Числовая метка для определения групп сообщений. (пока не используется)
+	pos = db.GeoPtProperty()
 
-	@property
-	def ldate(self):
-		#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
-		return fromUTC(self.date)
+	#@property
+	#def ldate(self):
+	#	#return fromUTC(self.date).strftime("%d/%m/%Y %H:%M:%S")
+	#	return fromUTC(self.date)
 
 """
 	Конфигурация системы

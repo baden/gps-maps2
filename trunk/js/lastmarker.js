@@ -228,7 +228,7 @@ LastMarker.prototype.onAdd = function() {
 		//log('lastmarker: mouseover', e, this);
 		var panel = ''
 		panel += '<table><tbody>';
-		panel += '<tr><td>Время</td><td>' + me.point.time+'</td></tr>';
+		panel += '<tr><td>Время</td><td>' + dt_to_datetime(me.point.time)+'</td></tr>';
 		panel += '<tr><td>Скорость</td><td>' + me.point.speed+'</td></tr>';
 		panel += '<tr><td>Осн.питание</td><td>' + me.point.vout+'</td></tr>';
 		panel += '<tr><td>Рез.питание</td><td>' + me.point.vin+'</td></tr>';
