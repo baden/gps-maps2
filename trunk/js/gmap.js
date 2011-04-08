@@ -270,6 +270,20 @@ $.gmap.images['finish'] = new google.maps.MarkerImage(
 	new google.maps.Point(14, 19)
 );
 
+$.gmap.images['begin'] = new google.maps.MarkerImage(
+	'/images/marker-begin.png?v=1',
+	new google.maps.Size(30, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(15, 19)
+);
+
+$.gmap.images['end'] = new google.maps.MarkerImage(
+	'/images/marker-end.png?v=1',
+	new google.maps.Size(30, 20),
+	new google.maps.Point(0, 0),
+	new google.maps.Point(15, 19)
+);
+
 $.gmap.images['stop'] = new google.maps.MarkerImage(
 	'/images/marker-stop.png?v=1',
 	new google.maps.Size(16, 20),

@@ -100,9 +100,10 @@ function genReport(skey, start, stop, title) {
 					}
 				}
 
-				if(cur_date != rec.start.time.slice(0,6)+'000000'){
-					cur_date = rec.start.time.slice(0,6)+'000000';
-					tbody.append( '<tr><td colspan="4" style="padding-top: 8px; padding-bottom: 8px; font-weight: bold;">' + dt_to_date(cur_date) + '</td></tr>');
+				//log('cur date:', cur_date, 'date: ', dt_to_date(rec.start.time));
+				if(cur_date != dt_to_date(rec.start.time)){
+					cur_date = dt_to_date(rec.start.time);
+					tbody.append( '<tr><td colspan="4" style="padding-top: 8px; padding-bottom: 8px; font-weight: bold;">' + cur_date + '</td></tr>');
 				}
 					
 				tbody.append( "<tr>" +
@@ -206,7 +207,7 @@ function showMap2(from, to, type) {
 							//tp + td_to_hms(dt) +
 							//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 							//'\n' + dstop + '...' + dstart,
-						icon: $.gmap.images['start'],
+						icon: $.gmap.images['begin'],
 			        		draggable: false
 						//zIndex: -1000
 					});
@@ -217,7 +218,7 @@ function showMap2(from, to, type) {
 							//tp + td_to_hms(dt) +
 							//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 							//'\n' + dstop + '...' + dstart,
-						icon: $.gmap.images['finish'],
+						icon: $.gmap.images['end'],
 			        		draggable: false
 						//zIndex: -1000
 					});
@@ -416,12 +417,22 @@ if(0){
 			},
 			'Построить отчет': function(){
 				$(this).dialog("close");
-				var dt = $('#report_date_by_day').datepicker('getDate');
-				var start = $.datepicker.formatDate('ymmdd000000', dt);
-				var stop = $.datepicker.formatDate('ymmdd235959', dt);
+				//var dt = $('#report_date_by_day').datepicker('getDate');
+				//var start = $.datepicker.formatDate('ymmdd000000', dt);
+				//var stop = $.datepicker.formatDate('ymmdd235959', dt);
+
+				var start = $('#report_date_by_day').datepicker('getDate');
+				var stop = new Date(start);
+				stop.setHours(23);
+				stop.setMinutes(59);
+				stop.setSeconds(59);
+				log('start:', start, 'stop:', stop);
+				//SetDay(config.skey, start, stop);
+
+
 				config.skey = $('#report_dlg_byday_syslist').val();
 
-				genReport(config.skey, start, stop, $.datepicker.formatDate('dd/mm/yy', dt));
+				genReport(config.skey, Date_to_url(start), Date_to_url(stop), $.datepicker.formatDate('dd/mm/yy', start));
 
 				/*
 				var start = date_to_url(dateText) + '000000'; //inst.currentYear, inst.currentMonth, inst.currentDay, '000000');
