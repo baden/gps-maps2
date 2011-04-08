@@ -377,7 +377,7 @@ var ParcePath = function(data){
 				//tp + td_to_hms(dt) +
 				//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 				//'\n' + dstop + '...' + dstart,
-			icon: $.gmap.images['start'],
+			icon: $.gmap.images['begin'],
 	       		draggable: false
 			//zIndex: -1000
 		});
@@ -399,7 +399,7 @@ var ParcePath = function(data){
 				//tp + td_to_hms(dt) +
 				//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 				//'\n' + dstop + '...' + dstart,
-			icon: $.gmap.images['finish'],
+			icon: $.gmap.images['end'],
 	       		draggable: false
 			//zIndex: -1000
 		});
@@ -597,6 +597,7 @@ var once_map_style = true;
 
 function CreateMap() {
 	log('CreateMap: begin');
+	//if(google.'maps')
 	geocoder = new google.maps.Geocoder();
 	var $map = $('#map').gmap({
 		pos: new google.maps.LatLng(35.5, 48.5),

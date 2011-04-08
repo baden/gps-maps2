@@ -1016,63 +1016,59 @@ class Report_Get(BaseApi):
 
 		dtto = datetime.strptime(self.request.get("to"), "%y%m%d%H%M%S")
 
-		report = []
-		stop_start = None
-		move_start = None
-		prev_point = None
-		state = 0	# 0 - stop   1 - move
-		length = 0
+		self.report = []
+		self.stop_start = None
+		self.move_start = None
+		self.prev_point = None
+		self.state = 0	# 0 - stop   1 - move
+		self.length = 0
 		sum_length = 0	# Пройденая дистанция
-		sum_tmove = 0	# Общее время в пути
-		sum_stop = 0	# Общее время простоя
+		self.sum_tmove = 0	# Общее время в пути
+		self.sum_stop = 0	# Общее время простоя
 		max_speed = 0	# Максимальная скорость
-		events = {}
+		self.events = {}
 
-		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, MAXPOINTS):
-			if move_start is None:
-				move_start = point
-			max_speed = max(max_speed, point['speed'])
-
+		def check_point(point):
 			if point['fsource'] in (2, 3, 7):
-				if stop_start is None:
-					if prev_point:
-						stop_start = prev_point
+				if self.stop_start is None:
+					if self.prev_point:
+						self.stop_start = self.prev_point
 					else:
-						stop_start = point
+						self.stop_start = point
 
-					dura = (stop_start['time'] - move_start['time'])
+					dura = (self.stop_start['time'] - self.move_start['time'])
 					dura = dura.days * 24 * 3600 + dura.seconds
-					sum_tmove += dura
-					report.append({
+					self.sum_tmove += dura
+					self.report.append({
 						'type': 'move',
 						'start': {
-							'time': move_start['time'].strftime("%y%m%d%H%M%S"),
-							'pos': (move_start['lat'], move_start['lon']),
+							'time': self.move_start['time'].strftime("%y%m%d%H%M%S"),
+							'pos': (self.move_start['lat'], self.move_start['lon']),
 						},
 						'stop': {
-							'time': stop_start['time'].strftime("%y%m%d%H%M%S"),
-							'pos': (stop_start['lat'], stop_start['lon']),
+							'time': self.stop_start['time'].strftime("%y%m%d%H%M%S"),
+							'pos': (self.stop_start['lat'], self.stop_start['lon']),
 						},
 						'duration': dura,
 						#'durationtxt': str(dura),
-						'length': "%.3f" % length,
+						'length': "%.3f" % self.length,
 						'startpos': (point['lat'], point['lon']),
-						'speed': (length * 3600 / dura) if dura!=0 else 0,
+						'speed': (self.length * 3600 / dura) if dura!=0 else 0,
 						'fsource': point['fsource'],
-						'events': events,
+						'events': self.events,
 					})
-					events = {}
+					self.events = {}
 
 			elif point['fsource'] == 6:
-				if stop_start is not None:
-					dura = (point['time'] - stop_start['time'])
+				if self.stop_start is not None:
+					dura = (point['time'] - self.stop_start['time'])
 					dura = dura.days * 24 * 3600 + dura.seconds
-					sum_stop += dura
-					report.append({
+					self.sum_stop += dura
+					self.report.append({
 						'type': 'stop',
 						'start': {
-							'time': stop_start['time'].strftime("%y%m%d%H%M%S"),
-							'pos': (stop_start['lat'], stop_start['lon']),
+							'time': self.stop_start['time'].strftime("%y%m%d%H%M%S"),
+							'pos': (self.stop_start['lat'], self.stop_start['lon']),
 						},
 						'stop': {
 							'time': point['time'].strftime("%y%m%d%H%M%S"),
@@ -1084,31 +1080,44 @@ class Report_Get(BaseApi):
 						'startpos': (point['lat'], point['lon']),
 						'speed': 0,
 						'fsource': point['fsource'],
-						'events': events,
+						'events': self.events,
 					})
-					events = {}
-					state = 1	# Начало движения
-					length = 0	# Пока не проехали нисколько
-					move_start = point
-					stop_start = None
+					self.events = {}
+					self.state = 1	# Начало движения
+					self.length = 0	# Пока не проехали нисколько
+					self.move_start = point
+					self.stop_start = None
 
-			if prev_point:
-				d = geo.distance(point, prev_point)
-				td = point['time'] - prev_point['time']
+		for point in DBGeo.get_items_by_range(self.skey, dtfrom, dtto, MAXPOINTS):
+			if self.move_start is None:
+				self.move_start = point
+			max_speed = max(max_speed, point['speed'])
+
+			check_point(point)
+
+			if self.prev_point:
+				d = geo.distance(point, self.prev_point)
+				td = point['time'] - self.prev_point['time']
 				td = td.days * 24 * 3600 + td.seconds
 				if td > 0:
 					sp = d * 3600 / td
 					if sp > 300:	# Максимальная скорость 300 км/ч
 						#d = 0
 						if 'path_break' not in events:
-							events['path_break'] = point['time'].strftime("%y%m%d%H%M%S")
+							self.events['path_break'] = point['time'].strftime("%y%m%d%H%M%S")
 						continue
 			else:
 				d = 0
-			length += d
+			self.length += d
 			sum_length += d
-			prev_point = point
+			self.prev_point = point
 
+		if self.prev_point['fsource'] == 6:
+			self.prev_point['fsource'] = 2
+		else:
+			self.prev_point['fsource'] = 6
+
+		check_point(self.prev_point)
 
 		return {
 			'answer': 'ok',
@@ -1116,12 +1125,12 @@ class Report_Get(BaseApi):
 			'dtto': str(dtto),
 			'summary': {
 				'length': sum_length, #"%.3f" % sum_length,
-				'movetime': sum_tmove,
-				'stoptime': sum_stop,
-				'speed': (sum_length * 3600 / sum_tmove) if (sum_tmove!=0) else 0,
+				'movetime': self.sum_tmove,
+				'stoptime': self.sum_stop,
+				'speed': (sum_length * 3600 / self.sum_tmove) if (self.sum_tmove!=0) else 0,
 				'maxspeed': max_speed
 			},
-			'report': report,
+			'report': self.report,
 		}
 
 class Sys_Add(BaseApi):
