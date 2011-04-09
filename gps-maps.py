@@ -636,51 +636,6 @@ class Firmware(TemplatedPage):
 
 		self.response.out.write("ROM ADDED: %d\r\n" % len(pdata))
 
-class XLS(TemplatedPage):
-	def get(self):
-		self.response.headers['Content-Type'] = 'application/octet-stream'	# Это единственный (пока) способ побороть Transfer-Encoding: chunked
-
-		import sys
-		sys.path.insert(0, 'xls/xlwt')  # Add .zip file to front of path
-
-		from xlwt import *
-
-		font0 = Font()
-		font0.name = 'Times New Roman'
-		font0.struck_out = True
-		font0.bold = True
-
-		style0 = XFStyle()
-		style0.font = font0
-
-		wb = Workbook()
-		ws0 = wb.add_sheet('0')
-
-		ws0.write(1, 1, 'Test', style0)
-
-		for i in range(0, 0x53):
-		    borders = Borders()
-		    borders.left = i
-		    borders.right = i
-		    borders.top = i
-		    borders.bottom = i
-
-		    style = XFStyle()
-		    style.borders = borders
-
-		    ws0.write(i, 2, '', style)
-		    ws0.write(i, 3, hex(i), style0)
-
-		ws0.write_merge(5, 8, 6, 10, "")
-
-        	#import CompoundDoc
-        	#doc = CompoundDoc.XlsDoc()
-
-		#self.response.out.write(wb.get_biff_data())
-
-		#wb.save('blanks.xls')
-		wb.save(self.response.out)
-
 
 application = webapp.WSGIApplication(
 	[('/', MainPage),
@@ -691,7 +646,6 @@ application = webapp.WSGIApplication(
 		('/params.*', Params),	# Запрос параметров системы, например localhost/params?cmd=check&imei=353358019726996
 		('/binbackup.*', BinBackup),
 		('/firmware.*', Firmware),
-		('/xls.*', XLS),
 	],
 	debug=True
 )
