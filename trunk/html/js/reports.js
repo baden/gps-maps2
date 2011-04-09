@@ -515,7 +515,6 @@ if(0){
 				var stop = $.datepicker.formatDate('ymmdd', dt_to) + time_to.replace(/:/g,'');
 				config.skey = $('#report_dlg_byint_syslist').val();
 
-
 				genReport(config.skey, start, stop,
 					' интервал с ' + $.datepicker.formatDate('dd/mm/yy ', dt_from) + $('#report_dlg_byint_time_from').val() +
 					' по ' + $.datepicker.formatDate('dd/mm/yy ', dt_to) + $('#report_dlg_byint_time_to').val()
@@ -551,7 +550,57 @@ if(0){
 		}})
 		.click(function(){$('#report_dlg_byint').dialog('open')});
 
+	if(1){
+	$('#report_export_xls').button().click(function(){
+		var tbody = $( "#report tbody" );
+		log('export to XLS tbody:', tbody);
+		var rows = [];
+
+		format5 = function(n){
+			if(n<10) return '0000'+n;
+			else if(n<100) return '000'+n;
+			else if(n<1000) return '00'+n;
+			else if(n<10000) return '0'+n;
+			else return ''+n;
+		}
+
+		$("#report tbody tr").each(function(ind, el){
+			var line = [];
+			$(el).children('td').each(function(tdi, tdel){
+				//rows['el_' + format5(ind) + '_' + format5(tdi)] = tdel.textContent;
+				line.push(tdel.textContent);
+			});
+			rows.push(line);
+		});
+		log('rows:', rows);
+
+		//rows['all'] = JSON.stringify(rows)
+
+		//$.getJSON('/export/xls', {data: 'aaa'}, function (data) {
+		$.ajax({
+			url: '/export/xls',
+			type: 'post',
+			data: {data: JSON.stringify(rows)},
+			success: function(data, textStatus, jqXHR){
+				//window.location();
+				var val = $.parseJSON(data);
+				log('ok, data:', data, 'val:', val);
+				$('#export_iframe').attr('src', '/export/get/report.xls?key=' + val.key);
+				//$('#export_iframe').html(data);
+				//var url='.';
+				//var win = window.open(url,'Download');
+				//win.document.write(data);
+
+			},
+			//Ext.get('iframe').set({src:result.responseText });
+		});
+		//'ext-gen233'
+	});
+	}
 
 });
 
 })();
+
+
+

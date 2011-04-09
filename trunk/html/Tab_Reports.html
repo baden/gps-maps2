@@ -40,6 +40,7 @@
 
 	-->
 
+	<!--form method="POST"-->
 	<h2 id="report_header" style="padding: 10px 4px 5px 4px;"></h2>
 
 	<h3>Комплексный отчет:</h3>
@@ -69,7 +70,12 @@
 		</tbody>
 	</table>
 
-	<button title="Загрузить отчет в формате CSV" disabled>Экспорт в Excel</button><br/>
+	<button title="Загрузить отчет в формате XLS" id="report_export_xls">Экспорт в Excel</button><br/>
+
+	<iframe name="export_iframe" id="export_iframe" style="display: none;" frameborder="no"></iframe>
+
+	<!--/form-->
+
 
 	<div id="report_dlg_byday" title="Отчет за сутки" hidden>
 		Система: <select id="report_dlg_byday_syslist" name="report_dlg_byday_syslist" style="width:auto;" />
