@@ -54,8 +54,8 @@ div.panel_control:hover {
 
 div#carselect {
 	position: absolute;
-	top: 48px;
-	bottom: 180px;
+	top: 24px;
+	bottom: 204px;
 	left:0px;
 	right: 0px;
 	overflow-x: hidden;
@@ -69,14 +69,38 @@ div#carselect ul li span {
 div#maptools {
 	position: absolute;
 	width:100%;
-	top: 0px;
+	bottom: 180px;
 	height: 24px;
 }
+
+div#zone_panel {
+	position: absolute;
+	top: 24px;
+	bottom: 204px;
+	left:0px;
+	right: 0px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	z-index: 10;
+	border: 1px solid lime;
+	background-color: white;
+	display: none;
+}
+
+ul#map_zones_list li {
+	border: 1px solid black;
+	cursor: pointer;
+}
+
+ul#map_zones_list li.highlight, ul#map_zones_list li:hover {
+	background-color: lime;
+}
+
 
 div#groupselect {
 	position: absolute;
 	width:100%;
-	top: 24px;
+	top: 0px;
 	height: 24px;
 }
 
@@ -126,6 +150,7 @@ div#controls:hover {
 	/*top: 0px;*/
 	opacity: 1.0;
 }
+
 
 div.mymarker {
 	position: absolute;

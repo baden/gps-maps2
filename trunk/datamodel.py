@@ -579,3 +579,11 @@ class DBFirmware(db.Model):
 	data = db.BlobProperty()			# Образ прошивки
 	size = db.IntegerProperty()			# Размер прошивки (опция)
 	desc = db.StringProperty(multiline=True)	# Описание прошивки (опция)
+
+# Гео-зоны
+class DBZone(db.Model):
+	ztype = db.StringProperty(required=True, choices=set(["poligon", "circle", "bound"]))
+	points = db.ListProperty(db.GeoPt, default=None)			# Перечень узлов
+	boundssw = db.GeoPtProperty()	# Оптимизация поиска вхождения точки
+	boundsne = db.GeoPtProperty()
+	options = db.StringListProperty(default=None)

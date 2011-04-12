@@ -69,6 +69,10 @@ class BaseApi(webapp.RequestHandler):
 		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
 		self.response.out.write(json.dumps(self._parcer(), indent=2) + "\r")
 
+	def post(self):
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+		self.response.out.write(json.dumps(self._parcer(), indent=2) + "\r")
+
 class Version(BaseApi):
 	def parcer(self):
 		return {'answer': 'ok', 'version': API_VERSION}
@@ -1447,6 +1451,60 @@ class SystemConfig(webapp.RequestHandler):
 
 		self.response.out.write(json.dumps(config) + "\r")
 
+class Zone_Add(BaseApi):
+	#requred = ('akey')
+	def parcer(self):
+		from datamodel import DBZone
+
+		#points = self.request.get("points", None)
+		points = json.loads(self.request.get('points', '[]'))
+		
+		zone = DBZone(ztype=self.request.get('type', 'poligon'))
+		zpoints = []
+		for p in points:
+			zpoints.append(db.GeoPt(lat=p[0], lon=p[1]))
+		zone.points = zpoints
+		zone.put()
+		
+
+		return {
+			"answer": "ok",
+			"points": points,
+			"zkey": str(zone.key())
+		}
+
+class Zone_Get(BaseApi):
+	#requred = ('akey')
+	def parcer(self):
+		from datamodel import DBZone
+
+		#points = self.request.get("points", None)
+		#points = json.loads(self.request.get('points', '[]'))
+		skey = self.request.get("skey", None)
+		
+		zones = DBZone.all().fetch(1000)
+		zlist = []
+		for zone in zones:
+			zlist.append({
+				'zkey': str(zone.key()),
+				'type': zone.ztype,
+				'points': [(p.lat, p.lon) for p in zone.points],
+			})
+		#zpoints = []
+		#for p in points:
+		#	zpoints.append(db.GeoPt(lat=p[0], lon=p[1]))
+		#zone.points = zpoints
+		#zone.put()
+		if zone:
+			return {
+				"answer": "ok",
+				"zones": zlist
+			}
+		else:
+			return {
+				"answer": "no"
+			}
+
 application = webapp.WSGIApplication(
 	[
 	('/api/info.*', Info),
@@ -1480,6 +1538,9 @@ application = webapp.WSGIApplication(
 	#('/api/global/delall*', Global_DelAll),
 
 	('/api/system/config*', SystemConfig),
+
+	('/api/zone/add*', Zone_Add),
+	('/api/zone/get*', Zone_Get),
 
 	#('/api/geo/test*', Geo_Test),
 	],

@@ -22,12 +22,6 @@
 	<div id="panel">
 		<div class="panel_control" style=""><span class="ui-icon ui-icon-circle-triangle-e">&lt;</span></div>
 
-		<div id="maptools">
-			<button id="map_track_show" title="Показать зоны">П</button>
-			<button id="map_track_add" title="Создать зону">Д</button>
-			<button id="map_track_edit" title="Редактировать зону">Р</button>
-			<button>4</button>
-		</div>
 		<div id="groupselect">
 			<select id="group_list" name="group_list" style="width:100%;" title="Группа" onchange="UpdateGroupList();">
 				<option value="*">Все</option>
@@ -36,6 +30,18 @@
 			</select>
 		</div>
 		<div id="carselect" class="nosel"><ul id="map_ul_sys"></ul></div>
+
+		<div id="maptools">
+			<button id="map_zone_show" title="Показать зоны">П</button>
+			<button id="map_zone_add" title="Создать зону">Д</button>
+			<button id="map_zone_edit" title="Редактировать зону">Р</button>
+			<button>4</button>
+		</div>
+
+		<div id="zone_panel">
+			<ul id="map_zones_list"></ul>
+		</div>
+
 		<div id="map_div_cleartrack" style=""><button id="map_btn_cleartrack">Скрыть трек</button></div>
 		<div id="date_tabs" style="">
 			<ul><li><a href="#date_select">Сутки</a></li><li><a href="#int_select">Интервал</a></li></ul>
@@ -53,6 +59,7 @@
 			</div>
 		</div>
 	</div>
+
 	</div>
 </body>
 
