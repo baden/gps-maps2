@@ -124,7 +124,7 @@ function genReport(skey, start, stop, title) {
 				$(this).css('font-weight', 'bold');
 			});
 			//log(adrlist);
-			for(i in adrlist){
+			for(var i in adrlist){
 				if(i==0){
 					$(".control").hide();
 				}
