@@ -29,8 +29,8 @@ PORT = 80
 #HOST = "217.24.167.101"
 #PORT = 8015
 
-#HOSTNAME = "gps-maps.appspot.com"
-HOSTNAME = "gps-maps2.appspot.com"
+HOSTNAME = "gps-maps.appspot.com"
+#HOSTNAME = "gps-maps2.appspot.com"
 
 IMEI = sys.argv[1]
 

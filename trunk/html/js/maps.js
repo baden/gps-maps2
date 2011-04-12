@@ -618,6 +618,10 @@ function CreateMap() {
 	});
 	google.maps.event.addListener(map, 'mousemove', UpdateMarker);
 
+	//google.maps.event.addListener(map, 'click', function(){
+	//	console.log("Map: clicked.");
+	//});
+
 	ruler1 = new MyMarker(map);
 }
 
@@ -1021,6 +1025,75 @@ $(document).ready(function(){
 		if(marker_finish) marker_finish.setMap(null);
 		flightPlanCoordinates = [];
 		showed_path = [];
+	});
+
+	var track_edit_mode = false;
+	var events = {};
+	//var poligon;
+	//var poligon_path;
+
+	$('#map_track_add').click(function(){
+		if(!track_edit_mode){
+			track_edit_mode = true;
+			$('#map_track_add>span').css('background-color', 'lime');
+			message('Создавайте зону указывая на карте последовательность вершин многоугольника левой клавишей мыши. Завершение создания зоны - правая клавиша мыши.');
+
+			var init_path = [];
+
+			var poligon = new google.maps.Polygon({
+				//path: init_path,
+				clickable: false,
+				strokeColor: "#FF0000",
+				strokeOpacity: 0.8,
+				strokeWeight: 3,
+				fillColor: "#FF0000",
+				fillOpacity: 0.35
+			});
+			poligon.setMap(config.map);
+
+			events.click = google.maps.event.addListener(config.map, 'click', function(event){
+			//events.click = google.maps.event.addDomListener(config.map.getDiv(), 'click', function(event){
+				log('map clicked', event);
+				var vertices = poligon.getPath();
+				vertices.push(event.latLng);
+				if(vertices.length == 1){
+					vertices.push(event.latLng);
+				}
+			});
+
+
+			//events.click = google.maps.event.addListener(poligon, 'click', function(event){
+			//	var vertices = poligon.getPath();
+			//	vertices.push(event.latLng);
+			//});
+
+			events.move = google.maps.event.addListener(config.map, 'mousemove', function(event){
+				//log('Mouse move');
+				var vertices = poligon.getPath();
+				if(vertices.length > 1){
+					vertices.setAt(vertices.length-1, event.latLng);
+				}
+			});
+
+			events.rclick = google.maps.event.addListenerOnce(config.map, 'rightclick', function(event){
+				track_edit_mode = false;
+				$('#map_track_add>span').css('background-color', '');
+				google.maps.event.removeListener(events.click);
+				google.maps.event.removeListener(events.move);
+				var vertices = poligon.getPath();
+				vertices.pop();
+			});
+
+			log('click event=', events.click);
+
+		} else {
+			track_edit_mode = false;
+			$('#map_track_add>span').css('background-color', '');
+			google.maps.event.removeListener(events.click);
+			google.maps.event.removeListener(events.move);
+			var vertices = poligon.getPath();
+			vertices.pop();
+		}
 	});
 
 });

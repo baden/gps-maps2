@@ -18,7 +18,8 @@ class XLS(webapp.RequestHandler):
 		#self.response.headers['Content-Type'] = 'application/octet-stream'	# Это единственный (пока) способ побороть Transfer-Encoding: chunked
 		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
 
-		import io
+		#import io
+		from StringIO import StringIO
 		import sys
 		from repy import simplejson as json
 		sys.path.insert(0, 'xlwt.zip')  # Add .zip file to front of path
@@ -74,7 +75,8 @@ class XLS(webapp.RequestHandler):
 		#wb.save('blanks.xls')
 		#wb.save(self.response.out)
 
-		out = io.BytesIO()
+		#out = io.BytesIO()
+		out = StringIO()
 		wb.save(out)
 
 		rec = DBExport()

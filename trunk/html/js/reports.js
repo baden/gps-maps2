@@ -349,7 +349,7 @@ $(document).ready(function() {
 			var start = date_to_url(dateText) + '000000'; //inst.currentYear, inst.currentMonth, inst.currentDay, '000000');
 			var stop = date_to_url(dateText) + '235959'; //inst.currentYear, inst.currentMonth, inst.currentDay, '235959');
 			config.skey = $('#rep_syslist').attr('value');
-			genReport($('#rep_syslist').attr('value'), start, stop);
+			\genReport($('#rep_syslist').attr('value'), start, stop);
 			//console.log(dateText);
 			//console.log(inst);
 		}
@@ -453,7 +453,10 @@ if(0){
 		}
 	});
 
+
+
 	var dates = $('#report_date_by_int_from, #report_date_by_int_to').datepicker({
+	//var dates = $('#report_date_by_int_from, #report_date_by_int_to').datetimepicker({
 		altFormat: "DD, d MM, yy",
 		onSelect: function( selectedDate ) {
 			var option = this.id == "report_date_by_int_from" ? "minDate" : "maxDate",
@@ -500,8 +503,9 @@ if(0){
 				$(this).dialog("close");
 			},
 			'Построить отчет': function(){
-				var dt_from = $('#report_date_by_int_from').datepicker('getDate');
-				var dt_to = $('#report_date_by_int_to').datepicker('getDate');
+				var start = $('#report_date_by_int_from').datepicker('getDate');
+				var stop = $('#report_date_by_int_to').datepicker('getDate');
+
 				var time_from = $('#report_dlg_byint_time_from').val();
 				var time_to = $('#report_dlg_byint_time_to').val();
 				log(time_from, /^\d\d:\d\d:\d\d$/.test(time_from), time_to, /^\d\d:\d\d:\d\d$/.test(time_to));
@@ -511,14 +515,29 @@ if(0){
 				}
 				$(this).dialog("close");
 
-				var start = $.datepicker.formatDate('ymmdd', dt_from) + time_from.replace(/:/g,'');
-				var stop = $.datepicker.formatDate('ymmdd', dt_to) + time_to.replace(/:/g,'');
+//				var start = $.datepicker.formatDate('ymmdd', dt_from) + time_from.replace(/:/g,'');
+//				var stop = $.datepicker.formatDate('ymmdd', dt_to) + time_to.replace(/:/g,'');
 				config.skey = $('#report_dlg_byint_syslist').val();
 
-				genReport(config.skey, start, stop,
-					' интервал с ' + $.datepicker.formatDate('dd/mm/yy ', dt_from) + $('#report_dlg_byint_time_from').val() +
-					' по ' + $.datepicker.formatDate('dd/mm/yy ', dt_to) + $('#report_dlg_byint_time_to').val()
-				);
+				start.setHours(parseInt(time_from.slice(0, 2), 10));
+				start.setMinutes(parseInt(time_from.slice(3, 5), 10));
+				start.setSeconds(parseInt(time_from.slice(6, 8), 10));
+
+				stop.setHours(parseInt(time_to.slice(0, 2), 10));
+				stop.setMinutes(parseInt(time_to.slice(3, 5), 10));
+				stop.setSeconds(parseInt(time_to.slice(6, 8), 10));
+
+
+/*				var start = $('#report_date_by_day').datepicker('getDate');
+				var stop = new Date(start);
+				stop.setHours(23);
+				stop.setMinutes(59);
+				stop.setSeconds(59);
+				Date_to_url
+
+*/
+
+				genReport(config.skey, Date_to_url(start), Date_to_url(stop), ' интервал с ' + Date_to_datetime(start) + ' по ' + Date_to_datetime(stop));
 
 				/*
 				var start = date_to_url(dateText) + '000000'; //inst.currentYear, inst.currentMonth, inst.currentDay, '000000');
