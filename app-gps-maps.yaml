@@ -97,6 +97,9 @@ handlers:
 - url: /bingps.*
   script: gps-bingps.py
 
+- url: /export.*
+  script: gps-export.py
+
 - url: /.*
   script: gps-maps.py
 

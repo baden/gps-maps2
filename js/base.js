@@ -48,7 +48,6 @@ function dt_to_time(dt) {
 	return date.toLocaleTimeString();
 }
 
-
 function dt_to_datetime(dt) {
 	return dt_to_date(dt) + ' ' + dt_to_time(dt);
 /*
@@ -66,6 +65,18 @@ function dt_to_datetime(dt) {
 	return f2d(date.getDate()) + '/' + f2d(date.getMonth()+1) + '/' + date.getFullYear() + ' ' + date.toLocaleTimeString();
 	//return dt[4]+dt[5] + '/' + dt[2]+dt[3] + '/20' + dt[0]+dt[1] + ' ' + dt[6]+dt[7] + ':' + dt[8]+dt[9] + ':' + dt[10]+dt[11];
 */
+}
+
+function Date_to_date(date) {
+	return f2d(date.getDate()) + '/' + f2d(date.getMonth()+1) + '/' + date.getFullYear();
+}
+
+function Date_to_time(date) {
+	return date.toLocaleTimeString();
+}
+
+function Date_to_datetime(date) {
+	return Date_to_date(date) + ' ' + Date_to_time(date);
 }
 
 

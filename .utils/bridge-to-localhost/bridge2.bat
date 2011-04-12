@@ -1,4 +1,6 @@
-#!/bin/sh
+rem #!/bin/sh
+
+path=c:\python25
 
 rem killall bribge.py >/dev/null 2>&1
 
