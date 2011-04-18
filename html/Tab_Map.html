@@ -5,6 +5,8 @@
 
   <script src="/js/loader.js"></script>
   <script>
+	loader.require("/html/js/zones.js");
+	loader.require("/html/js/directions.js");
 	loader.require("/html/js/maps.js");
   </script>
 
@@ -35,11 +37,16 @@
 			<button id="map_zone_show" title="Показать зоны">П</button>
 			<button id="map_zone_add" title="Создать зону">Д</button>
 			<button id="map_zone_edit" title="Редактировать зону">Р</button>
-			<button>4</button>
+			<button id="map_track_calc" title="Проложить маршрут">T</button>
 		</div>
 
 		<div id="zone_panel">
 			<ul id="map_zones_list"></ul>
+		</div>
+
+		<div id="dir_panel">
+			<button id="dir_panel_undo" style="display:block;margin:auto">Отмена</button>
+			<div id="directions_panel" style="width:100%;"></div>
 		</div>
 
 		<div id="map_div_cleartrack" style=""><button id="map_btn_cleartrack">Скрыть трек</button></div>

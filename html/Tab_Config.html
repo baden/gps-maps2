@@ -28,9 +28,19 @@
 		<h3><a href="#">Наблюдаемые системы</a></h3>
 		<div>
 			<ul id="config_sys_list"></ul>
-		
 			<button id="config_button_sys_add">Добавить систему</button>
+		</div>
+		<h3><a href="#">ГЕО-зоны</a></h3>
+		<div>
+			<ul id="config_zonerules_list"></ul>
+			<button id="config_button_zonerules_add">Создать набор правил.</button>
+		</div>
 
+		<h3><a href="#">Группы пользователей (Компании)</a></h3>
+		<div>
+			<ul id="config_ugroup_list"></ul>
+			<button id="config_button_ugroup_add">Создать группу пользователей. (Стать администратором группы).</button>
+			<button id="config_button_ugroup_select">Присоединиться к группе пользователей.</button>
 		</div>
 		<h3><a href="#">Настройки интерфейса</a></h3>
 		<div>
@@ -131,6 +141,19 @@
 	  <p>Описание: <span id="config_del_desc">*</span></p>
 	</div>
 
+
+	<div id="config_zone_link" title="Назначение правил для ГЕО-зон.">
+		<p>Система <span id="config_zone_link_imei">?</span> : <span id="config_zone_link_desc">?</span></p>
+		<table class="ui-widget ui-widget-content tview">
+			<thead>
+				<tr class="ui-widget-header"><th rowspan="2">Зона</th><th rowspan="2">Событие</th><th colspan="2">Правило действует</th><th rowspan="2">Приоритет</th><th rowspan="2">Удалить</th></tr>
+				<tr class="ui-widget-header"><th>c</th><th>по</th></tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>
+		<button id="config_zone_link_add_rule">Добавить правило</button>
+	</div>
 	
 	<style>
 		#popup-sys ul {

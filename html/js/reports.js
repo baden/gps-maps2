@@ -604,7 +604,8 @@ if(0){
 				//window.location();
 				var val = $.parseJSON(data);
 				log('ok, data:', data, 'val:', val);
-				$('#export_iframe').attr('src', '/export/get/report.xls?key=' + val.key);
+				$('#export_iframe').attr('src', '/export/get/' + encodeURI($('#report_header').text().replace(/[\/:?\\<*>|"']/gi,'-')) + '.xls?key=' + val.key);
+				log('header', $('#report_header').html());
 				//$('#export_iframe').html(data);
 				//var url='.';
 				//var win = window.open(url,'Download');

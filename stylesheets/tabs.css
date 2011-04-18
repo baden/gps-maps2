@@ -166,6 +166,10 @@ table.tview tr:hover td {
 	padding: 2px 8px 2px 8px;
 }
 
+.ui-button-icon-only .ui-button-text, .ui-button-icons-only .ui-button-text {
+	padding: 2px 8px 2px 8px;
+}
+
 .ui-button-text-icon-secondary .ui-button-text, .ui-button-text-icons .ui-button-text {
 	padding: 2px 24px 2px 8px;
 }
