@@ -1107,7 +1107,7 @@ class Report_Get(BaseApi):
 					sp = d * 3600 / td
 					if sp > 300:	# Максимальная скорость 300 км/ч
 						#d = 0
-						if 'path_break' not in events:
+						if 'path_break' not in self.events:
 							self.events['path_break'] = point['time'].strftime("%y%m%d%H%M%S")
 						continue
 			else:
@@ -1505,6 +1505,32 @@ class Zone_Get(BaseApi):
 				"answer": "no"
 			}
 
+class Zone_Del(BaseApi):
+	#requred = ('akey')
+	def parcer(self):
+		from datamodel import DBZone
+
+		zkey = self.request.get("zkey", None)
+
+		try:
+			db.delete(db.Key(zkey))
+		except db.datastore_errors.BadKeyError, e:
+			return {'answer': 'no', 'reason': 'account key error', 'comments': '%s' % e}
+
+		return {'answer': 'ok'}
+
+class Zone_Rule_Create(BaseApi):
+	def parcer(self):
+		return {'answer': 'ok'}
+
+class Zone_Rule_Get(BaseApi):
+	def parcer(self):
+		return {'answer': 'ok'}
+
+class Zone_Rule_Del(BaseApi):
+	def parcer(self):
+		return {'answer': 'ok'}
+
 application = webapp.WSGIApplication(
 	[
 	('/api/info.*', Info),
@@ -1541,6 +1567,10 @@ application = webapp.WSGIApplication(
 
 	('/api/zone/add*', Zone_Add),
 	('/api/zone/get*', Zone_Get),
+	('/api/zone/del*', Zone_Del),
+	('/api/zone/rule/create*', Zone_Rule_Create),
+	('/api/zone/rule/get*', Zone_Rule_Get),
+	('/api/zone/rule/del*', Zone_Rule_Del),
 
 	#('/api/geo/test*', Geo_Test),
 	],

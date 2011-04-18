@@ -38,13 +38,39 @@ class XLS(webapp.RequestHandler):
 		style0.font = font0
 
 		wb = Workbook()
-		ws0 = wb.add_sheet('0')
+		ws0 = wb.add_sheet(u'Отчет')
 
-		ws0.write(1, 1, 'Test', style0)
+		borders = [Borders() for i in range(7)]
 
-		#args.sort()
-		#for i in range(0, 0x53):
-		i = 0
+		# Стили заголовка
+		borders[0].left = 1
+		borders[0].top = 1
+		borders[0].bottom = 1
+
+		borders[1].top = 1
+		borders[1].bottom = 1
+
+		borders[2].right = 1
+		borders[2].top = 1
+		borders[2].bottom = 1
+
+		# Стили тела таблицы
+		borders[3].left = 1
+		#borders[4].left = 1
+		#borders[5].left = 1
+		borders[6].right = 1
+
+		style = [XFStyle() for i in range(7)]
+		for i in range(7): style[i].borders = borders[i]
+
+		ws0.write(0, 0, u'Действие', style[0])
+		ws0.write(0, 1, u'Примечание', style[1])
+		ws0.write(0, 2, u'Период', style[1])
+		ws0.write(0, 3, u'Время', style[2])
+
+    		#datestyle.num_format_str = fmt
+
+		i = 1
 		for line in data:
 			#borders = Borders()
 			#borders.left = i
@@ -59,11 +85,16 @@ class XLS(webapp.RequestHandler):
 			#ws0.write(i, 3, hex(i), style0)
 			#ws0.write(i, 4, par)
 			#ws0.write(i, 5, self.request.get(par, ''))
-			j = 4
+			j = 0
 			for cell in line:
-				ws0.write(i, j, cell)
+				ws0.write(i, j, cell, style[j+3])
 				j += 1
 			i += 1
+
+		ws0.col(0).width = 3000
+		ws0.col(1).width = 14000
+		ws0.col(2).width = 4500
+		ws0.col(3).width = 2600
 
 		#ws0.write_merge(5, 8, 6, 10, "")
 
@@ -94,8 +125,9 @@ class Get(webapp.RequestHandler):
 		self.response.headers['Content-Type'] = 'application/octet-stream'	# Это единственный (пока) способ побороть Transfer-Encoding: chunked
 		key = self.request.get('key', None)
 		if key:
-			rec = DBExport.get(key)
+			rec = DBExport.get(db.Key(key))
 			self.response.out.write(rec.data)
+			db.delete(rec)
 	
 
 application = webapp.WSGIApplication(

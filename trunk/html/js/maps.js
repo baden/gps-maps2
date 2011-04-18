@@ -373,7 +373,7 @@ var ParcePath = function(data){
 		marker_start = new google.maps.Marker({
 			position: new google.maps.LatLng(data.points[0][1], data.points[0][2]),
 			map: map,
-			title: 'Старт: ' + dt_to_datetime(data.points[0][0]),
+			title: 'Начало трека: ' + dt_to_datetime(data.points[0][0]),
 				//tp + td_to_hms(dt) +
 				//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 				//'\n' + dstop + '...' + dstart,
@@ -395,7 +395,7 @@ var ParcePath = function(data){
 		marker_finish = new google.maps.Marker({
 			position: new google.maps.LatLng(data.points[data.points.length-1][1], data.points[data.points.length-1][2]),
 				map: map,
-			title: 'Финиш: ' + dt_to_datetime(data.points[data.points.length-1][0]),
+			title: 'Конец трека: ' + dt_to_datetime(data.points[data.points.length-1][0]),
 				//tp + td_to_hms(dt) +
 				//'\n' + dt_to_datetime(data.points[data.stops[i].i][0]) + '...' + dt_to_datetime(data.points[data.stops[i].s][0]),
 				//'\n' + dstop + '...' + dstart,
@@ -1027,244 +1027,13 @@ $(document).ready(function(){
 		showed_path = [];
 	});
 
-	var track_edit_mode = false;
-	var events = {};
-	//var poligon;
-	//var poligon_path;
+	var zonekit = new ZoneKit();
+	$('#map_zone_show').click(zonekit.Show);
+	$('#map_zone_add').click(zonekit.AddPoligon);
+	$('#map_zone_edit').click(zonekit.Edit);
 
-	var update_zone_list = function(){
-		$('#map_zones_list').empty();
-		for(var i in config.zones){
-			var zone = config.zones[i];
-			if(zone.type == 'poligon'){
-				$('#map_zones_list').append('<li zkey="' + i + '"> Полигон, вершин: ' + zone.poligon.getPath().length + '</li>');
-			}
-		}
-		$('#map_zones_list li').mouseover(function(ev){
-			var zkey = $(this).attr('zkey');
-			//log('mouseover', this, ev, zkey);
-			var zone = config.zones[zkey];
-			if(zone.type == 'poligon'){
-				zone.poligon.setOptions({strokeWeight: 4});
-			}
-		}).mouseout(function(ev){
-			var zkey = $(this).attr('zkey');
-			//log('mouseover', this, ev, zkey);
-			var zone = config.zones[zkey];
-			if(zone.type == 'poligon'){
-				zone.poligon.setOptions({strokeWeight: 1});
-			}
-		});
-	}
-
-	$('#map_zone_show').click(function(){
-		$.getJSON('/api/zone/get', function (data) {
-			if (data.answer && data.answer == 'ok') {
-				if('zones' in config){
-					for(var i in config.zones){
-						if(config.zones[i].type == 'poligon'){
-							config.zones[i].poligon.setMap(null);
-						}
-					}
-				}
-				config['zones'] = {}
-				for(var i in data.zones){
-					var zone = data.zones[i];
-					if(zone.type == 'poligon'){
-						var path = [];
-						for(j in zone.points) path.push(new google.maps.LatLng(zone.points[j][0], zone.points[j][1]));
-
-						var poligon = new google.maps.Polygon({
-							path: path,
-							clickable: false,
-							strokeColor: "#FF0000",
-							strokeOpacity: 0.8,
-							strokeWeight: 1,
-							fillColor: "#FF0000",
-							fillOpacity: 0.35,
-							map: config.map
-						});
-						poligon['zkey'] = zone.zkey;
-						config.zones[zone.zkey] = {
-							'type': 'poligon',
-							'poligon': poligon
-						}
-					}
-				}
-				update_zone_list();
-			}
-		});
-	});
-
-	$('#map_zone_add').click(function(){
-
-		var poligon;
-
-		var start_add_zone = function (){
-			track_edit_mode = true;
-			//$('#zone_panel').css('display', 'block');
-			$('#map_zone_add>span').css('background-color', 'lime');
-			message('Создавайте зону указывая на карте последовательность вершин многоугольника левой клавишей мыши. Завершение создания зоны - правая клавиша мыши.');
-		}
-		var stop_add_zone = function(){
-			track_edit_mode = false;
-			//$('#zone_panel').css('display', 'none');
-			$('#map_zone_add>span').css('background-color', '');
-			google.maps.event.removeListener(events.click);
-			google.maps.event.removeListener(events.move);
-			var vertices = poligon.getPath();
-			vertices.pop();
-
-			var points = [];
-			for(var i=0; i<vertices.length; i++) {
-				var p = vertices.getAt(i)
-				points.push([p.lat(), p.lng()]);
-
-			}
-			log('points = ', points);
-
-			$.ajax({
-		  		url: '/api/zone/add?akey=' + config.akey,
-				  dataType: 'json',
-				  data: {type: 'poligon', points: JSON.stringify(points)},
-				  type: 'post',
-				  success: function(data){
-					log("zone add complete", data);
-					if(data && data.answer == 'ok'){
-						poligon['zkey'] = data.zkey;
-						if(!('zones' in config)) config['zones'] = {};
-						config.zones[data.zkey] = {
-							type: 'poligon',
-							poligon: poligon
-						}
-						update_zone_list();
-					}
-				  }
-				});
-
-
-			/*$.getJSON('/api/zone/add', points, function (data) {
-				//$("#progress").html("Обрабатываем...");
-				if (data.answer) {
-				}
-			});*/
-			
-
-		}
-
-		if(!track_edit_mode){
-			start_add_zone();
-			var init_path = [];
-
-			poligon = new google.maps.Polygon({
-				//path: init_path,
-				clickable: false,
-				strokeColor: "#FF0000",
-				strokeOpacity: 0.8,
-				strokeWeight: 3,
-				fillColor: "#FF0000",
-				fillOpacity: 0.35,
-				map: config.map
-			});
-			//poligon.setMap(config.map);
-
-			events.click = google.maps.event.addListener(config.map, 'click', function(event){
-				log('map clicked', event);
-				var vertices = poligon.getPath();
-				vertices.push(event.latLng);
-
-				//$('#zone_panel').append('<p>' + event.latLng.lat().toFixed(4) + ', ' + event.latLng.lng().toFixed(4) + '</p>');
-				if(vertices.length == 1){
-					vertices.push(event.latLng);
-				}
-			});
-
-			events.move = google.maps.event.addListener(config.map, 'mousemove', function(event){
-				//log('Mouse move');
-				var vertices = poligon.getPath();
-				if(vertices.length > 1){
-					vertices.setAt(vertices.length-1, event.latLng);
-				}
-			});
-
-			events.rclick = google.maps.event.addListenerOnce(config.map, 'rightclick', function(event){
-				stop_add_zone();
-			});
-
-			log('click event=', events.click);
-
-		} else {
-			stop_add_zone();
-		}
-	});
-
-	var zones_activate = function(){
-		for(var i in config.zones){
-			var zone = config.zones[i];
-			if(zone.type == 'poligon'){
-				zone.poligon.setOptions({
-					clickable: true,
-					//strokeWeight: 2
-				});
-				var eventsclick = google.maps.event.addListener(zone.poligon, 'mouseover', function(event){
-					log('mouseover', this, event, eventsclick);
-					if('zkey' in this) {
-						//$('#map_zones_list li').removeClass('highlight');
-						$('#map_zones_list li[zkey='+this.zkey+']').addClass('highlight');
-					}
-					this.setOptions({
-						//fillOpacity: 0.8,
-						strokeWeight: 4
-					});
-
-				});
-				var eventsleave = google.maps.event.addListener(zone.poligon, 'mouseout', function(event){
-					log('mouseout', this, event, eventsclick);
-					if('zkey' in this) {
-						//$('#map_zones_list li').removeClass('highlight');
-						$('#map_zones_list li[zkey='+this.zkey+']').removeClass('highlight');
-					}
-
-					this.setOptions({
-						//fillOpacity: 0.35,
-						strokeWeight: 1
-					});
-
-				});
-			}
-		}
-	}
-	var zones_deactivate = function(){
-		for(var i in config.zones){
-			var zone = config.zones[i];
-			if(zone.type == 'poligon'){
-				zone.poligon.setOptions({
-					clickable: false,
-					strokeWeight: 1
-				});
-
-			}
-		}
-	}
-
-	$('#map_zone_edit').click(function(){
-		if($('#zone_panel').css('display') == 'none'){
-			$('#map_zone_edit>span').css('background-color', 'lime');
-
-			$('#zone_panel').show('fast');
-			//$('#map_zones_list').empty();
-			//for(var i in config.zones){
-			//	var zone = config.zones[i];
-			//	$('#map_zones_list').append('<li>' + zone.type + ' ' + zone.poligon.getPath().length +' вершин </li>');
-			//}
-			zones_activate();
-
-		} else {
-			$('#map_zone_edit>span').css('background-color', '');
-			$('#zone_panel').hide('fast');
-			zones_deactivate();
-		}
-	});
+	var dirkit = new DirKit();
+	$('#map_track_calc').click(dirkit.Route)
 
 });
 

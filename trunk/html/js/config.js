@@ -41,12 +41,11 @@
 						 '<span class="bconf hl mm" title="Настроить систему">C</span>' +
 						 '<span class="spanbrd" title="IMEI">' + s.imei + '</span><span class="spanbrd" title="Телефон">' + (s.phone!='None'?(s.phone):'не определен') + '</span> <desc>' + s.desc + '</desc>' +
 						 '<button class="key bdesc" title="Изменить описание">...</button>' +
+						 '<button class="key bzone" title="Привязать ГЕО-зону">З</button>' +
 						 '<button class="key bdel" title="Отказаться от слежения за системой">X</button>' +
 						'</li>'
 					);
 				}
-				//$(".key").button();
-				//$("#config_list").accordion("resize");
 				/*
 				$(".sli").bind('contextmenu', function(e) {
 					//alert('Config');
@@ -69,6 +68,17 @@
 					//$("#sys_desc").val(sys_descs[i]);
 					dialog.find('textarea').val(desc);
 					//log('Dialog: dialog-sys-desc ' + sys_imeis[i] + ' (' + sys_descs[i] + ')');
+					dialog.dialog('open');
+				});
+
+				$("#config_sys_list .bzone").button().click(function(){
+					var par = $(this).parent();
+					var imei = par.attr('imei');
+					$('#config_zone_link_imei').html(imei);
+					var desc = par.find('desc').html();
+					$('#config_zone_link_desc').html(desc);
+					var dialog = $('#config_zone_link');
+					log('Zone links', par, imei, desc, dialog);
 					dialog.dialog('open');
 				});
 
@@ -365,6 +375,92 @@
 					$(this).dialog('close');
 				},
 				'Отменить': function() {
+					$(this).dialog('close');
+				}
+			}
+		});
+
+		var add_zone_rule = function(){
+			var tbody = $('#config_zone_link table tbody');
+			var select_zone = 
+				'<select name="config_select_zone_list" style="width:100%;" title="Выберите зону" onchange="/*UpdateGroupList();*/">'+
+				'	<option value="zz0">Зона 1</option>'+
+				'	<option value="zz1">Зона 2</option>'+
+				'	<option value="zz2">Зона 3</option>'+
+				'</select>';
+			var select_event =
+				'<select name="config_select_event_list" style="width:100%;" title="Группа" onchange="/*UpdateGroupList();*/">'+
+				'	<option value="0" title="Cообщение будет отражено в отчетах и в событиях">"Тихое" оповещение при покидании зоны</option>'+
+				'	<option value="1" title="Cообщение будет выведено на экран всем пользователям, наблюдающим за системой">"Cрочное" оповещение при покидании зоны</option>'+
+				'	<option value="2">"Тихое" оповещение о вхождении в зону</option>'+
+				'	<option value="3">"Срочное" оповещение о вхождении в зону</option>'+
+				'	<option value="4">Начало трека при покидании зоны</option>'+
+				'	<option value="5">Конец трека при вхождении в зону</option>'+
+				'	<option value="6">Событие 6</option>'+
+				'	<option value="7">Событие 7</option>'+
+				'	<option value="8">Событие 8</option>'+
+				'	<option value="9">Событие 9</option>'+
+				'	<option value="10">Событие 10</option>'+
+				'</select>';
+
+			tbody.append('<tr><td>'+select_zone+'</td><td>'+select_event+'</td><td>00:00:00</td><td>23:59:59</td><td>норма</td><td><button class="key">.</button></td></tr>');
+			$('#config_zone_link table tbody tr:last td:last button').button({text: false, icons: {primary: "ui-icon-close"}}).click(function(){
+				log('delete zone rule', this, $(this).parent().parent());
+				$(this).parent().parent().remove();
+			});
+		}
+
+		window['config_delete_zone_rule'] = function(){
+		}
+
+		$('#config_zone_link_add_rule').click(function(){
+			log('add zone rule');
+			add_zone_rule();
+		});
+
+		$("#config_zone_link").dialog({
+			width: 800,
+			height: 650,
+			modal: true,
+			autoOpen: false,
+			open: function(event, ui){
+
+				log('Zone Config dialog open');
+				
+				//for(var i=0; i<10; i++){
+				//	add_zone_rule();
+				//}
+				$(this).dialog('option', 'position', 'center');
+			},
+			buttons: {
+				/*
+				'За.': function() {
+					var dialog = $(this);
+					//log(dialog);
+					//log($(this));
+					//$("#sysdesc_imei").html(sys_imeis[i])
+					var imei = dialog.find('label').html();
+					//$("#sys_desc").val(sys_descs[i]);
+					var desc = dialog.find('textarea').val();
+
+					//var imei = $("#sysdesc_imei").html(); //document.getElementById('sysdesc_imei').value;
+					//var desc = document.getElementById('sys_desc').value;
+					log('Set desc for sys ' + imei + ' -> ' + desc);
+					$.getJSON('/api/sys/desc?akey='+config.akey+'&imei=' + imei + '&desc=' + desc, function (data) {
+						if(data.result){
+							var result = data.result;
+							if(result == "disabled"){
+								//$("#dialog-need-admin").dialog('open');
+							} else if(result == "ok") {
+								//UpdateSysList();
+								//$("#config_sysdsc_"+imei).html(desc);
+								$("#config_sys_list").find('li[imei="'+imei+'"]>desc').html(desc);
+							}
+						}
+					});
+					$(this).dialog('close');
+				},*/
+				'Закрыть': function() {
 					$(this).dialog('close');
 				}
 			}
