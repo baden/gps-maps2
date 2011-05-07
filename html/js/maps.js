@@ -1,3 +1,4 @@
+"use strict";
 
 (function(){
 
@@ -59,59 +60,17 @@ function LoadPoints1(){
 var GetPath = function(skey_, from, to){
 	skey = skey_;
 	ruler1.setSysKey(skey);
-	log("::GetPath.start");
+	//log("::GetPath.start");
 	$.getJSON('/api/geo/get?skey=' + skey + '&from=' + from + '&to=' + to, function (data) {
 		//$("#progress").html("Обрабатываем...");
-		log("getJSON parce");
+		//log("getJSON parce");
 		if (data.answer && data.points.length > 0) {
 			ParcePath(data);
 		}
 	});
-	log("::GetPath.end");
+	//log("::GetPath.end");
 }
 
-if(0){
-//google.maps.LatLng.prototype.setZoom = function(z){this.zoom = z;}
-//mLatLng_base = google.maps.LatLng.constructor;
-
-function newClass(parent, prop) {
-  // Dynamically create class constructor.
-  var clazz = function() {
-    // Stupid JS need exactly one "operator new" calling for parent
-    // constructor just after class definition.
-    if (clazz.preparing) return delete(clazz.preparing);
-    // Call custom constructor.
-    if (clazz.constr) {
-      this.constructor = clazz; // we need it!
-      clazz.constr.apply(this, arguments);
-    }
-  }
-  clazz.prototype = {}; // no prototype by default
-  if (parent) {
-    parent.preparing = true;
-    clazz.prototype = new parent;
-    clazz.prototype.constructor = parent;
-    clazz.constr = parent; // BY DEFAULT - parent constructor
-  }
-  if (prop) {
-    var cname = "constructor";
-    for (var k in prop) {
-      if (k != cname) clazz.prototype[k] = prop[k];
-    }
-    if (prop[cname] && prop[cname] != Object)
-      clazz.constr = prop[cname];
-  }
-  return clazz;
-}
-
-mLatLng = newClass(google.maps.LatLng, {
-	constructor: function(la, lo, z) {
-	    //document.writeln("Вызван конструктор Zaporojets().");
-	    this.constructor.prototype.constructor.call(this, la, lo);
-	    this.zoom = z;
-	  },
-});
-}
 /*
 mLatLng = function(la, lo, z){
 //	base.constructor.call(la, lo);
@@ -124,7 +83,7 @@ mLatLng = function(la, lo, z){
 mLatLng.prototype = new google.maps.LatLng.prototype.constructor();
 */
 
-function dt_to_Date(d){
+var dt_to_Date = function (d){
 /*	var h = parseInt(d.slice(6, 8), 10);
 	var dat = new Date(
 			parseInt('20' + d[0]+d[1], 10),	// год
@@ -184,10 +143,10 @@ var marker_finish = null;
 var ParcePath = function(data){
 	var profile = new Profile("GetPath");
 
-	log("Loading a path...");
+	//log("Loading a path...");
 
 	profile.show();
-	log("Create LatLng and calculate bounds...");
+	//log("Create LatLng and calculate bounds...");
 	flightPlanCoordinates = [];
 	for(var i in data.points){
 		var l = new google.maps.LatLng(data.points[i][1], data.points[i][2], false);
@@ -227,7 +186,7 @@ var ParcePath = function(data){
 	//var sw = flightPathBounds.getSouthWest();
 	//var ne = flightPathBounds.getNorthEast();
 
-	log("Bound in request: (" + data.bounds.sw[0] + "," + data.bounds.sw[1] + ")-(" + data.bounds.ne[0] + "," + data.bounds.ne[1] + ")" );
+	//log("Bound in request: (" + data.bounds.sw[0] + "," + data.bounds.sw[1] + ")-(" + data.bounds.ne[0] + "," + data.bounds.ne[1] + ")" );
 	//map.panToBounds(flightPathBounds);
 //	map.panTo(flightPlanCoordinates[flightPlanCoordinates.length-1]);
 
@@ -239,7 +198,7 @@ var ParcePath = function(data){
 */
 
 	profile.show();
-	log("Prepare sub bounds...");
+	//log("Prepare sub bounds...");
 	sub_bounds = [];
 	sub_bound_indexes = [];
 	
@@ -280,12 +239,12 @@ var ParcePath = function(data){
 
 	profile.show();
 
-	log("Clear stop_markers...");
+	//log("Clear stop_markers...");
 	for(var i in stop_markers){
 		stop_markers[i].setMap(null);
 	}
 	stop_markers = [];
-	log("Make stop_markers...");
+	//log("Make stop_markers...");
 	for(var i in data.stops){
 
 		var dstop = dt_to_Date(data.points[data.stops[i].i][0]);
@@ -319,7 +278,7 @@ var ParcePath = function(data){
 				//zIndex: -1000
 			});
 		google.maps.event.addListener(marker, 'click', function(moev){
-			log("Stop marker: click.");
+			//log("Stop marker: click.");
 			//console.log(this);
 			//console.log(moev);
 
@@ -358,7 +317,7 @@ var ParcePath = function(data){
 		stop_markers.push(marker);
 
 	}
-	log('Stop markers: ', data.stops.length);
+	//log('Stop markers: ', data.stops.length);
 
 	if(data.points.length > 0){
 		//var l = new google.maps.LatLng(data.points[i][1], data.points[i][2], false);
@@ -389,7 +348,7 @@ var ParcePath = function(data){
 		today.setMilliseconds(0);*/
 
 		//today = new Date().getFullYear();
-		log('selected day:', $("#datepicker").datepicker('getDate').toDateString() == new Date().toDateString());
+		//log('selected day:', $("#datepicker").datepicker('getDate').toDateString() == new Date().toDateString());
 
 		if($("#datepicker").datepicker('getDate').toDateString() != new Date().toDateString()){
 		marker_finish = new google.maps.Marker({
@@ -540,9 +499,9 @@ var UpdateMarker = function (moev){
 				total_points += sub_bound_indexes[i].length;
 
 				for(var j in sub_bound_indexes[i]){
-					p = flightPlanCoordinates[sub_bound_indexes[i][j]];
+					var p = flightPlanCoordinates[sub_bound_indexes[i][j]];
 					if(bound.contains(p)){
-						d = distance(moev.latLng, p);
+						var d = distance(moev.latLng, p);
 						if(d < mind) {
 							mind = d;
 							minp = sub_bound_indexes[i][j];
@@ -584,6 +543,8 @@ var UpdateMarker = function (moev){
 		//$("#point_info").html("Pos: " + flightPlanCoordinates[minp]);
 		//console.log("flightPath: minp set to = " + minp);
 		prev_minp = minp;
+		ruler1.HideInfo();
+		//log('marker change', minp);
 	}
 	var end = new Date();
 	var time = end.getTime() - start.getTime();
@@ -591,12 +552,13 @@ var UpdateMarker = function (moev){
 	if(config.admin){
 		$("#mark2").html("in s/bounds: " + total_points + " time: " + time);
 	}
+
 }
 
 var once_map_style = true;
 
-function CreateMap() {
-	log('CreateMap: begin');
+var CreateMap = function () {
+	//log('CreateMap: begin');
 	//if(google.'maps')
 	geocoder = new google.maps.Geocoder();
 	var $map = $('#map').gmap({
@@ -610,7 +572,7 @@ function CreateMap() {
 	map = $($map).gmap('option', 'map');
 	config.map = map;
 	//$(
-	console.log('CreateMap:', map);
+	//console.log('CreateMap:', map);
 
 	google.maps.event.addListener(map, 'zoom_changed', function(){
 		//console.log("Map: zoom_changed.");
@@ -627,7 +589,7 @@ function CreateMap() {
 
 var lastpos = {};
 
-function CreateLastMarker(p){
+var CreateLastMarker = function(p){
 	//var p = data.geo[i];
 	//console.log('CreateLastMarker ', p);
 
@@ -682,13 +644,12 @@ function CreateLastMarker(p){
 	}
 }
 
-function GetLastPositions(akey) {
-	log('Get last positions...');
-	url = "/api/geo/last?akey=" + akey;
-	$.getJSON(url, function (data) {
+var GetLastPositions = function (akey) {
+	//log('Get last positions...');
+	$.getJSON('/api/geo/last?akey=' + akey, function (data) {
 		//$("#progress").html("Обрабатываем...");
 		if (data.answer && data.answer == 'ok') {
-			log('Show last positions...');
+			//log('Show last positions...');
 			//console.log()
 			for(var i in data.geo){
 				CreateLastMarker(data.geo[i]);
@@ -697,7 +658,7 @@ function GetLastPositions(akey) {
 	});
 
 	config.updater.add('geo_change', function(msg) {
-		log('MAPS: GEO_Update: ', msg.data);
+		//log('MAPS: GEO_Update: ', msg.data);
 		var skey = msg.data.skey;
 		//map.panTo(lastpos[skey].position);
 		$.getJSON('/api/geo/last?akey=' + akey + '&skey=' + skey, function (data) {
@@ -719,7 +680,7 @@ function GetLastPositions(akey) {
 	});
 }
 
-function distance(p1, p2) {
+var distance = function (p1, p2) {
     var R = 6371; // km (change this constant to get miles)
     var dLat = (p2.lat()-p1.lat()) * Math.PI / 180;
     var dLon = (p2.lng()-p1.lng()) * Math.PI / 180;
@@ -734,7 +695,7 @@ function distance(p1, p2) {
 }
 
 
-function DrawPlyline()
+var DrawPlyline = function ()
 {
 	//if(flightPath.length == 2) return;
 	if(flightPath) return;
@@ -766,7 +727,7 @@ function DrawPlyline()
 
 	if(0){
 	google.maps.event.addListener(flightPath, 'click', function(moev){
-		log("flightPath: click.");
+		//log("flightPath: click.");
 	});
 
 	google.maps.event.addListener(flightPath, 'mouseover', function(moev){
@@ -778,16 +739,16 @@ function DrawPlyline()
 	});
 	}
 	//google.maps.event.addListener(flightPath, 'mousemove', UpdateMarker);
-	log("Draw polyline.");
+	//log("Draw polyline.");
 }
 
 var ClearPath = function(skey){
 	var profile = new Profile("Clear path");
-	log("Clear path.");
+	//log("Clear path.");
 	showed_path = []
-	log(" - purge points on map");
+	//log(" - purge points on map");
 	if(flightPath) flightPath.setPath(showed_path);
-	log("Clear stop_markers...");
+	//log("Clear stop_markers...");
 	for(var i in stop_markers){
 		stop_markers[i].setMap(null);
 	}
@@ -797,10 +758,10 @@ var ClearPath = function(skey){
 
 var prev_sender=null;
 
-function SetDay(skey, start, stop){
+var SetDay = function (skey, start, stop){
 	//var from = date+'000000';
 	//var to = date+'235959';
-	log("::SetDay.start from:", start, " to:", stop);
+	//log("::SetDay.start from:", start, " to:", stop);
 	GetPath(skey, Date_to_url(start), Date_to_url(stop));
 	//console.log(sender + '-' + prev_sender);
 	//if(prev_sender) $('#'+prev_sender).css('background-color','');
@@ -813,17 +774,16 @@ function SetDay(skey, start, stop){
 
 var dbg_data = null;
 
-monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+//var monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-function DayList(skey, month){
-	log("::DayList.start");
-	url = "/api/geo/dates?skey=" + skey + "&month="+ month;
-	$.getJSON(url, function (data) {
+var DayList = function (skey, month){
+	//log("::DayList.start");
+	$.getJSON('/api/geo/dates?skey=' + skey + '&month='+ month, function (data) {
 		//$("#progress").html("Обрабатываем...");
-		log("::DayList: getJSON parce " + data.years);
+		//log("::DayList: getJSON parce " + data.years);
 		dbg_data = data;
 		if (data.answer) {
-			log('DAY_LIST: ', data);
+			//log('DAY_LIST: ', data);
 			config.daylist = config.daylist || {};
 			config.daylist.skey = skey;
 			config.daylist.year = data.year;
@@ -850,7 +810,7 @@ function DayList(skey, month){
 			});*/
 		}
 	});
-	log("::DayList.end");
+	//log("::DayList.end");
 }
 
 
@@ -860,10 +820,10 @@ var params = {
 	scrollArrows: true
 }
 
-function UpdateDayList(){
+var UpdateDayList = function (){
 	var date = $("#datepicker").datepicker('getDate');
 	if(!config.cur_month) config.cur_month = $.datepicker.formatDate('yymm', date);
-	log('Update for sys ' + config.skey + ' and month ' + config.cur_month);
+	//log('Update for sys ' + config.skey + ' and month ' + config.cur_month);
 
 	DayList(config.skey, config.cur_month);
 }
@@ -887,13 +847,13 @@ $(document).ready(function() {
 		maxDate: '+0m +0w',
 		hideIfNoPrevNext: true,
 		onSelect: function(dateText, inst) {
-			log('DateText:', dateText);
+			//log('DateText:', dateText);
 			var start = $(this).datepicker('getDate');
 			var stop = new Date(start);
 			stop.setHours(23);
 			stop.setMinutes(59);
 			stop.setSeconds(59);
-			log('start:', start, 'stop:', stop);
+			//log('start:', start, 'stop:', stop);
 			SetDay(config.skey, start, stop);
 			//UpdateDayList();
 		},
@@ -938,13 +898,13 @@ $(document).ready(function() {
 });
 
 
-function UpdateGroupList(){
+var UpdateGroupList = function (){
 	var group = $('#group_list').attr('value');
 	log('Select group:' + group);
 }
 
-function Map_SysList(list){
-	log('Map_SysList systems:', config.systems);
+var Map_SysList = function (list){
+	//log('Map_SysList systems:', config.systems);
 	list.empty();
 	for(var i in config.systems){
 		var s = config.systems[i];
@@ -957,7 +917,7 @@ function Map_SysList(list){
 	}
 
 	list.find('li').click(function(){
-		log(this, $(this), this.attributes['imei'].value);
+		//log(this, $(this), this.attributes['imei'].value);
 		//map_ul_sys
 		$(this).parent().find('li').removeClass('ui-state-highlight');
 		$(this).addClass('ui-state-highlight');
@@ -989,21 +949,21 @@ $(document).ready(function(){
 	Map_SysList(list);
 
 	config.updater.add('changedesc', function(msg) {
-		log('MAP: Update descriptions');
+		//log('MAP: Update descriptions');
 		//updateLogList();
 		$(list).find('li[skey="' + msg.data.skey + '"]').html(
 			'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
 			msg.data.desc
 		).find('span').click(function(){
 			var skey = $(this).parent().attr('skey');
-			log('span:click', skey, lastpos[skey]);
+			//log('span:click', skey, lastpos[skey]);
 			map.panTo(lastpos[skey].position);
 		});
 		//console.log(l);
 	});
 
 	config.updater.add('changeslist', function(msg) {
-		log('MAP: Update system list');
+		//log('MAP: Update system list');
 		Map_SysList(list);
 		//updateLogList();
 		//$(list).find('li[skey="' + msg.data.skey + '"]').html(msg.data.desc);
@@ -1011,14 +971,14 @@ $(document).ready(function(){
 	});
 
 	config.updater.tabs[0] = function(){
-		log('MAP: tab update');
+		//log('MAP: tab update');
 		//$('#map').resize();
 		google.maps.event.trigger(map, 'resize');
 	}
 
 	$('#map_btn_cleartrack').click(function(){
 		//if(showed_path.length != 0){
-		log('clear path:', flightPath);
+		//log('clear path:', flightPath);
 		if(flightPath) flightPath.setPath([]);
 		// Маркеры начала и конца
 		if(marker_start) marker_start.setMap(null);

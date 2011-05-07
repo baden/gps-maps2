@@ -1,18 +1,19 @@
+"use strict";
 (function(window, $){
 	var document = window.document;
 
-	function sendGet(url) {
+	var sendGet = function(url) {
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', url, true);
 		xhr.send();
 	}
-	function sendPost(url, body) {
+	var sendPost = function(url, body) {
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', url, true);
 		xhr.send(body);
 	}
 
-	function saveconfig(it, val){
+	var saveconfig = function(it, val){
 		$('#button_config_restart').button( "option", "disabled", true );
 		if(val) config.ui[it] = val;
 		$.ajax({
@@ -21,13 +22,13 @@
 		  data: config.ui,
 		  type: 'POST',
 		  success: function(){
-			log('Saved.');
+			//log('Saved.');
 			$('#button_config_restart').button( "option", "disabled", false );
 			}
 		});
 	}
 
-	function UpdateSysList(){
+	var UpdateSysList = function(){
 		$.getJSON('/api/info?akey='+config.akey, function (data) {
 			if(data){
 				$("#config_sys_list").empty();
@@ -78,7 +79,7 @@
 					var desc = par.find('desc').html();
 					$('#config_zone_link_desc').html(desc);
 					var dialog = $('#config_zone_link');
-					log('Zone links', par, imei, desc, dialog);
+					//log('Zone links', par, imei, desc, dialog);
 					dialog.dialog('open');
 				});
 
@@ -104,7 +105,7 @@
 							if(data.config.length === 0){
 								$("#config_params_body").empty().html('Нет параметров. Возможно система еще не сохранила параметры.<br/>Можно послать SMS на номер системы с текстом <strong>saveconfig</strong> для принудительного сохранения параметров.');
 							} else {
-								log('Config_GET:', data);
+								//log('Config_GET:', data);
 								var rows = '<table class="tview"><thead><tr><th>№</th><th>Имя</th><th>Описание<span id="config_params_show_all" title="Показать все" class="cursor_pointer">...</span></th><th>Значение</th><th>Заводская установка</th><th>Очередь</th></tr></thead><tbody>';
 								var index = 1;
 								for(var i in data.config){
@@ -132,15 +133,15 @@
 								});
 
 								var tb = $('#config_params_body table tbody');
-								log('table = ', tb);
-								log('table>tr>td:first = ', tb.find('tr').find('td:first'));
+								//log('table = ', tb);
+								//log('table>tr>td:first = ', tb.find('tr').find('td:first'));
 								tb.find('tr').find('td:first').next().next().click(function(){
 									if(config.admin){
                                                                         var name = $(this).parent().attr('name');
 									var pvalue = $(this).html();
 									var nvalue = prompt("Введите описание для '" + name + "'", pvalue);
 									if(nvalue && nvalue != pvalue){
-										log('Change description', name);
+										//log('Change description', name);
 										$(this).html(nvalue);
 										sendGet('/api/param/desc?name=' + name + '&value=' + nvalue);
 									}
@@ -150,7 +151,7 @@
 									var pvalue = $(this).html();
 									var nvalue = prompt("Введите значение для '" + name + "'", pvalue);
 									if(nvalue && nvalue != pvalue){
-										log('Change value', name);
+										//log('Change value', name);
 										$(this).next().next().html(nvalue);
 										$(this).addClass('wait');
 										sendGet('/api/sys/config?cmd=set&imei=' + imei + '&name=' + name + '&value=' + nvalue);
@@ -200,7 +201,7 @@
 				if(config.admin) $('#config_sys_list .bpurge').button().css('color', 'red').click(function(){
 					//alert('В разработке');
 					var imei = $(this).parent().attr('imei');
-					log('Удаление GPS данных для системы', this, imei);
+					//log('Удаление GPS данных для системы', this, imei);
 					if($('#config_purgegps').length === 0){
 						$('body').append(
 							//'<div id="config_overlay" class="ui-widget-overlay"></div>' +
@@ -236,7 +237,7 @@
 							'Выполнить!': function() {
 
 								var dateto = $.datepicker.formatDate('ymmdd000000', $('#config_purgegps').datepicker('getDate'));
-								log('Удаление GPS данных для системы', imei, ' до даты ', dateto);
+								//log('Удаление GPS данных для системы', imei, ' до даты ', dateto);
 								$.getJSON('/api/geo/del?imei='+imei+'&to='+dateto, function (data) {
 									if(data.answer == 'ok'){
 										alert('Удаление данных поставлено в очередь. Это может потребовать некоторого времени.');
@@ -268,7 +269,7 @@
 	}
 
 	$(document).ready(function() {
-		log('Загрузка закладки. Конфигурация.');
+		//log('Загрузка закладки. Конфигурация.');
 
 		//$("#nav_config").button("option", "disabled", true);
 		// a workaround for a flaw in the demo system (http://dev.jqueryui.com/ticket/4375), ignore!
@@ -287,7 +288,7 @@
 
 		$("textarea").keypress(function(ev){
 			if(ev.which == 13) {
-				log('TEXTAREA_13:', $(this).parents('div[role="dialog"]').find('button').first());
+				//log('TEXTAREA_13:', $(this).parents('div[role="dialog"]').find('button').first());
 				$(this).parents('div[role="dialog"]').find('button').first().click();
 				return false;
 			}
@@ -359,7 +360,7 @@
 
 					//var imei = $("#sysdesc_imei").html(); //document.getElementById('sysdesc_imei').value;
 					//var desc = document.getElementById('sys_desc').value;
-					log('Set desc for sys ' + imei + ' -> ' + desc);
+					//log('Set desc for sys ' + imei + ' -> ' + desc);
 					$.getJSON('/api/sys/desc?akey='+config.akey+'&imei=' + imei + '&desc=' + desc, function (data) {
 						if(data.result){
 							var result = data.result;
@@ -405,7 +406,7 @@
 
 			tbody.append('<tr><td>'+select_zone+'</td><td>'+select_event+'</td><td>00:00:00</td><td>23:59:59</td><td>норма</td><td><button class="key">.</button></td></tr>');
 			$('#config_zone_link table tbody tr:last td:last button').button({text: false, icons: {primary: "ui-icon-close"}}).click(function(){
-				log('delete zone rule', this, $(this).parent().parent());
+				//log('delete zone rule', this, $(this).parent().parent());
 				$(this).parent().parent().remove();
 			});
 		}
@@ -414,7 +415,7 @@
 		}
 
 		$('#config_zone_link_add_rule').click(function(){
-			log('add zone rule');
+			//log('add zone rule');
 			add_zone_rule();
 		});
 
@@ -425,7 +426,7 @@
 			autoOpen: false,
 			open: function(event, ui){
 
-				log('Zone Config dialog open');
+				//log('Zone Config dialog open');
 				
 				//for(var i=0; i<10; i++){
 				//	add_zone_rule();
@@ -519,7 +520,7 @@
 		// Выбор темы оформления
 
 		$('#config_list select#config_set_theme option[value="'+config.ui.theme+'"]').attr('selected', 'selected');
-		log('Set theme item:', config.ui.theme, $('#config_list select#config_set_theme option[value="'+config.ui.theme+'"]'));
+		//log('Set theme item:', config.ui.theme, $('#config_list select#config_set_theme option[value="'+config.ui.theme+'"]'));
 
 		$('#config_list #config_set_theme').bind('change', function(){
 			var themename = $(this).attr('value');
@@ -545,7 +546,7 @@
 			},
 			onHide: function (colpkr) {
 				$(colpkr).fadeOut(100);
-				log('hide');
+				//log('hide');
 				saveconfig('trackcolor', null);
 				return false;
 			},
@@ -585,7 +586,7 @@
 		}
 
 		$('.cfg_iframe').click(function(){
-			log('boo', this);
+			//log('boo', this);
 			if($(this).find('div').length == 0){
 				$(this).append('<div><iframe src="'+$(this).attr('value')+'" style="width:100%; height: 70%;">'+
 				'Ваш браузер не поддерживает iframe. Сожалеем, но единственным выходом является использование другого браузера. Мы рекомендуем <a href="http://www.google.com/chrome?hl=ru">Google Chrome.</a>'+
@@ -615,7 +616,7 @@
 		setTimeout(function(){$("#config_list").accordion("resize")}, 1000);
 
 		config.updater.tabs[4] = function(){
-			log('CONFIG: tab update');
+			//log('CONFIG: tab update');
 			$("#config_list").accordion("resize");
 			//$('#map').resize();
 			//google.maps.event.trigger(map, 'resize');

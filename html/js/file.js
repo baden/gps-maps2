@@ -1,3 +1,4 @@
+"use strict";
 window.log = function(){
   log.history = log.history || [];   // store logs to an array for reference
   log.history.push(arguments);

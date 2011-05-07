@@ -1,4 +1,7 @@
-// usage: log('inside coolFunc',this,arguments);
+"use strict";
+//012; //Восьмеричный литерал запрешен. Выбросит исключение SyntaxError в Strict Mode// usage: log('inside coolFunc',this,arguments);
+//console.log('strict mode is not worked!');
+
 // paulirish.com/2009/log-a-lightweight-wrapper-for-consolelog/
 window.log = function(){
   log.history = log.history || [];   // store logs to an array for reference
@@ -19,14 +22,14 @@ window.log = function(){
   };
 })(document);
 
-function f2d(n) {
+var f2d = function(n) {
   if (n < 10) {
     return '0' + n;
   }
   return String(n);
 };
 
-function dt_to_Date(dt) {
+var dt_to_Date = function(dt) {
 	var date = new Date(Date.UTC(
 		parseInt('20'+dt[0]+dt[1], 10),
 		parseInt(dt[2]+dt[3], 10)-1,
@@ -38,17 +41,17 @@ function dt_to_Date(dt) {
 	return date;
 }
 
-function dt_to_date(dt) {
+var dt_to_date = function (dt) {
 	var date = dt_to_Date(dt);
 	return f2d(date.getDate()) + '/' + f2d(date.getMonth()+1) + '/' + date.getFullYear();
 }
 
-function dt_to_time(dt) {
+var dt_to_time = function (dt) {
 	var date = dt_to_Date(dt);
 	return date.toLocaleTimeString();
 }
 
-function dt_to_datetime(dt) {
+var dt_to_datetime = function (dt) {
 	return dt_to_date(dt) + ' ' + dt_to_time(dt);
 /*
 	//log('dt_to_datetime dt:', dt);
@@ -67,20 +70,20 @@ function dt_to_datetime(dt) {
 */
 }
 
-function Date_to_date(date) {
+var Date_to_date = function(date) {
 	return f2d(date.getDate()) + '/' + f2d(date.getMonth()+1) + '/' + date.getFullYear();
 }
 
-function Date_to_time(date) {
+var Date_to_time = function (date) {
 	return date.toLocaleTimeString();
 }
 
-function Date_to_datetime(date) {
+var Date_to_datetime = function (date) {
 	return Date_to_date(date) + ' ' + Date_to_time(date);
 }
 
 
-function td_to_hms(d) {
+var td_to_hms = function (d) {
 	var minutes = (d - (d % 60)) / 60;
 	var hours = (minutes - (minutes % 60)) / 60;
 	minutes = minutes % 60;
@@ -90,7 +93,7 @@ function td_to_hms(d) {
 	else return seconds + ' сек';
 }
 
-function td_to_time(d) {
+var td_to_time = function (d) {
 	var minutes = (d - (d % 60)) / 60;
 	var hours = (minutes - (minutes % 60)) / 60;
 	minutes = minutes % 60;
@@ -106,7 +109,7 @@ function td_to_time(d) {
 //	return ymd.slice(8,10) + ymd.slice(3,5) + ymd.slice(0,2);
 //}
 
-function Date_to_daystart(d) {
+var Date_to_daystart = function (d) {
 	var date = new Date(d);
 	date.setHours(0);
 	date.setMinutes(0);
@@ -114,7 +117,7 @@ function Date_to_daystart(d) {
 	return date;
 }
 
-function Date_to_daystop(d) {
+var Date_to_daystop = function (d) {
 	var date = new Date(d);
 	date.setHours(23);
 	date.setMinutes(59);
@@ -122,12 +125,12 @@ function Date_to_daystop(d) {
 	return date;
 }
 
-function Date_to_url(d) {
+var Date_to_url = function (d) {
 	return f2d(d.getUTCFullYear()-2000) + f2d(d.getUTCMonth()+1) + f2d(d.getUTCDate()) + 
 		f2d(d.getUTCHours()) + f2d(d.getUTCMinutes()) + f2d(d.getUTCSeconds());
 }
 
-function ln_to_km(l) {
+var ln_to_km = function (l) {
 //	var k = parseInt(l, 10);
 //	var m = Math.round((l-parseInt(l, 10))*1000);
 //	if(k) return Math.round(l*10)/10 + ' км (' + k + ' км ' + m + ' м)';
@@ -141,7 +144,7 @@ function ln_to_km(l) {
 /*
 	Выделение компонентов адреса
 */
-function geocode_to_addr(results) {
+var geocode_to_addr = function (results) {
 	var comp = {
 		street_address: '',
 		route: '',
@@ -176,7 +179,7 @@ function geocode_to_addr(results) {
 }
 
 
-function geocode_to_addr2(results) {
+var geocode_to_addr2 = function (results) {
 
 	for(var i in results){
 		var r = results[i];
@@ -268,7 +271,7 @@ config.updater.add('changedesc', function(msg) {
 config.syslist = function(options){
 	var list = $('#'+options.id);
 
-	function Make_SysList(){
+	var Make_SysList = function(){
 		list.empty();
 		for(var i in config.systems){
 			var s = config.systems[i];
@@ -298,7 +301,7 @@ config.syslist = function(options){
 
 }
 
-function UpdateAccountSystemList() {
+var UpdateAccountSystemList = function() {
 	if(config && config.akey)
 	$.getJSON('/api/info?akey='+config.akey, function (data) {
 		if(data){
@@ -333,6 +336,30 @@ var alertcnt = 0;
 var geocoder;
 if('google' in window) geocoder = new google.maps.Geocoder();
 //var sound;
+
+window.config['informer'] = {};
+config.updater.add('inform', function(msg) {
+	log('Inform: update', msg);
+
+	if(msg.data.skey in window.config.informer){
+		var infs = window.config.informer[msg.data.skey];
+		for(var i in infs){
+			if(infs[i].msg == msg.data.msg){
+				infs[i].callback();
+				delete infs[i];		// Не совсем правильное удаление, оно не удаляет, а ставит undefined
+			}
+		}
+	}
+});
+
+var push_informer = function(skey, msg, callback){
+	if(!(skey in window.config.informer)) window.config.informer[skey] = [];
+	window.config.informer[skey].push({
+		'msg': msg,
+		'callback': callback
+	});
+}
+
 
 config.updater.add('addlog', function(msg) {
 
@@ -407,6 +434,9 @@ config.updater.add('addlog', function(msg) {
 
 	//$(
 	//log('CreateMap:', map);
+	if((position.lat()==0) && (position.lng()==0)){
+		addres.innerHTML = 'Положение объекта неизвестно. Отсутствует сигнал GPS.';
+	} else 
 	if(geocoder) geocoder.geocode({'latLng': position}, function(results, status) {
 	      if (status == google.maps.GeocoderStatus.OK) {
 		var address = geocode_to_addr(results);
@@ -435,6 +465,8 @@ config.updater.add('addlog', function(msg) {
 	//	buttons = 
 	//}
 
+	var msg_zoombig
+
 	$(messageBox).dialog({
 		title: '<span class="ui-icon ui-icon-alert" style="display:inline-block;"></span> <span style="color:red;">Внимание! Нажата тревожная кнопка.</span>',
 		//hide: 'slide',
@@ -445,8 +477,74 @@ config.updater.add('addlog', function(msg) {
 		autoOpen: true,
 		width: 630,
 		height: 400,
-		buttons:{
-			'Центровать на большой карте': function(){
+		buttons:[{
+			text: 'Подтверждение',
+			click: function(event, ui){
+				var btn = event.currentTarget;
+				var dialog = this;
+				log($(dialog).dialog('option', 'buttons'));
+				console.dir($(dialog).dialog('option', 'buttons'));
+
+				$(btn).button( 'option', {
+					icons: {primary:'ui-icon-gear'},
+					label: 'Отправка подтверждения...',
+					disabled: true
+				});
+				$.getJSON('/api/alarm/confirm?imei=' + config.sysbykey[msg.data.skey].imei, function (data) {
+					if (data.answer && data.answer === 'ok'){
+						$(btn).button( 'option', {
+							icons: {primary:'ui-icon-zoomin'},
+							label: 'Ожидание ответа...',
+							disabled: true
+						});
+						// Так мудрёно сделано, пипец
+						// Я сильно удивлюсь если тут не будет утечки памяти
+						push_informer(msg.data.skey, 'ALARM_CONFIRM', function(){
+							log('Inform: wait-callback done.');
+							$(btn).button( 'option', {
+								icons: {primary:'ui-icon-flag'},
+								label: 'Подтверждено!',
+								disabled: true
+							});
+							//$(dialog).dialog('option', 'buttons')['Отмена тревоги'];
+						});
+					}
+				});
+			}},{
+			text: 'Отмена тревоги',
+			click: function(event, ui){
+				var btn = event.currentTarget;
+				var conf_btn = event.currentTarget.previousSibling;
+
+				var dialog = this;
+				$(btn).button( 'option', {
+					icons: {primary:'ui-icon-gear'},
+					label: 'Отправка отмены...',
+					disabled: true
+				});
+				$.getJSON('/api/alarm/cancel?imei=' + config.sysbykey[msg.data.skey].imei, function (data) {
+					if (data.answer && data.answer === 'ok'){
+						$(btn).button( 'option', {
+							icons: {primary:'ui-icon-zoomin'},
+							label: 'Ожидание ответа...',
+							disabled: true
+						});
+						// Так мудрёно сделано, пипец
+						// Я сильно удивлюсь если тут не будет утечки памяти
+						push_informer(msg.data.skey, 'ALARM_CANCEL', function(){
+							log('Inform: wait-callback done.');
+							$(btn).button( 'option', {
+								icons: {primary:'ui-icon-flag'},
+								label: 'Тревога отменена!',
+								disabled: true
+							});
+							$(conf_btn).button('option',{disabled: true});
+						});
+					}
+				});
+			}},{
+			text: 'Центровать на большой карте',
+			click: function(){
 				$(this).dialog("close");
 
 				//var handler = function() {
@@ -465,11 +563,11 @@ config.updater.add('addlog', function(msg) {
 					config.map.panTo(position);
 					config.map.setZoom(15);
 				}
-			},
+			}}/*,
 			'Закрыть': function(){
 				$(this).dialog("close");
-			}
-		},
+			}*/
+		],
 		open: function(event, ui) {
 			var position = $(this).dialog( "option", "position" );
 			log('position', position);

@@ -560,7 +560,6 @@ class DBConfig(db.Model):
 class DBNewConfig(DBConfig):
 	pass
 
-
 class DBDescription(db.Model):
 	name = db.StringProperty(multiline=False)	# имя параметра
 	value = db.StringProperty(multiline=False)	# Текстовое описание
@@ -598,3 +597,4 @@ class DBZoneLink(db.Model):
 	sort = db.IntegerProperty(default=0)		# приоритет правила (для поднятия приоритета указать -1, для уменьшения приоритета указать +1)
 	zone = db.ReferenceProperty(DBZone)
 	rule = db.IntegerProperty(default=0)		# правило 
+

@@ -1,4 +1,5 @@
-﻿(function( window, $, undefined ) {
+﻿"use strict";
+(function( window, $, undefined ) {
 
 var document = window.document;
 
@@ -63,7 +64,7 @@ $.getJSON('/api/zone/get', function (data) {
 			var zone = data.zones[i];
 			if(zone.type == 'poligon'){
 				var path = [];
-				for(j in zone.points) path.push(new google.maps.LatLng(zone.points[j][0], zone.points[j][1]));
+				for(var j in zone.points) path.push(new google.maps.LatLng(zone.points[j][0], zone.points[j][1]));
 				var poligon = new google.maps.Polygon({
 					path: path,
 					clickable: false,

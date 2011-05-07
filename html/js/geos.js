@@ -1,4 +1,5 @@
-﻿/*
+﻿"use strict";
+/*
 */
 (function(){
 
@@ -7,7 +8,7 @@ $(document).ready(function() {
 	var tbody = $('#geos_body table tbody');
 	var skey;
 
-	function td(value){
+	var td = function(value){
 		var res = '';
 		$.each(value, function(i, v){
 			res += '<td>' + v + '</td>'
@@ -15,7 +16,7 @@ $(document).ready(function() {
 		return res;
 	}
 
-	function genReport(){
+	var genReport = function(){
 		log('GEOS: Update report');
 		skey = $('#geos_syslist').val();
 
@@ -78,7 +79,7 @@ $(document).ready(function() {
 					_tail = '0';
 				} 
 
-				function add_data(name, digits){
+				var add_data = function(name, digits){
 					var value = parseFloat((vdata[name].vsum/vcnt).toFixed(digits));
 					vdata[name].data.addRow([dt_to_time(p[0]).slice(0,_slice)+_tail, value]);
 					vdata[name].vsum = 0;
@@ -128,7 +129,7 @@ $(document).ready(function() {
 				}*/
 
 				// Create and draw the visualization.
-				function draw_data(name, title){
+				var draw_data = function(name, title){
 					//vdata[name].data.sort([{column: 0}]);
 					$('#geos_vis_' + name).empty();
 					if(vdata[name].data.getNumberOfRows()>0){
