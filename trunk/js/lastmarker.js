@@ -1,3 +1,4 @@
+"use strict";
 /*
 	Что хочется от маркера.
 	В идеале Svg-представление.
@@ -78,8 +79,7 @@ LastMarker.prototype.Info = function() {
 		//$('#moreinfo').slideUp().delay(300).fadeIn();
 		//$("#moreinfo").animate({left:'+=200'},2000);
 		var self = this;
-		url = "/api/geo/info?skey="+skey+"&point="+point.date;
-		$.getJSON(url, function (data) {
+		$.getJSON('/api/geo/info?skey=' + skey + '&point=' + point.date, function (data) {
 			//$("#progress").html("Обрабатываем...");
 			/*console.*/log("JSON data: ", data);
 			if (data.answer && data.answer === 'ok'){
@@ -197,7 +197,7 @@ LastMarker.prototype.onAdd = function() {
 	var g = document.createElementNS(SVG.ns, "g");
 	g.setAttributeNS(null, 'transform', 'translate(16,16)');
 
-	shape = document.createElementNS(SVG.ns, "polyline");
+	var shape = document.createElementNS(SVG.ns, "polyline");
 	shape.setAttributeNS(null, "points", "-8,-4 0,-15 8,-4");
 	shape.setAttributeNS(null, "fill", "none");
 	shape.setAttributeNS(null, "stroke", "black");

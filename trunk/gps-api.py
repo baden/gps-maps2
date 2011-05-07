@@ -1116,12 +1116,13 @@ class Report_Get(BaseApi):
 			sum_length += d
 			self.prev_point = point
 
-		if self.prev_point['fsource'] == 6:
-			self.prev_point['fsource'] = 2
-		else:
-			self.prev_point['fsource'] = 6
+		if self.prev_point:
+			if self.prev_point['fsource'] == 6:
+				self.prev_point['fsource'] = 2
+			else:
+				self.prev_point['fsource'] = 6
 
-		check_point(self.prev_point)
+			check_point(self.prev_point)
 
 		return {
 			'answer': 'ok',
@@ -1315,6 +1316,7 @@ class Sys_Config(BaseApi):
 
 		# Установить параметр
 		if cmd == 'set':
+			#import inform
 			#from zlib import compress, decompress
 			name = self.request.get('name', 'unknown')
 			value = self.request.get('value', '0')
@@ -1330,6 +1332,8 @@ class Sys_Config(BaseApi):
 			waitconfig[name] = value
 			waitconfigs.config = waitconfig #compress(repr(waitconfig), 9)
 			waitconfigs.put()
+
+			#inform.send_by_imei(self.imei, 'CONFIGUP')
 
 		# Отменить задание (действие аналогичное /params?cmd=check&imei=xxxxxxxx)
 		if cmd == 'cancel':
@@ -1495,7 +1499,7 @@ class Zone_Get(BaseApi):
 		#	zpoints.append(db.GeoPt(lat=p[0], lon=p[1]))
 		#zone.points = zpoints
 		#zone.put()
-		if zone:
+		if zones:
 			return {
 				"answer": "ok",
 				"zones": zlist
@@ -1530,6 +1534,26 @@ class Zone_Rule_Get(BaseApi):
 class Zone_Rule_Del(BaseApi):
 	def parcer(self):
 		return {'answer': 'ok'}
+
+#
+# Подтверждение получения тревожного сообщения
+#
+class AlarmConfirm(BaseApi):
+	requred = ('imei')
+	def parcer(self):
+		from inform import Informer
+		Informer.add_by_imei(self.imei, 'ALARM_CONFIRM')
+		return {'answer': 'ok', 'imei': str(self.imei)}
+
+#
+# Отмена получения тревожного сообщения
+#
+class AlarmCancel(BaseApi):
+	requred = ('imei')
+	def parcer(self):
+		from inform import Informer
+		Informer.add_by_imei(self.imei, 'ALARM_CANCEL')
+		return {'answer': 'ok', 'imei': str(self.imei)}
 
 application = webapp.WSGIApplication(
 	[
@@ -1571,6 +1595,9 @@ application = webapp.WSGIApplication(
 	('/api/zone/rule/create*', Zone_Rule_Create),
 	('/api/zone/rule/get*', Zone_Rule_Get),
 	('/api/zone/rule/del*', Zone_Rule_Del),
+
+	('/api/alarm/confirm*', AlarmConfirm),
+	('/api/alarm/cancel*', AlarmCancel),
 
 	#('/api/geo/test*', Geo_Test),
 	],

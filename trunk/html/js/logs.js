@@ -1,7 +1,8 @@
+"use strict";
 
 // Private
 (function($){
-	function log_line(d) {
+	var log_line = function(d) {
 		var row = '<td>'+dt_to_datetime(d.time)+'</td><td>'+d.text+'<!--td>'+d.label+'</td-->';
 		if(config.admin){
 			row += '<!--td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td-->'
@@ -9,13 +10,12 @@
 		return row;
 	}
 
-	function UpdateLog() {
+	var UpdateLog = function() {
 		log('UpdateLog');
 		var table = $("#log_table tbody");
 		table.empty();
 
-		var url = '/api/logs/get?skey=' + config.skey;
-		$.getJSON(url, function (data) {
+		$.getJSON('/api/logs/get?skey=' + config.skey, function (data) {
 			//$("#progress").html("Обрабатываем...");
 			log("getJSON parce");
 			if (data.answer && data.answer == 'ok') {
@@ -29,7 +29,7 @@
 		});
 	}
 
-	function Log_Make_SysList(list){
+	var Log_Make_SysList = function(list){
 		list.empty();
 		for(var i in config.systems){
 			var s = config.systems[i];
@@ -38,7 +38,7 @@
 	}
 
 	$(document).ready(function() {
-		log('Загрузка закладки. События.');
+//		log('Загрузка закладки. События.');
 
 		UpdateLog();
 

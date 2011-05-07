@@ -1,10 +1,11 @@
+"use strict";
 (function(){
 
 var geocoder;
 
 var adrlist = [];
 
-function getGeocode(adrlist, i, recur) {
+var getGeocode = function(adrlist, i, recur) {
 	//console.log(adrlist[i]);
 	//log('geoget at ' + i);
 	if(adrlist[i].stop) log('stop: ' + i);
@@ -36,7 +37,7 @@ function getGeocode(adrlist, i, recur) {
 	}
 }
 
-function genReport(skey, start, stop, title) {
+var genReport = function(skey, start, stop, title) {
 	//$(".control").hide();
 	for(var i in adrlist) { clearInterval(adrlist[i].cb); adrlist[i].stop = true; }
 
@@ -140,11 +141,11 @@ function genReport(skey, start, stop, title) {
 	});
 
 }
-function purgeReport() {
+var purgeReport = function() {
 	$('#report tbody').empty();
 }
 
-function showMap2(from, to, type) {
+var showMap2 = function(from, to, type) {
 	var map_div = $('#map_preview');
 	if(map_div.length==0){
 		div = $('body')
@@ -161,8 +162,7 @@ function showMap2(from, to, type) {
 			$('#map_overlay').remove();
 		});
 
-		url = '/api/geo/get?skey='+config.skey+'&from='+from+'&to='+to+'&options=nosubbounds';
-		$.getJSON(url, function (data) {
+		$.getJSON('/api/geo/get?skey='+config.skey+'&from='+from+'&to='+to+'&options=nosubbounds', function (data) {
 			//$("#progress").html("Обрабатываем...");
 			//log("getJSON parce");
 			if (data.answer && data.points.length > 0) {
@@ -261,7 +261,7 @@ function showMap2(from, to, type) {
 window['showMap2'] = showMap2;
 
 if(0){
-	function showMap(lat, lon, title) {
+	var showMap = function(lat, lon, title) {
 		//$(this).css('border','2px solid green');
 		//map = $("#map_div");
 		//map.css({'left': me.pageX+10, 'top': me.pageY+10});
@@ -307,7 +307,7 @@ if(0){
 	} 
 }
 
-function Report_Make_SysList(list){
+var Report_Make_SysList = function(list){
 	list.empty();
 	for(var i in config.systems){
 		var s = config.systems[i];
@@ -364,7 +364,7 @@ $(document).ready(function() {
 		//showMap();
 	});
 
-	log('Загрузка закладки. Отчеты.');
+//	log('Загрузка закладки. Отчеты.');
 
 if(0){
 	var list = $('#rep_syslist');
@@ -575,7 +575,7 @@ if(0){
 		log('export to XLS tbody:', tbody);
 		var rows = [];
 
-		format5 = function(n){
+		var format5 = function(n){
 			if(n<10) return '0000'+n;
 			else if(n<100) return '000'+n;
 			else if(n<1000) return '00'+n;

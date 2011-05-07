@@ -106,7 +106,7 @@
   </script>
 
 
-  <script src="/js/base.js"></script>
+  <script src="/js/base.js?v=2"></script>
 
   <script>
 	//loader.require('/js/base.js');
@@ -186,7 +186,7 @@
 				if(config.updater.tabs[index]) config.updater.tabs[index]();
 			},
 			load: function(){
-				log('TAB: tab loaded: ', $(this).tabs( "option", "selected" ));
+				//log('TAB: tab loaded: ', $(this).tabs( "option", "selected" ));
 				$("button").button();
 
 			}

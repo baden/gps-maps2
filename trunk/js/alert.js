@@ -1,3 +1,4 @@
+"use strict";
 /**
 	* HabraAlert 0.2
 	* author DeerUA

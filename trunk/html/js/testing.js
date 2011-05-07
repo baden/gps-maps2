@@ -1,3 +1,4 @@
+"use strict";
 function unusedFunction(note) {
 	alert(note['text']);
 }

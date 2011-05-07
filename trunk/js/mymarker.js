@@ -1,3 +1,4 @@
+"use strict";
 /*
 	Что хочется от маркера.
 	Svg-представление
@@ -28,11 +29,11 @@ function MyMarker(map)
 
 MyMarker.prototype = new google.maps.OverlayView();
 
-function add_geo_row(label, value) {
+var add_geo_row = function(label, value) {
 	$('#tbl_info tbody').append('<tr><td>'+label+'</td><td><b>'+value+'</b></td></tr>');
 }
 
-function more_info(data){
+var more_info = function (data){
 	//$("#moreinfo").html("Ура: " + ":" + data.answer);
 	$("#moreinfo").html('');
 	add_geo_row('Спутники', data.point.sats);
@@ -48,11 +49,15 @@ function dt_to_date(dt){
 }
 */
 
+MyMarker.prototype.HideInfo = function() {
+	if(this.infowindow) this.infowindow.close();
+}
+
 MyMarker.prototype.Info = function() {
 	//alert('Bo ' + this.point.date);
 	var point = this.point;
 	var skey = this.skey;
-	log("skey = ", skey);
+	//log("skey = ", skey);
 	if(this.infowindow) this.infowindow.close();
 	this.infowindow = new google.maps.InfoWindow({content:
 		'<div style="width: 220px; height: 160px; border: none;"><div class="info-header">' + dt_to_datetime(point.date) + "</div>" +
@@ -69,16 +74,15 @@ MyMarker.prototype.Info = function() {
 		'<div id="moreinfo" title="Ожидайте, идет получение дополнительной информации."><center><img src="/images/loading.gif" /></center></div></div>',
 		position: point,
 	});
-	log(" info_window = ", this.infowindow);
+	//log(" info_window = ", this.infowindow);
 
 	//self = this;
 		//$('#moreinfo').slideUp().delay(300).fadeIn();
 		//$("#moreinfo").animate({left:'+=200'},2000);
 		var self = this;
-		url = "/api/geo/info?skey="+skey+"&point="+point.date;
-		$.getJSON(url, function (data) {
+		$.getJSON('/api/geo/info?skey=' + skey + '&point=' + point.date, function (data) {
 			//$("#progress").html("Обрабатываем...");
-			/*console.*/log("JSON data: " + data);
+			//log("JSON data: " + data);
 			if (data.answer && data.answer === 'ok'){
 				/*this.infowindow.close();
 				this.infowindow = new google.maps.InfoWindow({content:
@@ -89,7 +93,7 @@ MyMarker.prototype.Info = function() {
 
 				if($('#tbl_info tbody')){
 					$('#tbl_info tbody').ready(function(){
-						/*console.*/log("JSON data: jquery domready.");
+						//log("JSON data: jquery domready.");
 						more_info(data);
 					});
 					//console.log("JSON data: ready on request.");

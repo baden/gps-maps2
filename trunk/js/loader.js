@@ -1,3 +1,4 @@
+"use strict";
 (function(){
 
 if('loader' in window) return;
@@ -5,14 +6,14 @@ if('loader' in window) return;
 function Loader(){
 	this.list = {}
 	this.version = '0.0';
-	console.log('Loader init');
+	//console.log('Loader init');
 }
 
 Loader.prototype.require = function(filename){
-	console.log('Loader require:', filename);
+	//console.log('Loader require:', filename);
 
 	if(filename in this.list) {
-		console.log('Loader require: skip');
+		//console.log('Loader require: skip');
 		return;
 	}
 
@@ -22,15 +23,15 @@ Loader.prototype.require = function(filename){
 		var fileref=document.createElement('script');
 		fileref.setAttribute('type', 'text/javascript');
 		fileref.setAttribute('src', filename + '?version=' + this.version);
-		console.log('Loader require: javascript');
+		//console.log('Loader require: javascript');
 	} else if (filename.search('.css') != -1){ //if filename is an external CSS file
 		var fileref=document.createElement('link');
 		fileref.setAttribute('rel', 'stylesheet');
 		fileref.setAttribute('type', 'text/css');
 		fileref.setAttribute('href', filename + '?version=' + this.version);
-		console.log('Loader require: stylesheet');
+		//console.log('Loader require: stylesheet');
 	} else {
-		console.log('Loader require: unknown type');
+		//console.log('Loader require: unknown type');
 	}
 	if (typeof fileref!='undefined') document.getElementsByTagName('head')[0].appendChild(fileref);
 }

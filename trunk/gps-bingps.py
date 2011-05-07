@@ -258,6 +258,8 @@ class BinGps(webapp.RequestHandler):
 
 	def post(self):
 		from datamodel import DBNewConfig
+		from inform import Informer
+
 		_log = "\n== BINGPS ["
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 		imei = self.request.get('imei')
@@ -322,6 +324,13 @@ class BinGps(webapp.RequestHandler):
 		#newconfigs = utils.CheckUpdates(userdb)
 		#if newconfigs:
 		#	self.response.out.write('CONFIGUP\r\n')
+
+		#infos = inform.get_by_imei(imei)
+		#if infos:
+		#	self.response.out.write(infos)
+
+		for info in Informer.get_by_imei(imei):
+			self.response.out.write(info + '\r\n')
 
 		newconfigs = DBNewConfig.get_by_imei(imei)
 		newconfig = newconfigs.config

@@ -1,3 +1,4 @@
+"use strict";
 (function( window, $, undefined ) {
 
 var document = window.document;
@@ -8,7 +9,7 @@ var map;
 var oldDirections = [];
 var currentDirections = null;
 
-function initRoute() {
+var initRoute = function () {
 	directionsDisplay = new google.maps.DirectionsRenderer({
 		'map': window.config.map,
 		'preserveViewport': true,
@@ -29,7 +30,7 @@ function initRoute() {
 //    calcRoute();
 }
 
-function calcRoute(start, end) {
+var calcRoute = function (start, end) {
 	//var start = '48 Pirrama Road, Pyrmont NSW';
 	//var end = 'Bondi Beach, NSW';
 	var request = {
@@ -46,7 +47,7 @@ function calcRoute(start, end) {
 	});
 }
 
-function undo() {
+var undo = function () {
 	currentDirections = null;
 	directionsDisplay.setDirections(oldDirections.pop());
 	if (!oldDirections.length) {
@@ -54,12 +55,12 @@ function undo() {
 	}
 }
 
-function setUndoDisabled(value) {
+var setUndoDisabled = function (value) {
 	document.getElementById("dir_panel_undo").disabled = value;
 }
 
 function DirKit(){
-	log('DirKit init');
+	//log('DirKit init');
 	$('#dir_panel_undo').click(undo);
 }
 
@@ -68,7 +69,7 @@ var track_mode = false;
 var events = {fclick: null, sclick:null};
 
 DirKit.prototype.Route = function(){
-	log('DirKit::Route');
+	//log('DirKit::Route');
 	var start_marker = null;
 
 	if(!track_mode){
@@ -104,9 +105,9 @@ DirKit.prototype.Route = function(){
 				$('#dir_panel').show('fast');
 			});
 		});
-		log('events.fclick', events.fclick, events);
+		//log('events.fclick', events.fclick, events);
 	} else {
-		log('DirKit cancel route.', events);
+		//log('DirKit cancel route.', events);
 		track_mode = false;
 		$('#dir_panel').hide('fast');
 		/*if(events.fclick != null) */google.maps.event.removeListener(events.fclick);

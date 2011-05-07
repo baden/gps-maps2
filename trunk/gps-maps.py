@@ -53,6 +53,7 @@ class AddLog(webapp.RequestHandler):
 	def get(self):
 		from datamodel import DBNewConfig
 		from datetime import datetime
+		from inform import Informer
 
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 
@@ -82,24 +83,29 @@ class AddLog(webapp.RequestHandler):
 		if mtype == 'alarm':
 			if text is None: text = u'Нажата тревожная кнопка.'
 
-		gpslog = GPSLogs(parent = system, text = text, label = label, mtype = mtype, pos = db.GeoPt(lat, lon))
-		gpslog.put()
+		if text != 'ignore me':	# Ping
+			gpslog = GPSLogs(parent = system, text = text, label = label, mtype = mtype, pos = db.GeoPt(lat, lon))
+			gpslog.put()
 
-		updater.inform('addlog', system.key(), {
-			'skey': str(system.key()),
-			#'time': gpslog.date.strftime("%d/%m/%Y %H:%M:%S"),
-			'time': datetime.utcnow().strftime("%y%m%d%H%M%S"),
-			'text': text,
-			'label': label,
-			'mtype': mtype,
-			'key': "%s" % gpslog.key(),
-			'data': data,
-		})	# Информировать всех пользователей, у которых открыта страница Отчеты
+			updater.inform('addlog', system.key(), {
+				'skey': str(system.key()),
+				#'time': gpslog.date.strftime("%d/%m/%Y %H:%M:%S"),
+				'time': datetime.utcnow().strftime("%y%m%d%H%M%S"),
+				'text': text,
+				'label': label,
+				'mtype': mtype,
+				'key': "%s" % gpslog.key(),
+				'data': data,
+			})	# Информировать всех пользователей, у которых открыта страница Отчеты
 
 		newconfigs = DBNewConfig.get_by_imei(imei)
 		newconfig = newconfigs.config
 		if newconfig and (newconfig != {}):
 			self.response.out.write('CONFIGUP\r\n')
+
+		for info in Informer.get_by_imei(imei):
+			self.response.out.write(info + '\r\n')
+		
 
 		self.response.out.write('ADDLOG: OK\r\n')
 """
@@ -636,6 +642,38 @@ class Firmware(TemplatedPage):
 
 		self.response.out.write("ROM ADDED: %d\r\n" % len(pdata))
 
+class Inform(webapp.RequestHandler):
+	def get(self):
+		from datetime import datetime
+		from inform import Informer
+		# Это единственный (пока) способ побороть Transfer-Encoding: chunked
+		imei = self.request.get('imei', 'unknown')
+		msg = self.request.get('msg', 'unknown')
+		if msg == 'ALL':
+			Informer.purge_by_imei(imei)
+		else:
+			Informer.del_by_imei(imei, msg)
+		self.response.headers['Content-Type'] = 'application/octet-stream'
+		self.response.out.write("OK\r\n")
+		self.response.out.write("INFORM: OK\r\n")
+
+		system = DBSystem.get_or_create(imei)
+
+		updater.inform('inform', system.key(), {
+			'skey': str(system.key()),
+			'time': datetime.utcnow().strftime("%y%m%d%H%M%S"),
+			'msg': msg,
+		})
+
+class Ping(webapp.RequestHandler):
+	def get(self):
+		from inform import Informer
+		# Это единственный (пока) способ побороть Transfer-Encoding: chunked
+		imei = self.request.get('imei', 'unknown')
+		self.response.headers['Content-Type'] = 'application/octet-stream'
+		for info in Informer.get_by_imei(imei):
+			self.response.out.write(info + '\r\n')
+		self.response.out.write("PING: OK\r\n")
 
 application = webapp.WSGIApplication(
 	[('/', MainPage),
@@ -645,6 +683,8 @@ application = webapp.WSGIApplication(
 		('/config.*', Config),	# Конфигурация системы
 		('/params.*', Params),	# Запрос параметров системы, например localhost/params?cmd=check&imei=353358019726996
 		('/binbackup.*', BinBackup),
+		('/inform.*', Inform),
+		('/ping.*', Ping),
 		('/firmware.*', Firmware),
 	],
 	debug=True
