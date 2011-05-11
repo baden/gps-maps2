@@ -837,6 +837,7 @@ $(document).ready(function() {
 	//$('#int_select').unbind('selectstart');
 	CreateMap();
 
+
 	$("#date_tabs").tabs();
 	$("#nav_map").button("option", "disabled", true);
 
@@ -908,12 +909,21 @@ var Map_SysList = function (list){
 	list.empty();
 	for(var i in config.systems){
 		var s = config.systems[i];
-		list.append(
-			'<li class="ui-widget ui-state-default" imei="'+s.imei+'" skey="'+s.skey+'">'+
-			'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
-			s.desc+
-			'</li>'
-		);
+		/*if(i==10){
+			list.append(
+				'<li class="ui-widget ui-state-error" imei="'+s.imei+'" skey="'+s.skey+'">'+
+				'  <span class="ui-icon ui-icon-alert" title="Центровать последнее положение на карте"></span>'+
+				s.desc+
+				'</li>'
+			);
+		} else {*/
+			list.append(
+				'<li class="ui-widget ui-state-default" imei="'+s.imei+'" skey="'+s.skey+'">'+
+				'  <span class="ui-icon ui-icon-zoomin" title="Центровать последнее положение на карте"></span>'+
+				s.desc+
+				'</li>'
+			);
+		/*}*/
 	}
 
 	list.find('li').click(function(){
@@ -994,6 +1004,9 @@ $(document).ready(function(){
 
 	var dirkit = new DirKit();
 	$('#map_track_calc').click(dirkit.Route)
+
+
+	window.config.alarm.show_alert_icons();
 
 });
 

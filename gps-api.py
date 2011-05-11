@@ -1404,6 +1404,8 @@ class Chanel_GetToken(BaseApi):
 
 		token = updater.register(self.account, uuid)
 
+		logging.info('== Goted token %s ' % token)
+
 		return {
 			'answer': 'ok',
 			'akey': '%s' % self.account.key(),
@@ -1539,21 +1541,51 @@ class Zone_Rule_Del(BaseApi):
 # Подтверждение получения тревожного сообщения
 #
 class AlarmConfirm(BaseApi):
-	requred = ('imei')
+	requred = ('account', 'imei')
 	def parcer(self):
+		from alarm import Alarm
 		from inform import Informer
+		import urllib
+
 		Informer.add_by_imei(self.imei, 'ALARM_CONFIRM')
+		Alarm.confirm(self.imei, self.account)
+
+		#url = "/addlog?imei=%s&text=%s" % (self.imei, u'Получение тревоги подтверждено оператором ' % self.account.user.nickname())
+		url = "/addlog?imei=%s&mtype=alarm_confirm&akey=%s" % (self.imei, str(self.account.key()))
+		taskqueue.add(url = url, method="GET", countdown=0)
+
 		return {'answer': 'ok', 'imei': str(self.imei)}
 
 #
 # Отмена получения тревожного сообщения
 #
 class AlarmCancel(BaseApi):
-	requred = ('imei')
+	requred = ('account', 'imei')
 	def parcer(self):
+		from alarm import Alarm
 		from inform import Informer
+		import urllib
+
 		Informer.add_by_imei(self.imei, 'ALARM_CANCEL')
+		Alarm.cancel(self.imei, self.account)
+
+		#url = "/addlog?imei=%s&text=%s" % (self.imei, u'Отбой тревоги оператором ' % self.account.user.nickname())
+		#url = "/addlog?imei=%s&text=%s" % (self.imei, urllib.quote(u'Cancel alarm ру'.encode('utf-8')))
+		url = "/addlog?imei=%s&mtype=alarm_cancel&akey=%s" % (self.imei, str(self.account.key()))
+
+		taskqueue.add(url = url, method="GET", countdown=0)
+
 		return {'answer': 'ok', 'imei': str(self.imei)}
+
+#
+# Запросить список "активных" тревог
+#
+class AlarmGet(BaseApi):
+	requred = ('account')
+	def parcer(self):
+		from alarm import Alarm
+		all = [r for r in Alarm.getall()]
+		return {'answer': 'ok', 'alarms': all}
 
 application = webapp.WSGIApplication(
 	[
@@ -1598,6 +1630,7 @@ application = webapp.WSGIApplication(
 
 	('/api/alarm/confirm*', AlarmConfirm),
 	('/api/alarm/cancel*', AlarmCancel),
+	('/api/alarm/get*', AlarmGet),
 
 	#('/api/geo/test*', Geo_Test),
 	],

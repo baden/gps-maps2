@@ -51,9 +51,10 @@ class StaticPage(TemplatedPage):
 
 class AddLog(webapp.RequestHandler):
 	def get(self):
-		from datamodel import DBNewConfig
+		from datamodel import DBNewConfig, DBAccounts
 		from datetime import datetime
 		from inform import Informer
+		from alarm import Alarm
 
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 
@@ -65,6 +66,7 @@ class AddLog(webapp.RequestHandler):
 		mtype = self.request.get('mtype', None)
 		slat = self.request.get('lat', '0000.0000E')
 		slon = self.request.get('lon', '00000.0000N')
+		fid = self.request.get('fid', 'unknown')
 
 		lat = float(slat[:2]) + float(slat[2:9]) / 60.0
 		lon = float(slon[:3]) + float(slon[3:10]) / 60.0
@@ -77,11 +79,26 @@ class AddLog(webapp.RequestHandler):
 
 		data = {
 			'lat': lat,
-			'lon': lon
+			'lon': lon,
+			'fid': fid,
+			'dt': datetime.now().strftime("%y%m%d%H%M%S")
 		}
 
 		if mtype == 'alarm':
 			if text is None: text = u'Нажата тревожная кнопка.'
+			alarmmsg = Alarm.add_alarm(system, int(fid, 10), db.GeoPt(lat, lon) )
+
+		if mtype == 'alarm_confirm':
+			if text is None:
+				akey = self.request.get('akey', None)
+				account = DBAccounts.get(db.Key(akey))
+				text = u'Тревога подтверждена оператором %s' % account.user.nickname()
+
+		if mtype == 'alarm_cancel':
+			if text is None:
+				akey = self.request.get('akey', None)
+				account = DBAccounts.get(db.Key(akey))
+				text = u'Отбой тревоги оператором %s' % account.user.nickname()
 
 		if text != 'ignore me':	# Ping
 			gpslog = GPSLogs(parent = system, text = text, label = label, mtype = mtype, pos = db.GeoPt(lat, lon))

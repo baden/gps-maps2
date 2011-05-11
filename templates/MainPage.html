@@ -113,6 +113,7 @@
 	loader.require('/js/mymarker.js');
 	loader.require('/js/lastmarker.js');
 	loader.require('/js/gmap.js');
+	loader.require('/js/alarm.js');
   </script>
 
   <!--script src="/js/mymarker.js"></script>
@@ -141,6 +142,7 @@
 
   <script>
 	var config = config || {};
+	config.username = "{{ username }}";
 	config.skey = "{{ account.systems.0.key }}";
 	config.akey = "{{ account.key }}";
 	{% if admin %}
@@ -202,10 +204,10 @@
 		// Установим chanel-соединение
 		// Получим токен для установки соединения
 		var uuid = new Date().getTime();
-		$.getJSON('/api/chanel/gettoken?akey={{ account.key }}&uuid={{ uid }}-' + uuid, function (data) {
+		$.getJSON('/api/chanel/gettoken?akey={{ account.key }}&uuid={{ uid }}_' + uuid, function (data) {
 			if(data.token){
 				var token = data.token;
-				//log("Token goted:" + token);
+				log("Token goted:" + token, 'uuid={{ uid }}');
 
 				var onOpened = function() {
 					//log('goog.appengine.Channel: onOpened ('+token+')');
@@ -242,11 +244,13 @@
 					//connected = false;
 				}
 
+				if(0){
 				// Чуть снизим нагрузку для локальной отладки (1 опрос в 5 секунд)
 				//if(document.URL.match(/localhost/g1)){
 				if(window.location.hostname == 'localhost'){
 					if(goog.appengine.Socket.POLLING_TIMEOUT_MS) goog.appengine.Socket.POLLING_TIMEOUT_MS = 5000;
 					//if(goog.appengine.Socket.POLLING_TIMEOUT_MS) goog.appengine.Socket.POLLING_TIMEOUT_MS = 500;
+				}
 				}
 				var channel = new goog.appengine.Channel(token);
 				var socket = channel.open();
