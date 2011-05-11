@@ -62,10 +62,10 @@ class DBUpdater(db.Model):
 				return
 			uuids = entity.uuids
 
-		#logging.info("UPDATER: uuids=%s" % repr(uuids))
+		logging.info("UPDATER: uuids=%s" % repr(uuids))
 
 		for uuid in uuids:
-			#logging.info("Update for account[%s] uuid[%s]" % (account.user.email(), uuid))
+			logging.info("Update for account[%s] uuid[%s]" % (account.user.email(), uuid))
 			message = {
 				'msg': '%s' % msg,
 				'account': {
@@ -79,7 +79,7 @@ class DBUpdater(db.Model):
 			#except:
 			#except channel._ToChannelError, e:
 			except channel.InvalidChannelClientIdError, e:
-				#logging.info("UPDATER: InvalidChannelClientIdError")
+				logging.info("UPDATER: InvalidChannelClientIdError")
 				# Тут по идее должно быть удаление устаревших uuid
 				if entity is None:
 					entity = cls.get_by_key_name("updater_%s" % account.key())

@@ -409,7 +409,7 @@ class DBGeo(db.Model):
 				item = rec.get_item(i)
 				if prev == (item['lat'], item['lon']): continue
 				prev = (item['lat'], item['lon'])
-				logging.info('Get_Tail_Items: Lat = %f  Lon = %f' % prev)
+				#logging.info('Get_Tail_Items: Lat = %f  Lon = %f' % prev)
 				yield item
 				count -= 1
 				if count<=0: return
