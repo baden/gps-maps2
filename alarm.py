@@ -17,18 +17,19 @@ class Alarm(db.Model):
 	cdateHistory = db.ListProperty(datetime, default=None)	# Время создания тревоги
 	lpos = db.GeoPtProperty()				# Последняя позиция
 	fid = db.IntegerProperty()				# FID
+	ceng = db.StringProperty(default='')			# Строка инженерного меню (если есть)
 	confirmed = db.BooleanProperty(default=False)		# Получение тревоги подтверждено
 	confirmby = db.ReferenceProperty(DBAccounts, default=None)	# Оператор, подтвердивший тревогу -> DBAccounts
 	confirmwhen = db.DateTimeProperty()			# Время подтвердения тревоги
 
 	@classmethod
-	def add_alarm(cls, system, fid, lpos):
+	def add_alarm(cls, system, fid, lpos, ceng):
 		#entity = cls(key_name="alarm_%s" % system.imei, system_key=system)
 		#entity.put()
 		def txn():
 			entity = cls.get_by_key_name("alarm_%s" % system.imei)
 			if entity is None:
-				entity = cls(key_name="alarm_%s" % system.imei, system=system, fid=fid, lpos=lpos, cdateHistory = [datetime.now()])
+				entity = cls(key_name="alarm_%s" % system.imei, system=system, fid=fid, lpos=lpos, ceng=ceng, cdateHistory = [datetime.now()])
 				#memcache.set("inform_%s" % imei, [msg])
 				entity.put()
 			else:
@@ -51,6 +52,7 @@ class Alarm(db.Model):
 				'dt': r.cdate.strftime("%y%m%d%H%M%S"),
 				'lpos': (r.lpos.lat, r.lpos.lon),
 				'fid': r.fid,
+				'ceng': r.ceng,
 				'confirmed': r.confirmed,
 				'confirmby': usr,
 				'dthistory': [x.strftime("%y%m%d%H%M%S") for x in r.cdateHistory],

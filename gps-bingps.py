@@ -19,6 +19,7 @@ from utils import CRC16
 import updater
 
 SERVER_NAME = os.environ['SERVER_NAME']
+os.environ['CONTENT_TYPE'] = "application/octet-stream"
 
 jit_lat = 0
 jit_long = 0
@@ -251,6 +252,13 @@ class BinGpsParse(webapp.RequestHandler):
 
 		logging.info(_log)
 
+"""
+_CHARSET_RE = re.compile(r';\s*charset=([^;\s]*)', re.I)
+environ.get('CONTENT_TYPE', '')
+os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+"""
+
 class BinGps(webapp.RequestHandler):
 	def get(self):
 		self.response.headers['Content-Type'] = 'text/plain'
@@ -259,6 +267,8 @@ class BinGps(webapp.RequestHandler):
 	def post(self):
 		from datamodel import DBNewConfig
 		from inform import Informer
+		from urllib import unquote_plus
+		import os
 
 		_log = "\n== BINGPS ["
 		self.response.headers['Content-Type'] = 'application/octet-stream'
@@ -271,9 +281,37 @@ class BinGps(webapp.RequestHandler):
 		else:
 			dataid = 0
 
-		pdata = self.request.body
+
+		_log += '\n==\tEnviron: '
+		for k,v in os.environ.items():
+			_log += "\n==\t%s = %s" % (str(k), str(v))
+
+
+		_log += '\n==\tRBody size: %d' % len(self.request.body)
+		_log += '\n==\tRBody: '
+		for data in self.request.body:
+			_log += ' %02X' % ord(data)
+
+
+		pdata = ''
+		if 'Content-Type' in self.request.headers:
+			if self.request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+				pdata = unquote_plus(self.request.body)
+			else:
+				pdata = self.request.body
+
+		#pdata = self.request.body
+
+		for k,v in self.request.headers.items():
+			_log += "\n==\tHeader: %s = %s" % (str(k), str(v))
 
 		_log += '\n==\tData ID: %d' % dataid
+
+		_log += '\n==\tBody size: %d' % len(pdata)
+		_log += '\n==\tBody: '
+		for data in pdata:
+			_log += ' %02X' % ord(data)
+
 
 		_log += '\nSaving to backup'
 		newbinb = DBGPSBinBackup(parent = system)
@@ -371,8 +409,8 @@ application = webapp.WSGIApplication(
 	debug=True
 )
 
-
 def main():
+	os.environ['CONTENT_TYPE'] = "application/octet-stream"
 	run_wsgi_app(application)
 
 if __name__ == "__main__":

@@ -1,4 +1,9 @@
+import os
+
+os.environ['CONTENT_TYPE'] = "application/octet-stream"
+
 def webapp_add_wsgi_middleware(app):
+   os.environ['CONTENT_TYPE'] = "application/octet-stream"
    from google.appengine.ext.appstats import recording
    return recording.appstats_wsgi_middleware(app)
 
