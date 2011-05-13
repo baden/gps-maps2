@@ -244,7 +244,47 @@ var show_alarm_window = function(skey, update){
 	data.datetime.innerHTML = 'Время: <b>' + dt_to_datetime(data.dt) + '</b><span style="cursor: pointer;" title="'+title+'">'+sp+'</span>';
 
 	if((data.position.lat()==0) && (data.position.lng()==0)){
-		data.addres.innerHTML = 'Положение объекта неизвестно. Отсутствует сигнал GPS.';
+
+		data.addres.innerHTML = 'Положение объекта неизвестно. Отсутствует сигнал GPS.  '+
+		/*'<span style="display:inline-block;border:1px solid black;cursor:pointer;" spid="1" title="Показать последнее положение из базы.">LAST</span>'+*/
+		'<span style="display:inline-block;border:1px solid black;cursor:pointer;border-radius:4px;" spid="2" title="Определить по вышкам сотовой связи (приблизительно)">GSM</span>';
+		$(data.addres).find('span[spid="1"]').click(function(){
+			log('Show last');
+		});
+		$(data.addres).find('span[spid="2"]').click(function(){
+			log('Show GPRS', data.ceng);
+			$.getJSON('/api/gmap/ceng?akey='+window.config.akey+'&ceng=' + data.ceng, function (rdata) {
+				if (rdata.answer && rdata.answer === 'ok'){
+					data.position = new google.maps.LatLng(rdata.loc[0], rdata.loc[1]);
+					data.addres.innerHTML = 'Положение объекта по вышкам GSM: ' + rdata.loc;
+					//data.addres.title = rdata.geo;
+					data.map.panTo(data.position);	// Не уверен что замыкание будет работать правильно
+
+					if(geocoder) geocoder.geocode({'latLng': data.position}, function(results, status) {
+	      					if (status == google.maps.GeocoderStatus.OK) {
+							var address = geocode_to_addr(results);
+	  						//console.log(results);
+
+							data.addres.innerHTML = 'Адрес: <b>' + address + '</b>';
+							data.addres.title = 'Нажмите чтобы центровать на миникарте.';
+							data.addres.style.cursor = 'pointer';
+							$(data.addres).bind('click', function(event){
+								data.map.panTo(data.position);	// Не уверен что замыкание будет работать правильно
+								//log('click');
+							});
+							//data.map.panTo(data.position);	// Не уверен что замыкание будет работать правильно
+
+					      } else {
+						        //alert("Geocoder failed due to: " + status);
+					      }
+					});
+				}
+
+
+
+			});
+
+		});
 	} else if(geocoder) geocoder.geocode({'latLng': data.position}, function(results, status) {
 	      if (status == google.maps.GeocoderStatus.OK) {
 		var address = geocode_to_addr(results);

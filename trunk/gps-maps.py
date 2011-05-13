@@ -2,6 +2,7 @@
 
 __author__ = "Batrak Denis"
 
+import os
 import logging
 
 from google.appengine.ext import db
@@ -25,6 +26,8 @@ from google.appengine.api import memcache
 #from guppy import hpy
 
 import updater
+
+os.environ['CONTENT_TYPE'] = "application/octet-stream"
 
 class MainPage(TemplatedPage):
 	def get(self):
@@ -67,6 +70,7 @@ class AddLog(webapp.RequestHandler):
 		slat = self.request.get('lat', '0000.0000E')
 		slon = self.request.get('lon', '00000.0000N')
 		fid = self.request.get('fid', 'unknown')
+		ceng = self.request.get('ceng', '')
 
 		lat = float(slat[:2]) + float(slat[2:9]) / 60.0
 		lon = float(slon[:3]) + float(slon[3:10]) / 60.0
@@ -81,12 +85,13 @@ class AddLog(webapp.RequestHandler):
 			'lat': lat,
 			'lon': lon,
 			'fid': fid,
+			'ceng': ceng,
 			'dt': datetime.now().strftime("%y%m%d%H%M%S")
 		}
 
 		if mtype == 'alarm':
 			if text is None: text = u'Нажата тревожная кнопка.'
-			alarmmsg = Alarm.add_alarm(system, int(fid, 10), db.GeoPt(lat, lon) )
+			alarmmsg = Alarm.add_alarm(system, int(fid, 10), db.GeoPt(lat, lon), ceng)
 
 		if mtype == 'alarm_confirm':
 			if text is None:
@@ -177,9 +182,13 @@ class Alert(webapp.RequestHandler):
 class Config(webapp.RequestHandler):
 	def post(self):
 		from datamodel import DBConfig
+		from urllib import unquote_plus
 		#from zlib import compress
 
 		self.response.headers['Content-Type'] = 'application/octet-stream'
+
+		for k,v in self.request.headers.items():
+			logging.info("== header: %s = %s" % (str(k), str(v)))
 
 		imei = self.request.get('imei', 'unknown')
 		system = DBSystem.get_or_create(imei, phone=self.request.get('phone', None), desc=self.request.get('desc', None))
@@ -188,8 +197,17 @@ class Config(webapp.RequestHandler):
 		if cmd == 'save':
 			newconfig = DBConfig.get_by_imei(imei)
 
+			body = ''
+			if 'Content-Type' in self.request.headers:
+				if self.request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+					body = unquote_plus(self.request.body)
+				else:
+					body = self.request.body
+
+			logging.info("== CONFIG_BODY: %s" % body)
+
 			config = {}
-			for conf in self.request.body.split("\n"):
+			for conf in body.split("\n"):
 				params = conf.strip().split()
 				if len(params) == 4:
 					config[params[0]] = (params[1], params[2], params[3])
@@ -708,6 +726,7 @@ application = webapp.WSGIApplication(
 )
 
 def main():
+	os.environ['CONTENT_TYPE'] = "application/octet-stream"
 	logging.getLogger().setLevel(logging.DEBUG)
 	run_wsgi_app(application)
 

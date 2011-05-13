@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
+os.environ['CONTENT_TYPE'] = "application/octet-stream"
+
 TYPES = {
 	#'js': 'text/javascript; charset=utf-8',
 	'js': 'application/x-javascript',
@@ -81,6 +83,7 @@ application = webapp.WSGIApplication(
 
 
 def main():
+	os.environ['CONTENT_TYPE'] = "application/octet-stream"
 	run_wsgi_app(application)
 
 if __name__ == "__main__":
