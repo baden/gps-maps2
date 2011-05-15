@@ -49,10 +49,10 @@ handlers:
   static_files: static/robots.txt
   upload: static/robots.txt
 
-- url: /gps-maps.crx
-  static_files: googleapp/gps-maps.crx
+- url: /(.*\.(crx))
+  static_files: googleapp/\1
   mime_type: application/x-chrome-extension
-  upload: googleapp/gps-maps.crx
+  upload: googleapp/(.*\.(crx))
 
 #- url: /gps-maps.manifest
 #  static_files: static/gps-maps.manifest
