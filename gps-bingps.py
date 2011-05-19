@@ -68,6 +68,10 @@ def SaveGPSPointFromBin(pdata, result):
 		LogError()
 		return None	# LENGTH
 
+	if datestamp > datetime.now() + timedelta(days=1):
+		logging.error("\n==\t GPS_PARSE_ERROR: error datetime: future point")
+		return None
+
 	latitude = float(ord(pdata[7])) + (float(ord(pdata[8])) + float(ord(pdata[9])*100 + ord(pdata[10]))/10000.0)/60.0
 	longitude = float(ord(pdata[11])) + (float(ord(pdata[12])) + float(ord(pdata[13])*100 + ord(pdata[14]))/10000.0)/60.0
 	if ord(pdata[15]) & 1:
