@@ -175,7 +175,7 @@ var geocode_to_addr = function (results) {
 		((comp.locality == '')?(((comp.sublocality != '')?comp.sublocality:comp.administrative_area_level_2) + ' район, '):'') +
 		((comp.locality != '')?(comp.locality+', '):'') +
 		comp.route +
-		((comp.street_address != '')?(', ' + comp.street_address):'');
+		((comp.street_number != '')?(', ' + comp.street_number):'');
 }
 
 
