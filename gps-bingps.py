@@ -126,8 +126,12 @@ def SaveGPSPointFromBin(pdata, result):
 	#in2 = float(self.request.get('in2'))*100.0/65535 
 	in1 = 0.0
 	in2 = 0.0
-	vout = float(ord(pdata[21])) / 10.0;
-	vin = float(ord(pdata[22])) / 50.0;
+	if (ord(pdata[23]) == 0) and (ord(pdata[24]) == 0):
+		vout = float(ord(pdata[21]) / 10.0;
+		vin = float(ord(pdata[22])) / 50.0;
+	else:
+		vout = float(ord(pdata[21]) + 256*ord(pdata[22])) / 100.0;
+		vin = float(ord(pdata[23]) + 256*ord(pdata[24])) / 100.0;
 
 	fsource = ord(pdata[26]);	# Причина фиксации координаты
 
@@ -215,7 +219,7 @@ class BinGpsParse(webapp.RequestHandler):
 					offset += 1
 					continue
 
-				p_id = ord(pdata[offset+1])		# Идентификатор пакета
+				p_id = ord(pdata[offset+1])	# Идентификатор пакета
 				p_len = ord(pdata[offset+2])	# Длина пакета в байтах
 
 				if p_id == 0xF2:
