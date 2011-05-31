@@ -127,11 +127,11 @@ def SaveGPSPointFromBin(pdata, result):
 	in1 = 0.0
 	in2 = 0.0
 	if (ord(pdata[23]) == 0) and (ord(pdata[24]) == 0):
-		vout = float(ord(pdata[21]) / 10.0;
-		vin = float(ord(pdata[22])) / 50.0;
+		vout = float(ord(pdata[21])) / 10.0
+		vin = float(ord(pdata[22])) / 50.0
 	else:
-		vout = float(ord(pdata[21]) + 256*ord(pdata[22])) / 100.0;
-		vin = float(ord(pdata[23]) + 256*ord(pdata[24])) / 100.0;
+		vout = float(ord(pdata[21]) + 256*ord(pdata[22])) / 100.0
+		vin = float(ord(pdata[23]) + 256*ord(pdata[24])) / 100.0
 
 	fsource = ord(pdata[26]);	# Причина фиксации координаты
 
