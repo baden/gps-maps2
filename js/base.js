@@ -6,7 +6,8 @@
 window.log = function(){
   log.history = log.history || [];   // store logs to an array for reference
   log.history.push(arguments);
-  if(this.console){
+//  if(this.console){
+  if(window.console){
     console.log( Array.prototype.slice.call(arguments) );
   }
 };
