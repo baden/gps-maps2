@@ -30,7 +30,7 @@ def senddatav2(f, imei):
 	print("Connect to %s:%d" % (HOST, PORT))
 	s.connect((HOST, PORT))
 
-	send = "POST /bingps?imei=%s&dataid=0 HTTP/1.1\r\n" % imei
+	send = "POST /bingps?imei=%s HTTP/1.1\r\n" % imei
 	send+= "Host: %s\r\n" % HOSTNAME
 	send+= "Content-type: application/octet-stream\r\n"
 	send+= "Content-Length: %d\r\n" % len(body)

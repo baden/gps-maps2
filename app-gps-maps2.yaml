@@ -37,6 +37,10 @@ handlers:
   static_files: images/\1
   upload: images/(.*\.(gif|png|jpg|ico))
 
+- url: /google1e0f340fb7ee1468.html
+  static_files: static/google1e0f340fb7ee1468.html
+  upload: static/google1e0f340fb7ee1468.html
+
 - url: /sound/(.*\.(mp3|ogg))
   static_files: sound/\1
   upload: sound/(.*\.(mp3|ogg))

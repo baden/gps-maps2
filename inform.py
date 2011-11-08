@@ -22,8 +22,10 @@ class Informer(db.Model):
 		else:
 			req = cls.get_by_key_name("inform_%s" % imei)
 			if req:
+				memcache.set("inform_%s" % imei, req.messages)
 				return req.messages
 			else:
+				memcache.set("inform_%s" % imei, [])
 				return []
 
 #

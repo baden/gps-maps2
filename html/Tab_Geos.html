@@ -80,6 +80,10 @@
 		-webkit-box-shadow: 1px 1px 6px #999;
 	}
 
+	table.tview th {
+		padding-left: 2px !important; 
+		padding-right: 2px !important; 
+	}
 
   </style>
 
@@ -98,13 +102,14 @@
 	<div id="geos_body">
 		<table class="ui-widget ui-widget-content tview">
 			<thead>
-				<tr class="ui-widget-header"><th rowspan=2>Время</th><th rowspan=2>Широта</th><th rowspan=2>Долгота</th><th rowspan=2>Спутники<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="sats"></span></th><th rowspan=2>Скорость<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="speed"></span></th><th colspan=2>Питание</th></tr>
+				<tr class="ui-widget-header"><th rowspan=2>Время</th><th rowspan=2>Широта</th><th rowspan=2>Долгота</th><th rowspan=2>Спутники<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="sats"></span></th><th rowspan=2>Скорость<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="speed"></span></th><th colspan=2>Питание</th><th rowspan="2">Тип метки</th></tr>
 				<tr class="ui-widget-header"><th>основное<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="vout"></span></th><th>резервное<span title="Показать график" class="ui-icon ui-icon-calculator showchart" value="vin"></span></th></tr>
 			</thead>
 			<tbody>
 			</tbody>
 		</table>
 	</div>
+	<div id="geomap" style="height: 99%; position: absolute; right: 16px; top: 0px; border: 1px solid black;"></div>
 	<div id="geos_previev" style="display: none;">
 		 <div class="geos_vis" id="geos_vis_vout" style="display: none;"></div>
 		 <div class="geos_vis" id="geos_vis_vin" style="display: none;"></div>

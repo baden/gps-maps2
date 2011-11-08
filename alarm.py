@@ -23,13 +23,14 @@ class Alarm(db.Model):
 	confirmwhen = db.DateTimeProperty()			# Время подтвердения тревоги
 
 	@classmethod
-	def add_alarm(cls, system, fid, lpos, ceng):
+	def add_alarm(cls, imei, fid, lpos, ceng):
 		#entity = cls(key_name="alarm_%s" % system.imei, system_key=system)
 		#entity.put()
 		def txn():
-			entity = cls.get_by_key_name("alarm_%s" % system.imei)
+			entity = cls.get_by_key_name("alarm_%s" % imei)
 			if entity is None:
-				entity = cls(key_name="alarm_%s" % system.imei, system=system, fid=fid, lpos=lpos, ceng=ceng, cdateHistory = [datetime.now()])
+				#entity = cls(key_name="alarm_%s" % imei, system=DBSystem.get_by_imei(imei), fid=fid, lpos=lpos, ceng=ceng, cdateHistory = [datetime.now()])
+				entity = cls(key_name="alarm_%s" % imei, system=db.Key.from_path('DBSystem', "sys_%s" % imei), fid=fid, lpos=lpos, ceng=ceng, cdateHistory = [datetime.now()])
 				#memcache.set("inform_%s" % imei, [msg])
 				entity.put()
 			else:
