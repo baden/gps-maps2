@@ -10,7 +10,9 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api.labs import taskqueue
 #from google.appengine.api import taskqueue
+#from google.appengine.api import taskqueue
 from google.appengine.api import urlfetch
+from zlib import compress, decompress
 
 from datamodel import DBSystem, DBGeo, PointWorker, DBGPSBin, DBGPSBinBackup
 
@@ -21,6 +23,7 @@ import updater
 
 from google.appengine.api import memcache
 
+from urllib import quote_plus, unquote_plus
 
 SERVER_NAME = os.environ['SERVER_NAME']
 os.environ['CONTENT_TYPE'] = "application/octet-stream"
@@ -29,6 +32,7 @@ jit_lat = 0
 jit_long = 0
 
 USE_BACKUP = False
+USE_TASK_DATA = True
 
 def SaveGPSPointFromBin(pdata, result):
 	def LogError():
@@ -195,7 +199,7 @@ def SaveGPSPointFromBin(pdata, result):
 	}
 
 class BinGpsParse(webapp.RequestHandler):
-	def get(self):
+	def post(self):
 		from geo import updateLasts
 		from updater import inform
 
@@ -206,8 +210,9 @@ class BinGpsParse(webapp.RequestHandler):
 		#	_log += "\n==\t%s = %s" % (str(k), str(v))
 		#logging.info(_log)
 
+		#logging.info("arguments: %s" % self.request.arguments())
 		#logging.info('\n==\tRBody size: %d' % len(self.request.body))
-		#logging.info('Body: %s' % self.request.body)
+		#logging.info('Body: %s' % decompress(self.request.body))
 		#return
 
 		_log = "\n== BINGPS/PARSE ["
@@ -215,18 +220,62 @@ class BinGpsParse(webapp.RequestHandler):
 		pdata = None
 		skey = None
 		result = None
-		key = db.Key(self.request.get('key'))
+		crc = 0
 
-		value = memcache.get("newbi_%s" % key)
-		if value is not None:
-			skey, pdata = value
-			_log += 'Cached data by memcache'
+		key = self.request.get('key', None)
+
+		if key is None:
+			payload = eval(decompress(self.request.body))
+			skey = db.Key(payload['skey'])
+			pdata = payload['pdata']
+			crc = payload['crc']
+			#logging.info('payload: %s' % repr(payload))
+
+			#return
+			#skey = db.Key(self.request.get('skey'))
+			"""
+			_lg = 'dest pbody (%d) ' % len(pdata)
+			for data in pdata:
+				_lg += ' %02X' % ord(data)
+
+			logging.info(_lg)
+			return
+			"""
+
+
+			"""
+			_pdata = unquote_plus(self.request.get('pdata'))
+			_lg = 'dest pbody (%d) ' % len(_pdata)
+			for data in _pdata:
+				_lg += ' %02X' % ord(data)
+
+			logging.info(_lg)
+
+			_zdata = unquote_plus(self.request.get('zdata'))
+			_lg = 'dest zbody (%d) ' % len(_zdata)
+			for data in _zdata:
+				_lg += ' %02X' % ord(data)
+			logging.info(_lg)
+
+			_rdata = decompress(_zdata.encode('latin-1'))
+			_lg = 'dest rbody (%d) ' % len(_rdata)
+			for data in _rdata:
+				_lg += ' %02X' % ord(data)
+			logging.info(_lg)
+			"""
 		else:
-			_log += '!!! Fail caching data by memcache!'
-			result = DBGPSBin.get(key)
-			skey = result.parent().key()
-			if result:
-				pdata = result.data
+			key = db.Key(key)
+
+			value = memcache.get("newbi_%s" % key)
+			if value is not None:
+				skey, crc, pdata = value
+				_log += 'Cached data by memcache'
+			else:
+				_log += '!!! Fail caching data by memcache!'
+				result = DBGPSBin.get(key)
+				skey = result.parent().key()
+				if result:
+					pdata = result.data
 
 		if pdata is not None:
 			#dataid = result.dataid
@@ -235,7 +284,19 @@ class BinGpsParse(webapp.RequestHandler):
 			#_log += '\n==\tDATA ID: %d' % dataid
 			_log += '\n==\tDATA LENGHT: %d' % plen
 
-			#_log += '\nParsing...'
+			crc2 = 0
+			for byte in pdata:
+				crc2 = CRC16(crc2, ord(byte))
+
+			if crc == crc2:
+				_log += '\nCRC: OK'
+			else:
+				_err = '\nCRC: ERROR!\n==\tpdata size: %d' % plen
+				_err+= '\n==\tpdata: '
+				for data in pdata:
+					_err += ' %02X' % ord(data)
+				logging.error(_err)
+
 
 			worker = PointWorker(skey)
 
@@ -279,16 +340,17 @@ class BinGpsParse(webapp.RequestHandler):
 				_log += '\n==\tSaved points: %d\n' % points
 
 				updateLasts(skey);
-				inform('geo_change', skey, {
-					'points': points
-				})
+				# Временно запретим обновление, работате не так как задумано
+				#inform('geo_change', skey, {
+				#	'points': points
+				#})
 
 			else:
 				logging.error("Packet has no data or data is corrupted.\n")
 
 			if result is not None:
 				result.delete()
-			else:
+			elif key is not None:
 				db.delete(key)
 
 			#_log += '\nData deleted.\n'
@@ -322,11 +384,13 @@ class BinGps(webapp.RequestHandler):
 	def post(self):
 		from datamodel import DBNewConfig
 		from inform import Informer
-		from urllib import unquote_plus
 		import os
 
 		_log = "\n== BINGPS ["
-		self.response.headers['Content-Type'] = 'application/octet-stream'
+		logging.info("arguments: %s" % self.request.arguments())
+		logging.info("body: %s" % len(self.request.body))
+
+		#self.response.headers['Content-Type'] = 'application/octet-stream'
 		imei = self.request.get('imei')
 		#system = DBSystem.get_or_create(imei)
 		skey = DBSystem.getkey_or_create(imei)
@@ -355,11 +419,10 @@ class BinGps(webapp.RequestHandler):
 
 		#pdata = self.request.body
 
-		for k,v in self.request.headers.items():
-			_log += "\n==\tHeader: %s = %s" % (str(k), str(v))
+		#for k,v in self.request.headers.items():
+		#	_log += "\n==\tHeader: %s = %s" % (str(k), str(v))
 
 		_log += '\n==\tData ID: %d' % dataid
-
 		_log += '\n==\tBody size: %d' % len(pdata)
 		"""
 		_log += '\n==\tBody: '
@@ -367,59 +430,76 @@ class BinGps(webapp.RequestHandler):
 			_log += ' %02X' % ord(data)
 		"""
 
+		crc = ord(pdata[-1])*256 + ord(pdata[-2])
+		pdata = pdata[:-2]
+		_log += '\n==\tData size: %d' % len(pdata)
+
+		crc2 = 0
+		for byte in pdata:
+			crc2 = CRC16(crc2, ord(byte))
+
 		if USE_BACKUP:
 			_log += '\nSaving to backup'
 			newbinb = DBGPSBinBackup(parent = skey)
 			newbinb.dataid = dataid
 			newbinb.data = pdata
 
-			crc = ord(pdata[-1])*256 + ord(pdata[-2])
-			pdata = pdata[:-2]
-			_log += '\n==\tData size: %d' % len(pdata)
-
-			crc2 = 0
-			for byte in pdata:
-				crc2 = CRC16(crc2, ord(byte))
-
 			if crc!=crc2:
-				_log += '\n==\tWarning! Calculated CRC: 0x%04X but system say CRC: 0x%04X. (Now error ignored.)' % (crc2, crc)
-				_log += '\n==\t\tData (HEX):'
-				for data in pdata:
-					_log += ' %02X' % ord(data)
-
 				newbinb.crcok = False
-				newbinb.put()
-				logging.info(_log)
-				self.response.out.write('BINGPS: CRCERROR\r\n')
-				return
 			else:
-				_log += '\n==\tCRC OK %04X' % crc
-
-			newbinb.crcok = True
+				newbinb.crcok = True
 			newbinb.put()
 
-		newbin = DBGPSBin(parent = skey)
-		newbin.dataid = dataid
-		newbin.data = pdata #db.Text(pdata)
-		newbin.put()
-
-		#logging.info("==> Bin data: %s" % repr(pdata))
-		#parts = pdata.split('\xFF')
-		#logging.info("==> Parts data: %s" % repr(parts))
+		if crc!=crc2:
+			_log += '\n==\tWarning! Calculated CRC: 0x%04X but system say CRC: 0x%04X. (Now error ignored.)' % (crc2, crc)
+			_log += '\n==\t\tData (HEX):'
+			for data in pdata:
+				_log += ' %02X' % ord(data)
+			logging.info(_log)
+			self.response.out.write('BINGPS: CRCERROR\r\n')
+			return
+		else:
+			_log += '\n==\tCRC OK %04X' % crc
 
 		_log += '\nSaved to DBGPSBin creating tasque'
 
-		#url = "/bingps/parse?dataid=%s&key=%s" % (dataid, newbin.key())
-		#url = "/bingps/parse"
-		#taskqueue.add(url = url % self.key().id(), method="GET", countdown=countdown)
-		#countdown=0
+		#if len(pdata) < (300*1024):
+		no_task_data = False
+		if USE_TASK_DATA:
+			try:
+				payload = compress(repr({'skey': str(skey), 'crc': crc, 'pdata': pdata}), 9)
+				taskqueue.add(url='/bingps/parse', method="POST", payload=payload)
 
-		#logging.info("memcache_key: newbi_%s" % newbin.key())
-		memcache.set("newbi_%s" % newbin.key(), (skey, pdata), time = 30)
-		taskqueue.add(url='/bingps/parse', method="GET", params={'dataid': dataid, 'key':newbin.key()})
-		#taskqueue.add(url='/bingps/parse', params={'key': newbin.key()})
-		#taskqueue.add(url = '/bingps/task', params={'dataid': dataid, 'key':newbin.key()})
-		#taskqueue.add(url = '/bingps/task')
+			except taskqueue.TaskTooLargeError, e:
+				no_task_data = True
+				logging.warning("Big packet for task transfer (%s)! Use datastore transfer" % e)
+		else:
+			no_task_data = True
+
+		if no_task_data:
+			key_name = "%s-%s" % (skey, datetime.now().strftime("%y%m%d%H%M%S"))
+			newbin = DBGPSBin(key_name = key_name, parent = skey)
+			newbin.dataid = dataid
+			newbin.data = pdata #db.Text(pdata)
+			#newbin.put()
+			db.put_async(newbin)
+			#db.put(newbin)
+
+			#logging.info("==> Bin data: %s" % repr(pdata))
+			#parts = pdata.split('\xFF')
+			#logging.info("==> Parts data: %s" % repr(parts))
+
+			#url = "/bingps/parse?dataid=%s&key=%s" % (dataid, newbin.key())
+			#url = "/bingps/parse"
+			#taskqueue.add(url = url % self.key().id(), method="GET", countdown=countdown)
+			#countdown=0
+
+			#logging.info("memcache_key: newbi_%s" % newbin.key())
+			memcache.set("newbi_%s" % newbin.key(), (skey, crc, pdata), time = 30)
+			taskqueue.add(url='/bingps/parse', method="POST", params={'dataid': dataid, 'key': newbin.key(), 'crc': crc})
+			#taskqueue.add(url='/bingps/parse', params={'key': newbin.key()})
+			#taskqueue.add(url = '/bingps/task', params={'dataid': dataid, 'key':newbin.key()})
+			#taskqueue.add(url = '/bingps/task')
 
 		#newconfigs = utils.CheckUpdates(userdb)
 		#if newconfigs:
