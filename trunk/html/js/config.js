@@ -43,6 +43,7 @@
 						 '<span class="spanbrd" title="IMEI">' + s.imei + '</span><span class="spanbrd" title="Телефон">' + (s.phone!='None'?(s.phone):'не определен') + '</span> <desc>' + s.desc + '</desc>' +
 						 '<button class="key bdesc" title="Изменить описание">...</button>' +
 						 '<button class="key bzone" title="Привязать ГЕО-зону">З</button>' +
+						 (config.admin?'<button class="key calarm" title ="Принудительная отмена тревоги">x!</button>':'') +
 						 '<button class="key bdel" title="Отказаться от слежения за системой">X</button>' +
 						'</li>'
 					);
@@ -55,6 +56,14 @@
                   			return false;
         			});
 				*/
+				$("#config_sys_list .calarm").button().click(function(){
+					var par = $(this).parent();
+					var imei = par.attr('imei');
+					log('imei', imei);
+					$.getJSON('/api/alarm/cancel?akey='+window.config.akey+'&imei=' + imei, function (data) {
+					});
+				});
+
 				$("#config_sys_list .bdesc").button().click(function(){
 					//alert(this.attributes['imei'].value);
 					//var i = this.attributes['index'].value;

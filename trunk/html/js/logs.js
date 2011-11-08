@@ -5,9 +5,27 @@
 	var log_line = function(d) {
 		var row = '<td>'+dt_to_datetime(d.time)+'</td><td>'+d.text+'<!--td>'+d.label+'</td-->';
 		if(config.admin){
-			row += '<!--td class="del_log" title="Удалить сообщение\nБез подтверждения!" key='+d.key+'><span class="ui-icon ui-icon-close"></span></td-->'
+			row += '<td class="del_log" title="Удалить сообщение\nБез подтверждения!" id="dellog_'+d.key+'" key="'+d.key+'"><span class="ui-icon ui-icon-close"></span></td>'
 		}
+		/*$('#dellog_'+d.key).click(function(){
+			log('del:' + $(this).attr('key'));
+		});*/
 		return row;
+	}
+
+	var UpdateDelProc = function() {
+		$('td.del_log').unbind('click');
+		$('td.del_log').bind('click', function(){
+			//log('del:' + $(this).attr('key'));
+			var row = this;
+			$(row).parent().remove();
+			$.getJSON('/api/logs/del?skey=' + config.skey+ '&lkey=' + $(this).attr('key'), function (data) {
+				log('dellog complete');
+				if (data.answer && data.answer == 'ok') {
+					//$(row).parent().remove();
+				}
+			});
+		});
 	}
 
 	var UpdateLog = function() {
@@ -23,9 +41,7 @@
 					table.append('<tr>' + log_line(data.logs[i]) + '</tr>');
 				}
 			}
-			$('td.del_log').click(function(){
-				log('del:' + $(this).attr('key'));
-			});
+			UpdateDelProc();
 		});
 	}
 
@@ -72,6 +88,7 @@
 		config.updater.add('addlog', function(msg) {
 			if(msg.data.skey == config.skey){
 				$("#log_table tbody tr:first").before('<tr>' + log_line(msg.data) + '</tr>');
+				UpdateDelProc();
 			}
 		});
 	});

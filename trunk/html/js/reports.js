@@ -148,7 +148,7 @@ var purgeReport = function() {
 var showMap2 = function(from, to, type) {
 	var map_div = $('#map_preview');
 	if(map_div.length==0){
-		div = $('body')
+		var div = $('body')
 		.append('<div id="map_overlay" class="ui-widget-overlay"></div>')
 		.append('<div id="map_preview" style="">Загрузка карты, ожидайте...</div>');
 		var map_div = $('#map_preview');

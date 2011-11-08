@@ -7,7 +7,11 @@ rem killall bribge.py >/dev/null 2>&1
 rem 356895035359317 Omega-Caravan AE1829BE
 python ./bribge.py 356895035359317 >nul 2>nul
 
+
 exit
+
+python ./bribge.py 012207005520132 >nul 2>nul
+
 
 rem 353358019726996 Отладочная система
 python ./bribge.py 353358019726996 >nul 2>nul

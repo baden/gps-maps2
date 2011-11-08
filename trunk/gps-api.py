@@ -13,6 +13,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from google.appengine.api.labs import taskqueue
 from google.appengine.api import urlfetch
+from google.appengine.api import memcache
 
 #from template import TemplatedPage
 from datamodel import DBAccounts, DBSystem, DBGeo, PointWorker
@@ -1001,7 +1002,7 @@ class Geo_Report(BaseApi):
 				point['vout'],
 				point['vin'],
 				point['speed'],
-				0, 0, 0
+				point['fsource'], 0, 0
 			));
 
 		return {'answer': 'ok',
@@ -1332,6 +1333,7 @@ class Sys_Config(BaseApi):
 			waitconfig[name] = value
 			waitconfigs.config = waitconfig #compress(repr(waitconfig), 9)
 			waitconfigs.put()
+			memcache.set("update_config_%s" % self.imei, "yes")
 
 			#inform.send_by_imei(self.imei, 'CONFIGUP')
 
@@ -1340,8 +1342,24 @@ class Sys_Config(BaseApi):
 			newconfigs = DBNewConfig().get_by_imei(self.imei)
 			newconfigs.config = {}
 			newconfigs.put()
+			memcache.set("update_config_%s" % self.imei, "no")
 
 		return {'result': 'ok'}
+
+class Sys_SecureList(BaseApi):
+	def parcer(self):
+		#from datamodel import DBSystem
+		sysinfos = []
+		systems = DBSystem.all(keys_only=True).fetch(1000)
+		for rec in systems:
+			sysinfos.append({'imei': rec.name()[4:], 'key': "%s" % rec, })
+
+		return {
+			'answer': 'ok',
+			'info': {
+				'systems': sysinfos,
+			}
+		}
 
 class Param_Desc(BaseApi):
 	def parcer(self):
@@ -1391,6 +1409,22 @@ class Logs_Get(BaseApi):
 		return {
 			"answer": "ok",
 			"logs": logs,
+		}
+
+class Logs_Del(BaseApi):
+	requred = ('skey')
+	def parcer(self):
+		from datamodel import GPSLogs
+
+		self.response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+
+		lkey = self.request.get("lkey", None)
+		
+		#logsq = GPSLogs.all().ancestor(self.skey).order('-date').fetch(1000)
+		GPSLogs.get(lkey).delete()
+
+		return {
+			"answer": "ok",
 		}
 		
 class Chanel_GetToken(BaseApi):
@@ -1687,10 +1721,12 @@ application = webapp.WSGIApplication(
 	('/api/sys/desc*', Sys_Desc),
 	('/api/sys/sort*', Sys_Sort),
 	('/api/sys/config*', Sys_Config),
+	('/api/sys/secure_list*', Sys_SecureList),
 
 	('/api/param/desc*', Param_Desc),
 
 	('/api/logs/get*', Logs_Get),
+	('/api/logs/del*', Logs_Del),
 
 	('/api/chanel/gettoken*', Chanel_GetToken),
 

@@ -62,7 +62,7 @@ class AddLog(webapp.RequestHandler):
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 
 		imei = self.request.get('imei', 'unknown')
-		system = DBSystem.get_or_create(imei)
+		skey = DBSystem.getkey_or_create(imei)
 
 		text = self.request.get('text', None)
 		label = int(self.request.get('label', '0'))
@@ -91,7 +91,7 @@ class AddLog(webapp.RequestHandler):
 
 		if mtype == 'alarm':
 			if text is None: text = u'Нажата тревожная кнопка.'
-			alarmmsg = Alarm.add_alarm(system, int(fid, 10), db.GeoPt(lat, lon), ceng)
+			alarmmsg = Alarm.add_alarm(imei, int(fid, 10), db.GeoPt(lat, lon), ceng)
 
 		if mtype == 'alarm_confirm':
 			if text is None:
@@ -106,11 +106,11 @@ class AddLog(webapp.RequestHandler):
 				text = u'Отбой тревоги оператором %s' % account.user.nickname()
 
 		if text != 'ignore me':	# Ping
-			gpslog = GPSLogs(parent = system, text = text, label = label, mtype = mtype, pos = db.GeoPt(lat, lon))
+			gpslog = GPSLogs(parent = skey, text = text, label = label, mtype = mtype, pos = db.GeoPt(lat, lon))
 			gpslog.put()
 
-			updater.inform('addlog', system.key(), {
-				'skey': str(system.key()),
+			updater.inform('addlog', skey, {
+				'skey': str(skey),
 				#'time': gpslog.date.strftime("%d/%m/%Y %H:%M:%S"),
 				'time': datetime.utcnow().strftime("%y%m%d%H%M%S"),
 				'text': text,
@@ -120,10 +120,27 @@ class AddLog(webapp.RequestHandler):
 				'data': data,
 			})	# Информировать всех пользователей, у которых открыта страница Отчеты
 
-		newconfigs = DBNewConfig.get_by_imei(imei)
-		newconfig = newconfigs.config
-		if newconfig and (newconfig != {}):
-			self.response.out.write('CONFIGUP\r\n')
+		#newconfigs = DBNewConfig.get_by_imei(imei)
+		#newconfig = newconfigs.config
+		#if newconfig and (newconfig != {}):
+		#	self.response.out.write('CONFIGUP\r\n')
+		#	memcache.set("update_config_%s" % imei, "yes")
+		""" TBD! Вынести в описание класса """
+		value = memcache.get("update_config_%s" % imei)
+		if value is not None:
+			if value == "no":
+				pass
+			elif value == "yes":
+				self.response.out.write('CONFIGUP\r\n')
+		else:
+			newconfigs = DBNewConfig.get_by_imei(imei)
+			newconfig = newconfigs.config
+			if newconfig and (newconfig != {}):
+				memcache.set("update_config_%s" % imei, "yes")
+				self.response.out.write('CONFIGUP\r\n')
+			else:
+				memcache.set("update_config_%s" % imei, "no")
+
 
 		for info in Informer.get_by_imei(imei):
 			self.response.out.write(info + '\r\n')
@@ -214,6 +231,7 @@ class Config(webapp.RequestHandler):
 
 			newconfig.config = config #compress(repr(config), 9)
 			#newconfig.strconfig = repr(config)
+			#newconfig.
 			newconfig.put()
 
 			updater.inform('cfgupd', system.key(), {
@@ -246,13 +264,16 @@ class Params(webapp.RequestHandler):
 					#self.response.out.write("<tr><td>%s:%s</td></tr>" % (config, value))
 					self.response.out.write("PARAM %s %s\r\n" % (config, value))
 				self.response.out.write("FINISH\r\n")
+				memcache.set("update_config_%s" % imei, "yes")
 			else:
 				self.response.out.write("NODATA\r\n")
+				memcache.set("update_config_%s" % imei, "no")
 
 		elif cmd == 'cancel':
 			newconfigs = DBNewConfig().get_by_imei(imei)
 			newconfigs.config = {}
 			newconfigs.put()
+			memcache.set("update_config_%s" % imei, "no")
 			
 			#for newconfig in newconfigs:
 			#	newconfig.delete()
@@ -275,6 +296,7 @@ class Params(webapp.RequestHandler):
 
 				newconfig.config = {}
 				newconfig.put()
+				memcache.set("update_config_%s" % imei, "no")
 
 				self.response.out.write("CONFIRM")
 
@@ -286,8 +308,10 @@ class Params(webapp.RequestHandler):
 			newconfig = newconfigs.config
 			if newconfig and (newconfig != {}):
 				self.response.out.write('CONFIGUP\r\n')
+				memcache.set("update_config_%s" % imei, "yes")
 			else:
 				self.response.out.write('NODATA\r\n')
+				memcache.set("update_config_%s" % imei, "no")
 
 		else:
 			self.response.out.write('CMD_ERROR\r\n')
@@ -556,6 +580,7 @@ class Firmware(TemplatedPage):
 		swid = self.request.get('swid')
 		hwid = self.request.get('hwid')
 		boot = self.request.get('boot')
+		subid = int(self.request.get('subid', '0'), 16)
 		if boot:
 			if boot == 'yes':
 				boot = True
@@ -567,13 +592,13 @@ class Firmware(TemplatedPage):
 		if cmd:
 			if cmd == 'del':
 				if fid:
-					datamodel.DBFirmware().get_by_key_name(fid).delete()
+					DBFirmware().get_by_key_name(fid).delete()
 				self.redirect("/firmware")
 
 			elif cmd == 'check':	# Запросить версию самой свежей прошивки
 				self.response.headers['Content-Type'] = 'application/octet-stream'	# Это единственный (пока) способ побороть Transfer-Encoding: chunked
 					
-				fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).order('-swid').fetch(1)
+				fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).filter('subid =', subid).order('-swid').fetch(1)
 				if fw:
 					self.response.out.write("SWID: %04X\r\n" % fw[0].swid)
 				else:
@@ -598,9 +623,9 @@ class Firmware(TemplatedPage):
 					fw = DBFirmware.get_by_key_name(fid)
 					fw = [fw]
 				elif swid:
-					fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).filter('swid =', int(swid, 16)).fetch(1)
+					fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).filter('subid =', subid).filter('swid =', int(swid, 16)).fetch(1)
 				else:
-					fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).order('-swid').fetch(1)
+					fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).filter('subid =', subid).order('-swid').fetch(1)
 
 				self.response.headers['Content-Type'] = 'application/octet-stream'	# Это единственный (пока) способ побороть Transfer-Encoding: chunked
 				if fw:
@@ -619,6 +644,56 @@ class Firmware(TemplatedPage):
 						crc2 = CRC16(crc2, ord(byte))
 						by = by - 1
 					self.response.out.write("\r\n")
+					self.response.out.write("CRC:%04X\r\n" % crc2)
+					self.response.out.write("ENDDATA\r\n")
+				else:
+					self.response.out.write('NOT FOUND\r\n')
+
+			elif cmd == 'getpack':
+				if fid:
+					fw = DBFirmware.get_by_key_name(fid)
+					fw = [fw]
+				elif swid:
+					fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).filter('subid =', subid).filter('swid =', int(swid, 16)).fetch(1)
+				else:
+					fw = DBFirmware.all().filter('boot =', boot).filter('hwid =', int(hwid, 16)).filter('subid =', subid).order('-swid').fetch(1)
+
+				#self.response.headers['Content-Type'] = 'application/octet-stream'	# Это единственный (пока) способ побороть Transfer-Encoding: chunked
+				self.response.headers['Content-Type'] = 'text/html'
+				if fw:
+					by = 0
+					line = 0
+					crc2 = 0
+					self.response.out.write("SWID:%04X" % fw[0].swid)
+					self.response.out.write("\r\nLENGTH:%04X" % len(fw[0].data))
+
+					for byte in fw[0].data:
+						if by == 0:
+							self.response.out.write("\r\nL%03X:" % line)
+							line = line + 1
+							by = 64
+						#self.response.out.write("%02X" % ord(byte))
+						#if ord(byte)>=16:
+						
+						if ord(byte) in (0x0D, 0x0A, 0x00, 0x01):
+							self.response.out.write('\x01' + chr(ord(byte)+32))
+						else:
+							self.response.out.write(byte)
+						
+						"""
+						if ord(byte) >= 33:
+							self.response.out.write(byte)
+						else:
+							#self.response.out.write('\x0F' + chr(ord(byte)+32))
+							self.response.out.write('\x20' + chr(ord(byte)+32))
+						"""
+						
+						crc2 = CRC16(crc2, ord(byte))
+						by = by - 1
+					for i in range(by):
+						self.response.out.write('-');	# заполним последнюю строку чтобы не была короткой
+						
+					self.response.out.write("\r\nIGNOREME-IGNOREME-IGNOREME-IGNOREME-IGNOREME-IGNOREME-IGNOREME\r\n")
 					self.response.out.write("CRC:%04X\r\n" % crc2)
 					self.response.out.write("ENDDATA\r\n")
 				else:
@@ -648,6 +723,7 @@ class Firmware(TemplatedPage):
 					'key': fw.key().name(),
 					'hwid': "%04X" % fw.hwid,
 					'swid': "%04X" % fw.swid,
+					'subid': "%d" % fw.subid,
 					'cdate': fw.cdate,
 					'size': fw.size,
 					'desc': fw.desc,
@@ -664,13 +740,15 @@ class Firmware(TemplatedPage):
 		pdata = self.request.body
 		hwid = int(self.request.get('hwid'), 16)
 		swid = int(self.request.get('swid'), 16)
+		subid = int(self.request.get('subid', 0), 10)
 
 		if boot:
 			newfw = DBFirmware(key_name = "FWBOOT%04X" % hwid, desc = u"Загрузчик", boot = True)
 		else:
-			newfw = DBFirmware(key_name = "FWGPS%04X%04X" % (hwid, swid), desc = u"Образ ядра")
+			newfw = DBFirmware(key_name = "FWGPS%04X%04X%04X" % (hwid, swid, subid), desc = u"Образ ядра")
 		newfw.hwid = hwid
 		newfw.swid = swid
+		newfw.subid = subid
 		newfw.data = pdata
 		newfw.size = len(pdata)
 		newfw.put()

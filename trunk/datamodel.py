@@ -153,6 +153,21 @@ class DBSystem(db.Model):
 
 		return db.run_in_transaction(txn)
 
+	''' Тоже что и функция get_or_create, только возвращает значение ключа.
+		используется когда нужен только ключ, и сами данные не обязательны. Записи phone и desc не обновляются.
+		дополнительно кешируется.
+	'''
+	@classmethod
+	def getkey_or_create(cls, imei, phone=None, desc=None):
+		from google.appengine.api import memcache
+		value = memcache.get("skey_by_imei_%s" % imei)
+		if value is not None:
+			return db.Key(value)
+		else:
+			key = cls.get_or_create(imei).key()	# Это не самое элегантное решение, но я другого не вижу пока.
+			value = memcache.set("skey_by_imei_%s" % imei, "%s" % key)
+			return key
+
 
 """
  Информация о последней известной координате
@@ -575,6 +590,7 @@ class DBFirmware(db.Model):
 	boot = db.BooleanProperty(default=False)	# Устанавливается в True если это образ загрузчика
 	hwid = db.IntegerProperty()			# Версия аппаратуры
 	swid = db.IntegerProperty()			# Версия прошивки
+	subid = db.IntegerProperty(default=0)		# Подверсия аппаратуры (введена из-за 6000ков)
 	data = db.BlobProperty()			# Образ прошивки
 	size = db.IntegerProperty()			# Размер прошивки (опция)
 	desc = db.StringProperty(multiline=True)	# Описание прошивки (опция)

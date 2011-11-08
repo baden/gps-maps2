@@ -5,8 +5,47 @@
 
 $(document).ready(function() {
 
+	//$('#geomap').bind('click', function(){
+	//	log('1111');
+	//});
+	//log($('#geos_body table tr:first th:last')[0].offsetLeft);
+	var $p = $('#geos_body table tr:first th:last')[0];
+	$('#geomap').css('left', $p.offsetLeft+$p.offsetWidth);
+	//$("#geomap").resizable();
+	var $map = $('#geomap').gmap({
+			//pos: new google.maps.LatLng(45, 35),
+			zoom: 15,
+			//marker: 'center',
+			//markertitme: title
+	});
+	var map = $($map).gmap('option', 'map');
+
+	var icon = $.gmap.images['center'];
+	var marker = new google.maps.Marker({
+        	//position: new google.maps.LatLng(data.stops[i].p[0], data.stops[i].p[1]),
+	        map: map,
+		title: 'Положение',
+		icon: icon,
+	        draggable: false
+	});
+
 	var tbody = $('#geos_body table tbody');
 	var skey;
+
+	var fsource = {
+		0: "-",
+		1: "SUDDENSTOP",
+		2: "STOPACC",
+		3: "TIMESTOPACC",
+		4: "SLOW",
+		5: "TIMEMOVE",
+		6: "START",
+		7: "TIMESTOP",
+		8: "ANGLE",
+		9: "DELTALAT",
+		10: "DELTALONG",
+		11: "DELTA",
+	};
 
 	var td = function(value){
 		var res = '';
@@ -98,7 +137,7 @@ $(document).ready(function() {
 					p = data.points[i];
 					var row = '<tr>';
 //					row += td([p[0], p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2)]);
-					row += td([dt_to_time(p[0]), p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2)]);
+					row += td([dt_to_time(p[0]), p[1].toFixed(5), p[2].toFixed(5), p[3], p[6].toFixed(1), p[4].toFixed(1), p[5].toFixed(2), fsource[p[7]]]);
 					row += '</tr>';
 					//tbody.append(row);
 					tbody.prepend(row);
@@ -152,7 +191,27 @@ $(document).ready(function() {
 				draw_data('speed', 'Скорость (средняя)');
 				draw_data('sats', 'Спутники (усредненное значение)');
 			}
+
+			var $p = $('#geos_body table tr:first th:last')[0];
+			$('#geomap').css('left', $p.offsetLeft+$p.offsetWidth);
+			$('#geos_body table tr').unbind('mouseover');
+			$('#geos_body table tr').bind('mouseover', function(){
+				//var lat = parseFloat($(this).children()[1].slice(4,-4));
+				//var lon = parseFloat($(this).children()[2].slice(4,-4));
+				if($(this).children()[1] && $(this).children()[2]){
+					var lat = parseFloat($(this).children()[1].innerHTML); //.slice(4,-4)
+					var lon = parseFloat($(this).children()[2].innerHTML); //.slice(4,-4)
+					if(!isNaN(lat) && !isNaN(lon)){
+						//log('geo preview', lat, lon);
+						var pos = new google.maps.LatLng(lat, lon);
+						map.panTo(pos);
+						marker.setPosition(pos);
+					}
+				}
+			});
 		});
+
+
 	}
 
 	$('span.showchart').click(function(){
