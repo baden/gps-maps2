@@ -27,7 +27,7 @@ from google.appengine.api import memcache
 
 import updater
 
-os.environ['CONTENT_TYPE'] = "application/octet-stream"
+#os.environ['CONTENT_TYPE'] = "application/octet-stream"
 
 class MainPage(TemplatedPage):
 	def get(self):
@@ -804,7 +804,7 @@ application = webapp.WSGIApplication(
 )
 
 def main():
-	os.environ['CONTENT_TYPE'] = "application/octet-stream"
+	#os.environ['CONTENT_TYPE'] = "application/octet-stream"
 	logging.getLogger().setLevel(logging.DEBUG)
 	run_wsgi_app(application)
 

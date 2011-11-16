@@ -146,16 +146,21 @@
 								//log('table>tr>td:first = ', tb.find('tr').find('td:first'));
 								tb.find('tr').find('td:first').next().next().click(function(){
 									if(config.admin){
-                                                                        var name = $(this).parent().attr('name');
-									var pvalue = $(this).html();
-									var nvalue = prompt("Введите описание для '" + name + "'", pvalue);
-									if(nvalue && nvalue != pvalue){
-										//log('Change description', name);
-										$(this).html(nvalue);
-										sendGet('/api/param/desc?name=' + name + '&value=' + nvalue);
-									}
+	                                                                        var name = $(this).parent().attr('name');
+										var pvalue = $(this).html();
+										var nvalue = prompt("Введите описание для '" + name + "'", pvalue);
+										if(nvalue && nvalue != pvalue){
+											//log('Change description', name);
+											$(this).html(nvalue);
+											sendGet('/api/param/desc?name=' + name + '&value=' + nvalue);
+										}
 									}
 								}).next().click(function(){
+									if(config.username == "test-gps@batrak.net") {
+										alert('На тестовом аккаунте данная операция запрещена.');
+										return;
+									}
+
 									var name = $(this).parent().attr('name');
 									var pvalue = $(this).html();
 									var nvalue = prompt("Введите значение для '" + name + "'", pvalue);
@@ -367,6 +372,12 @@
 					//$("#sys_desc").val(sys_descs[i]);
 					var desc = dialog.find('textarea').val();
 
+					if(config.username == "test-gps@batrak.net") {
+						alert('На тестовом аккаунте данная операция запрещена.');
+						$(this).dialog('close');
+						return;
+					}
+
 					//var imei = $("#sysdesc_imei").html(); //document.getElementById('sysdesc_imei').value;
 					//var desc = document.getElementById('sys_desc').value;
 					//log('Set desc for sys ' + imei + ' -> ' + desc);
@@ -491,6 +502,13 @@
 				},
 				'Да, отказаться от слежения': function(){
 					var imei = $('#config_del_imei').html();
+
+					if(config.username == "test-gps@batrak.net") {
+						alert('На тестовом аккаунте данная операция запрещена.');
+						$(this).dialog('close');
+						return;
+					}
+
 					$.getJSON('/api/sys/del?akey='+config.akey+'&imei=' + imei, function (data) {
 						UpdateSysList();
 					});
