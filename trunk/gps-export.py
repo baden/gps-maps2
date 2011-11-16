@@ -10,7 +10,7 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 
-os.environ['CONTENT_TYPE'] = "application/octet-stream"
+#os.environ['CONTENT_TYPE'] = "application/octet-stream"
 
 class DBExport(db.Model):
 	etype = db.StringProperty(multiline=False)	# тип экспортируемого документа
@@ -142,7 +142,7 @@ application = webapp.WSGIApplication(
 )
 
 def main():
-	os.environ['CONTENT_TYPE'] = "application/octet-stream"
+	#os.environ['CONTENT_TYPE'] = "application/octet-stream"
 	logging.getLogger().setLevel(logging.DEBUG)
 	run_wsgi_app(application)
 

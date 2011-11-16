@@ -34,6 +34,9 @@ jit_long = 0
 USE_BACKUP = False
 USE_TASK_DATA = True
 
+BLACK_LIST = ("861785000681597", "123")
+#BLACK_LIST = ("123")
+
 def SaveGPSPointFromBin(pdata, result):
 	def LogError():
 		sstr = "==  pdata: "
@@ -213,7 +216,6 @@ class BinGpsParse(webapp.RequestHandler):
 		#logging.info("arguments: %s" % self.request.arguments())
 		#logging.info('\n==\tRBody size: %d' % len(self.request.body))
 		#logging.info('Body: %s' % decompress(self.request.body))
-		#return
 
 		_log = "\n== BINGPS/PARSE ["
 
@@ -221,61 +223,32 @@ class BinGpsParse(webapp.RequestHandler):
 		skey = None
 		result = None
 		crc = 0
+		key = None
 
-		key = self.request.get('key', None)
+		payload = eval(decompress(self.request.body))
+		#logging.info('payload: %s' % repr(payload))
 
-		if key is None:
+		skey = db.Key(payload['skey'])
+		crc = payload['crc']
+
+		if 'key' not in payload:
 			payload = eval(decompress(self.request.body))
-			skey = db.Key(payload['skey'])
 			pdata = payload['pdata']
-			crc = payload['crc']
-			#logging.info('payload: %s' % repr(payload))
-
-			#return
-			#skey = db.Key(self.request.get('skey'))
-			"""
-			_lg = 'dest pbody (%d) ' % len(pdata)
-			for data in pdata:
-				_lg += ' %02X' % ord(data)
-
-			logging.info(_lg)
-			return
-			"""
-
-
-			"""
-			_pdata = unquote_plus(self.request.get('pdata'))
-			_lg = 'dest pbody (%d) ' % len(_pdata)
-			for data in _pdata:
-				_lg += ' %02X' % ord(data)
-
-			logging.info(_lg)
-
-			_zdata = unquote_plus(self.request.get('zdata'))
-			_lg = 'dest zbody (%d) ' % len(_zdata)
-			for data in _zdata:
-				_lg += ' %02X' % ord(data)
-			logging.info(_lg)
-
-			_rdata = decompress(_zdata.encode('latin-1'))
-			_lg = 'dest rbody (%d) ' % len(_rdata)
-			for data in _rdata:
-				_lg += ' %02X' % ord(data)
-			logging.info(_lg)
-			"""
 		else:
-			key = db.Key(key)
+			#key = db.Key(key)
+			key = db.Key(payload['key'])
 
-			value = memcache.get("newbi_%s" % key)
-			if value is not None:
-				skey, crc, pdata = value
+			pdata = memcache.get("newbi_%s" % key)
+			if pdata is not None:
+				#skey, crc, pdata = value
 				_log += 'Cached data by memcache'
 			else:
 				_log += '!!! Fail caching data by memcache!'
 				result = DBGPSBin.get(key)
-				skey = result.parent().key()
+				#skey = result.parent().key()
 				if result:
 					pdata = result.data
+				#crc = int(payload['crc'])
 
 		if pdata is not None:
 			#dataid = result.dataid
@@ -341,9 +314,9 @@ class BinGpsParse(webapp.RequestHandler):
 
 				updateLasts(skey);
 				# Временно запретим обновление, работате не так как задумано
-				#inform('geo_change', skey, {
-				#	'points': points
-				#})
+				inform('geo_change', skey, {
+					'points': points
+				})
 
 			else:
 				logging.error("Packet has no data or data is corrupted.\n")
@@ -386,12 +359,18 @@ class BinGps(webapp.RequestHandler):
 		from inform import Informer
 		import os
 
+		self.response.headers['Content-Type'] = 'application/octet-stream'
 		_log = "\n== BINGPS ["
 		logging.info("arguments: %s" % self.request.arguments())
 		logging.info("body: %s" % len(self.request.body))
 
 		#self.response.headers['Content-Type'] = 'application/octet-stream'
 		imei = self.request.get('imei')
+
+		if imei in BLACK_LIST:
+			logging.error("IMEI in black list. Denied.")
+			self.response.out.write('BINGPS: DENIED\r\n')
+
 		#system = DBSystem.get_or_create(imei)
 		skey = DBSystem.getkey_or_create(imei)
 
@@ -429,6 +408,9 @@ class BinGps(webapp.RequestHandler):
 		for data in pdata:
 			_log += ' %02X' % ord(data)
 		"""
+		if len(pdata) < 3:
+			self.response.out.write('BINGPS: CRCERROR\r\n')
+			return
 
 		crc = ord(pdata[-1])*256 + ord(pdata[-2])
 		pdata = pdata[:-2]
@@ -465,12 +447,18 @@ class BinGps(webapp.RequestHandler):
 
 		#if len(pdata) < (300*1024):
 		no_task_data = False
+		payload = {
+			'skey': str(skey),
+			'crc': crc,
+			'pdata': pdata,
+		}
 		if USE_TASK_DATA:
 			try:
-				payload = compress(repr({'skey': str(skey), 'crc': crc, 'pdata': pdata}), 9)
-				taskqueue.add(url='/bingps/parse', method="POST", payload=payload)
+				#payload = {'skey': str(skey), 'crc': crc, 'pdata': pdata}
+				taskqueue.add(url='/bingps/parse', method="POST", payload=compress(repr(payload), 9), headers={'Content-Type': 'application/octet-stream'})
 
 			except taskqueue.TaskTooLargeError, e:
+				del payload['pdata']
 				no_task_data = True
 				logging.warning("Big packet for task transfer (%s)! Use datastore transfer" % e)
 		else:
@@ -495,9 +483,14 @@ class BinGps(webapp.RequestHandler):
 			#countdown=0
 
 			#logging.info("memcache_key: newbi_%s" % newbin.key())
-			memcache.set("newbi_%s" % newbin.key(), (skey, crc, pdata), time = 30)
-			taskqueue.add(url='/bingps/parse', method="POST", params={'dataid': dataid, 'key': newbin.key(), 'crc': crc})
+			memcache.set("newbi_%s" % newbin.key(), pdata, time = 30)
+			#taskqueue.add(url='/bingps/parse', method="POST", params={'dataid': dataid, 'key': newbin.key(), 'crc': crc})
+			#payload = compress(repr({'dataid': dataid, 'key': str(newbin.key()), 'crc': crc}), 9)
+			payload['key'] = str(newbin.key())
+			taskqueue.add(url='/bingps/parse', method="POST", payload=compress(repr(payload), 9), headers={'Content-Type': 'application/octet-stream'})
+
 			#taskqueue.add(url='/bingps/parse', params={'key': newbin.key()})
+
 			#taskqueue.add(url = '/bingps/task', params={'dataid': dataid, 'key':newbin.key()})
 			#taskqueue.add(url = '/bingps/task')
 
@@ -555,7 +548,6 @@ class BinGps(webapp.RequestHandler):
 
 application = webapp.WSGIApplication(
 	[
-#	('/bingps/task.*', BinGpsTask),
 	('/bingps/parse.*', BinGpsParse),
 	('/bingps.*', BinGps),
 	],

@@ -11,6 +11,12 @@ $(document).ready(function() {
 	//log($('#geos_body table tr:first th:last')[0].offsetLeft);
 	var $p = $('#geos_body table tr:first th:last')[0];
 	$('#geomap').css('left', $p.offsetLeft+$p.offsetWidth);
+
+	config.updater.tabs[3] = function(){
+		var $p = $('#geos_body table tr:first th:last')[0];
+		$('#geomap').css('left', $p.offsetLeft+$p.offsetWidth);
+	}
+
 	//$("#geomap").resizable();
 	var $map = $('#geomap').gmap({
 			//pos: new google.maps.LatLng(45, 35),
