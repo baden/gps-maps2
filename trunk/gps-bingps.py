@@ -31,7 +31,7 @@ os.environ['CONTENT_TYPE'] = "application/octet-stream"
 jit_lat = 0
 jit_long = 0
 
-USE_BACKUP = False
+USE_BACKUP = True
 USE_TASK_DATA = True
 
 BLACK_LIST = ("861785000681597", "123")
@@ -372,7 +372,7 @@ class BinGps(webapp.RequestHandler):
 			logging.warning("IMEI block by DOS. Denied.")
 			self.response.out.write('BINGPS: TIMEIN\r\n')
 			return
-		memcache.set("block_bingps:%s" % imei, '*', time = 60*1)
+		memcache.set("block_bingps:%s" % imei, '*', time = 57)
 
 		if imei in BLACK_LIST:
 			logging.error("IMEI in black list. Denied.")
