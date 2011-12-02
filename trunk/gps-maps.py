@@ -62,6 +62,16 @@ class AddLog(webapp.RequestHandler):
 		self.response.headers['Content-Type'] = 'application/octet-stream'
 
 		imei = self.request.get('imei', 'unknown')
+
+		"""
+		block_addlog = memcache.get("block_addlog:%s" % imei)
+		if block_addlog is not None:
+			logging.error("IMEI block by DOS. Denied.")
+			self.response.out.write('ADDLOG: TIMEIN\r\n')
+			return
+		memcache.set("block_addlog:%s" % imei, '*', time = 30)
+		"""
+
 		skey = DBSystem.getkey_or_create(imei)
 
 		text = self.request.get('text', None)

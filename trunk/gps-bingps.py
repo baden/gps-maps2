@@ -367,9 +367,17 @@ class BinGps(webapp.RequestHandler):
 		#self.response.headers['Content-Type'] = 'application/octet-stream'
 		imei = self.request.get('imei')
 
+		block_bingps = memcache.get("block_bingps:%s" % imei)
+		if block_bingps is not None:
+			logging.warning("IMEI block by DOS. Denied.")
+			self.response.out.write('BINGPS: TIMEIN\r\n')
+			return
+		memcache.set("block_bingps:%s" % imei, '*', time = 60*1)
+
 		if imei in BLACK_LIST:
 			logging.error("IMEI in black list. Denied.")
 			self.response.out.write('BINGPS: DENIED\r\n')
+			return
 
 		#system = DBSystem.get_or_create(imei)
 		skey = DBSystem.getkey_or_create(imei)
