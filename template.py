@@ -30,8 +30,8 @@ class TemplatedPage(webapp.RequestHandler):
 	def write_template(self, values, alturl=None):
 		if self.user:
 			#url = users.create_logout_url(self.request.uri)
-			login_url = users.create_login_url(self.request.uri)
-			values['login_url'] = login_url
+			values['login_url'] = users.create_login_url(self.request.uri)
+			values['logout_url'] = users.create_logout_url(self.request.uri)
 			values['now'] = datetime.utcnow()
 			values['username'] = self.user.nickname()
 			values['admin'] = users.is_current_user_admin()
